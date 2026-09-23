@@ -17,5 +17,14 @@ export async function POST(req: Request) {
   if (!lead.name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(lead.email)) return json({ error: 'Nom et courriel valides requis.' }, 400)
   if (!storageReady()) return json({ error: 'storage', fallback: true }, 503)
   await mutate<Lead[]>(LEADS, () => [], l => [lead, ...l].slice(0, 5000))
+  const notify = process.env.LEADS_NOTIFY_EMAIL
+  if (notify && process.env.RESEND_API_KEY && process.env.RESEND_FROM) {
+    const esc = (x: string) => x.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]!)
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST', headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ from: process.env.RESEND_FROM, to: notify.split(','), reply_to: lead.email, subject: `Nouvelle demande : ${lead.interest} — ${lead.name}`,
+        html: `<h2>${esc(lead.interest)}</h2><p><b>${esc(lead.name)}</b> (${esc(lead.role)}) — ${esc(lead.agency)} — ${esc(lead.agents)} courtier(s)<br>${esc(lead.email)} · ${esc(lead.phone)}</p><p>${esc(lead.message).replace(/\n/g, '<br>')}</p>` }),
+    }).catch(() => undefined)
+  }
   return json({ ok: true })
 }

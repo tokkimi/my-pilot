@@ -8,8 +8,8 @@ import { useStore } from '../lib/store'
 import type { FloorPlan, MediaRef, Measure, Visit, VisitRoom, VisitType, Visitor } from '../lib/types'
 import { newContact, newShowing, newTask } from '../lib/seed'
 import { SOP_SELLER } from '../lib/content'
-import { Avatar, Empty, Field, ListingSelect, MemberSelect, Modal, MultiContact, PageHeader, ScopeFilter, Stat } from '../lib/ui'
-import { daysUntil, fmtDate, fullName, isoDateTime, uid } from '../lib/utils'
+import { Letterhead, Avatar, Empty, Field, ListingSelect, MemberSelect, Modal, MultiContact, PageHeader, ScopeFilter, Stat } from '../lib/ui'
+import { daysUntil, fmtDate, fullName, isoDateTime, printElement, uid } from '../lib/utils'
 import { deleteMedia, mediaBlob, saveMedia, useMediaUrl } from '../lib/media'
 import { createDossierFolder, ensureFolder, googleStatus, uploadToDrive } from '../lib/google'
 import DrivePanel from '../components/DrivePanel'
@@ -575,13 +575,7 @@ function Report({ visit: v, go, onDelete, listingName, me }: { visit: Visit; go:
   }
   const followUp = () => { upsert('tasks', newTask(v.agentId, { title: `Suivi de la visite — ${v.title}`, due: new Date(Date.now() + 86400000).toISOString().slice(0, 10), contactId: v.contactIds[0] ?? '', listingId: v.listingId, category: 'Suivi' })); alert('Tâche de suivi créée pour demain.') }
   const text = [`Résumé de visite — ${v.title}`, v.address, fmtDate(v.date, true), '', v.summary, '', 'Pièces :', ...v.rooms.map(r => `• ${r.name} (${r.level}) : ${r.length && r.width ? `${r.length} × ${r.width} ${r.unit} — ${area(r)} ${r.unit}²` : 'non mesurée'}${r.floor ? ` — ${r.floor}` : ''}`), '', `Superficie habitable estimée : ${Math.round(total)} ${unit}²`, '', me].join('\n')
-  const print = () => {
-    const el = document.getElementById('visit-report')
-    const w = window.open('', '_blank')
-    if (!el || !w) return
-    w.document.write(`<html><head><title>Visite — ${v.title}</title><style>body{font-family:system-ui;padding:24px;color:#0f172a}h1{margin:0 0 4px}h2{border-bottom:2px solid #7c3aed;padding-bottom:4px;margin-top:22px;font-size:15px;text-transform:uppercase}table{width:100%;border-collapse:collapse}td,th{border:1px solid #e2e8f0;padding:4px 6px;font-size:12px;text-align:left}img{border-radius:6px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.no-print{display:none}</style></head><body>${el.innerHTML}</body></html>`)
-    w.document.close(); setTimeout(() => w.print(), 400)
-  }
+  const print = () => printElement('visit-report', `Visite — ${v.title}`)
   return (
     <div className="space-y-4">
       <div className="card flex flex-wrap gap-2 p-3 no-print">
@@ -596,8 +590,8 @@ function Report({ visit: v, go, onDelete, listingName, me }: { visit: Visit; go:
         <button className="btn-ghost ml-auto text-rose-600" onClick={onDelete}><Trash2 size={15} /> Supprimer la visite</button>
       </div>
       <div id="visit-report" className="card space-y-3 p-5">
+        <Letterhead title="Rapport de visite" subtitle={fmtDate(v.date, true)} memberId={v.agentId} />
         <div>
-          <div className="text-xs font-semibold uppercase tracking-widest text-brand-600">{db.agency.name}</div>
           <h1 className="text-xl font-bold">{v.title}</h1>
           <div className="text-sm text-slate-600">{VISIT_TYPES[v.type].label} · {v.address || listingName} · {fmtDate(v.date, true)}{duration ? ` · ${duration} min` : ''}</div>
           <div className="text-sm text-slate-600">Clients : {clients.map(c => fullName(c!)).join(', ') || '—'} · Courtier : {db.members.find(m => m.id === v.agentId)?.name}</div>

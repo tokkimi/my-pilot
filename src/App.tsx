@@ -21,7 +21,7 @@ import Guides from './modules/Guides'
 import Platforms from './modules/Platforms'
 import Partners from './modules/Partners'
 import Team from './modules/Team'
-import Finance from './modules/Finance'
+import Accounting from './modules/Accounting'
 import SettingsPage from './modules/Settings'
 import GlobalSearch from './modules/GlobalSearch'
 import Visits from './modules/Visits'
@@ -51,7 +51,7 @@ const PAGES = {
   platforms: { label: 'Plateformes', icon: Grid3x3, C: Platforms, group: 'Réseau' },
   google: { label: 'Google Drive & Agenda', icon: HardDrive, C: GooglePage, group: 'Réseau' },
   partners: { label: 'Partenaires', icon: Handshake, C: Partners, group: 'Réseau' },
-  finance: { label: 'Commissions & dépenses', icon: Wallet, C: Finance, group: 'Agence' },
+  finance: { label: 'Comptabilité', icon: Wallet, C: Accounting, group: 'Agence' },
   team: { label: 'Équipe', icon: UserCog, C: Team, group: 'Agence' },
   settings: { label: 'Paramètres & données', icon: Settings, C: SettingsPage, group: 'Agence' },
 } satisfies Record<string, { label: string; icon: ComponentType<{ size?: number }>; C: ComponentType<PageProps>; group: string }>
@@ -78,15 +78,19 @@ export default function App() {
 
   const go = (page: Page, id?: string) => { location.hash = `/${page}${id ? `/${id}` : ''}`; setNav(false); window.scrollTo(0, 0) }
   const Cur = PAGES[route.page].C
+  const inVisit = route.page === 'visits' && !!route.id
   const groups = [...new Set(Object.values(PAGES).map(p => p.group))]
 
   return (
     <div className="min-h-screen lg:pl-64">
       <aside className={`no-print fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-ink text-slate-300 transition-transform lg:translate-x-0 ${nav ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between px-4 py-4">
-          <div>
-            <div className="text-lg font-bold text-white">🏡 ImmoPilot</div>
-            <div className="truncate text-xs text-slate-400">{db.agency.name}</div>
+          <div className="flex min-w-0 items-center gap-2">
+            {db.agency.logo ? <img src={db.agency.logo} alt="" className="h-9 w-9 shrink-0 rounded-lg bg-white object-contain p-0.5" /> : <img src="/icon.svg" alt="" className="h-9 w-9 shrink-0" />}
+            <div className="min-w-0">
+              <div className="truncate text-base font-bold text-white">{db.agency.logo ? db.agency.name : 'ImmoPilot'}</div>
+              <div className="truncate text-xs text-slate-400">{db.agency.logo ? 'propulsé par ImmoPilot' : db.agency.name}</div>
+            </div>
           </div>
           <button className="lg:hidden" onClick={() => setNav(false)}><X size={20} /></button>
         </div>
@@ -138,18 +142,44 @@ export default function App() {
       </aside>
       {nav && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setNav(false)} />}
 
-      <header className="no-print sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-2.5 backdrop-blur lg:hidden">
-        <button onClick={() => setNav(true)}><Menu size={22} /></button>
-        <span className="font-semibold">{PAGES[route.page].label}</span>
-        <button className="ml-auto" onClick={() => setSearch(true)}><Search size={20} /></button>
+      <header className="no-print safe-top sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-2.5 backdrop-blur lg:hidden">
+        {db.agency.logo ? <img src={db.agency.logo} alt="" className="h-7 w-7 rounded-lg object-contain" /> : <img src="/icon.svg" alt="" className="h-7 w-7" />}
+        <span className="truncate font-semibold">{PAGES[route.page].label}</span>
+        {mode === 'remote' && <span className="ml-auto">{sync === 'ok' ? <Cloud size={17} className="text-emerald-500" /> : sync === 'saving' ? <Loader2 size={17} className="animate-spin text-slate-400" /> : <CloudOff size={17} className="text-rose-500" />}</span>}
+        <button className={mode === 'remote' ? '' : 'ml-auto'} onClick={() => setSearch(true)}><Search size={20} /></button>
       </header>
 
       {mode === 'local' && <div className="no-print bg-amber-100 px-4 py-1.5 text-center text-xs text-amber-900">Mode démonstration — données enregistrées dans ce navigateur seulement. <a href="/connexion" className="font-semibold underline">Se connecter</a> pour l’espace sécurisé partagé de votre agence.</div>}
-      <main className="mx-auto max-w-7xl p-4 sm:p-6">
+      <main className={`mx-auto max-w-7xl p-4 sm:p-6 ${inVisit ? '' : 'max-lg:pb-32'}`}>
         <Cur key={route.page} go={go} openId={route.id} />
       </main>
+      {!inVisit && <BubbleNav current={route.page} go={go} openMenu={() => setNav(true)} />}
       {search && <GlobalSearch go={go} onClose={() => setSearch(false)} />}
       {account && <AccountModal onClose={() => setAccount(false)} forced={!!session?.user.mustChangePassword} />}
     </div>
+  )
+}
+
+// Menu mobile « bulle » : barre flottante; l'onglet actif s'ouvre en bulle avec son nom.
+const BUBBLES: [Page, string, ComponentType<{ size?: number }>][] = [['dashboard', 'Accueil', LayoutDashboard], ['contacts', 'Contacts', Users], ['visits', 'Visite', ScanLine], ['deals', 'Dossiers', FileCheck2]]
+function BubbleNav({ current, go, openMenu }: { current: Page; go: (p: Page) => void; openMenu: () => void }) {
+  return (
+    <nav className="no-print safe-bottom fixed inset-x-0 bottom-0 z-30 px-3 pb-3 lg:hidden">
+      <div className="mx-auto flex max-w-md items-center justify-between rounded-full bg-ink/95 p-1.5 shadow-2xl ring-1 ring-white/10 backdrop-blur">
+        {BUBBLES.map(([page, label, Icon]) => {
+          const on = current === page
+          const center = page === 'visits'
+          return (
+            <button key={page} onClick={() => go(page)} aria-label={label}
+              className={`flex items-center justify-center gap-1.5 rounded-full transition-all duration-300 ${center && !on ? 'h-12 w-12 bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg' : on ? 'h-12 bg-white px-4 text-brand-700' : 'h-12 w-12 text-slate-300'}`}>
+              <Icon size={20} />{on && <span className="text-sm font-semibold">{label}</span>}
+            </button>
+          )
+        })}
+        <button onClick={openMenu} aria-label="Plus" className={`flex h-12 items-center justify-center gap-1.5 rounded-full px-3 transition-all ${!BUBBLES.some(b => b[0] === current) ? 'bg-white text-brand-700' : 'text-slate-300'}`}>
+          <Menu size={20} />{!BUBBLES.some(b => b[0] === current) && <span className="max-w-24 truncate text-sm font-semibold">Plus</span>}
+        </button>
+      </div>
+    </nav>
   )
 }

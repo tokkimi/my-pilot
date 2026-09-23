@@ -69,3 +69,29 @@ export async function copy(text: string) {
 // Taxes Québec
 export const TPS = 0.05
 export const TVQ = 0.09975
+
+/** Redimensionne une image (logo, justificatif) et renvoie une data URL. */
+export async function resizeImage(file: Blob, max = 400, type = 'image/png', quality = 0.9): Promise<string> {
+  const url = URL.createObjectURL(file)
+  try {
+    const img = new Image()
+    img.src = url
+    await img.decode()
+    const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight))
+    const c = document.createElement('canvas')
+    c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s)
+    c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height)
+    return c.toDataURL(type, quality)
+  } finally { URL.revokeObjectURL(url) }
+}
+
+/** Imprime (ou enregistre en PDF) un élément de la page avec les styles de l'application. */
+export function printElement(id: string, title: string) {
+  const el = document.getElementById(id)
+  const w = window.open('', '_blank')
+  if (!el || !w) return
+  const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(n => n.outerHTML).join('')
+  w.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${title}</title><base href="${location.origin}/">${styles}<style>body{background:#fff;padding:24px}.no-print{display:none!important}@page{margin:14mm}</style></head><body>${el.innerHTML}</body></html>`)
+  w.document.close()
+  w.onload = () => setTimeout(() => w.print(), 300)
+}

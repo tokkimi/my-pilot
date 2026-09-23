@@ -40,6 +40,8 @@ const page =
   : path === '/admin' ? <Admin />
   : <Landing />
 
+if ('serviceWorker' in navigator && location.hostname !== 'localhost') window.addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js').catch(() => undefined) })
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Suspense fallback={<Loading />}>{page}</Suspense>

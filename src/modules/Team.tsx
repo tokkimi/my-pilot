@@ -4,7 +4,8 @@ import type { PageProps } from '../App'
 import { useStore } from '../lib/store'
 import type { Member, Role } from '../lib/types'
 import { Avatar, Field, Modal, PageHeader, ROLES } from '../lib/ui'
-import { money, uid } from '../lib/utils'
+import { money, resizeImage, uid } from '../lib/utils'
+import { ImagePlus } from 'lucide-react'
 
 export default function Team(_: PageProps) {
   const { db, patch, isAdmin, mode } = useStore()
@@ -20,6 +21,17 @@ export default function Team(_: PageProps) {
       {mode === 'remote' && isAdmin && <p className="mb-4 rounded-lg bg-brand-50 p-3 text-sm text-brand-700">Chaque membre ajouté reçoit son propre accès (courriel + mot de passe temporaire à lui transmettre). Il devra choisir son mot de passe à la première connexion.</p>}
       <fieldset disabled={!isAdmin} className="card mb-5 p-4">
         <h2 className="mb-3 font-semibold">Agence</h2>
+        <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg bg-slate-50 p-3">
+          <div className="flex h-20 w-40 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white">{a.logo ? <img src={a.logo} alt="Logo" className="max-h-16 max-w-36 object-contain" /> : <span className="text-xs text-slate-400">Aucun logo</span>}</div>
+          <div className="space-y-2 text-sm">
+            <label className="btn-outline cursor-pointer"><ImagePlus size={15} /> {a.logo ? 'Changer le logo' : 'Ajouter le logo de l’agence'}
+              <input type="file" accept="image/*" hidden onChange={async e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) patch({ agency: { ...a, logo: await resizeImage(f, 480) } }) }} />
+            </label>
+            {a.logo && <button className="btn-ghost text-xs text-rose-600" onClick={() => patch({ agency: { ...a, logo: '' } })}>Retirer</button>}
+            <div className="flex items-center gap-2"><span className="text-xs text-slate-500">Couleur de marque</span><input type="color" value={a.brandColor || '#6d28d9'} onChange={e => setA('brandColor', e.target.value)} className="h-8 w-12 cursor-pointer rounded border border-slate-300" /></div>
+          </div>
+          <p className="max-w-xs text-xs text-slate-500">Le logo et la couleur apparaissent dans l’application, les guides clients, les fiches, les rapports de visite, les devis, les factures et les rapports comptables.</p>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Nom de l’agence / équipe"><input className="input" value={a.name} onChange={e => setA('name', e.target.value)} /></Field>
           <Field label="Bureau"><input className="input" value={a.office} onChange={e => setA('office', e.target.value)} /></Field>
@@ -27,6 +39,10 @@ export default function Team(_: PageProps) {
           <Field label="Courriel général"><input className="input" value={a.email} onChange={e => setA('email', e.target.value)} /></Field>
           <Field label="Site Web"><input className="input" value={a.website} onChange={e => setA('website', e.target.value)} /></Field>
           <Field label="Linktree"><input className="input" value={a.linktree} onChange={e => setA('linktree', e.target.value)} /></Field>
+          <Field label="Adresse (documents)"><input className="input" value={a.address ?? ''} onChange={e => setA('address', e.target.value)} /></Field>
+          <Field label="No de TPS de l’agence"><input className="input" value={a.tpsNo ?? ''} onChange={e => setA('tpsNo', e.target.value)} /></Field>
+          <Field label="No de TVQ de l’agence"><input className="input" value={a.tvqNo ?? ''} onChange={e => setA('tvqNo', e.target.value)} /></Field>
+          <Field label="No de permis d’agence (OACIQ)"><input className="input" value={a.licence ?? ''} onChange={e => setA('licence', e.target.value)} /></Field>
         </div>
       </fieldset>
 
@@ -81,6 +97,8 @@ function MemberForm({ m: init, onClose }: { m: Member; onClose: () => void }) {
         <Field label="Téléphone"><input className="input" value={m.phone} onChange={e => set('phone', e.target.value)} /></Field>
         <Field label={needsAccess ? 'Courriel de connexion *' : 'Courriel'}><input className="input" type="email" value={m.email} disabled={mode === 'remote' && !isNew} onChange={e => set('email', e.target.value)} /></Field>
         {needsAccess && <Field label="Mot de passe temporaire"><input className="input font-mono" value={password} onChange={e => setPassword(e.target.value)} /></Field>}
+        <Field label="No de TPS (courtier autonome)"><input className="input" value={m.tpsNo ?? ''} onChange={e => set('tpsNo', e.target.value)} /></Field>
+        <Field label="No de TVQ (courtier autonome)"><input className="input" value={m.tvqNo ?? ''} onChange={e => set('tvqNo', e.target.value)} /></Field>
         <Field label="Partage de commission (% au courtier)"><input className="input" type="number" value={m.split} onChange={e => set('split', +e.target.value)} /></Field>
         <Field label="Couleur"><input className="input h-10" type="color" value={m.color} onChange={e => set('color', e.target.value)} /></Field>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand-600" checked={m.active} onChange={e => set('active', e.target.checked)} /> Membre actif</label>

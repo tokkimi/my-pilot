@@ -1,4 +1,4 @@
-import { bootstrap, checkPassword, clearCookie, currentUser, hashPassword, json, loadAgencies, loadUsers, publicUser, sameOrigin, sessionCookie, trackActivity, USERS, type User } from '../server/platform.js'
+import { bootstrap, checkPassword, clearCookie, currentUser, hashPassword, json, loadAgencies, loadUsers, publicUser, renewCookie, sameOrigin, sessionCookie, trackActivity, USERS, type User } from '../server/platform.js'
 import { mutate, storageMode, storageReady, StorageUnavailable } from '../server/storage.js'
 
 export async function GET(req: Request) {
@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     const u = await currentUser(req)
     if (!u) return json({ user: null, storage: storageMode() })
     const agency = (await loadAgencies()).find(a => a.id === u.agencyId) ?? null
-    return json({ user: publicUser(u), agency, storage: storageMode() })
+    return json({ user: publicUser(u), agency, storage: storageMode() }, 200, { 'set-cookie': renewCookie(u) })
   } catch (e) { return fail(e) }
 }
 
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       const agency = (await loadAgencies()).find(a => a.id === u.agencyId)
       if (u.role !== 'superadmin' && agency?.status === 'suspendu') return json({ error: 'L’abonnement de votre agence est suspendu. Contactez-nous.' }, 403)
       await trackActivity(u, true)
-      return json({ user: publicUser(u), redirect: u.role === 'superadmin' ? '/admin' : '/app' }, 200, { 'set-cookie': sessionCookie(u.id) })
+      return json({ user: publicUser(u), redirect: u.role === 'superadmin' ? '/admin' : '/app' }, 200, { 'set-cookie': sessionCookie(u.id, u.sessionVersion ?? 0) })
     }
 
     if (body.action === 'password') {
@@ -43,8 +43,10 @@ export async function POST(req: Request) {
       if (!checkPassword(u, String(body.current || ''))) return json({ error: 'Mot de passe actuel invalide.' }, 400)
       if (String(body.next || '').length < 8) return json({ error: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' }, 400)
       const { salt, hash } = hashPassword(String(body.next))
-      await mutate<User[]>(USERS, () => [], l => l.map(x => x.id === u.id ? { ...x, salt, hash, mustChangePassword: false } : x))
-      return json({ ok: true })
+      // les autres appareils sont déconnectés; l'appareil actuel reste connecté
+      const version = (u.sessionVersion ?? 0) + 1
+      await mutate<User[]>(USERS, () => [], l => l.map(x => x.id === u.id ? { ...x, salt, hash, mustChangePassword: false, sessionVersion: version } : x))
+      return json({ ok: true }, 200, { 'set-cookie': sessionCookie(u.id, version) })
     }
     return json({ error: 'Action inconnue.' }, 400)
   } catch (e) { return fail(e) }

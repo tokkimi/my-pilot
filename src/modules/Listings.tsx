@@ -5,11 +5,12 @@ import { useStore } from '../lib/store'
 import type { Listing, ListingStatus, Room } from '../lib/types'
 import { newDeal, newListing, newShowing } from '../lib/seed'
 import { DAYS, FLOORINGS, LISTING_DOCS, MARKETING_PLAN, PROPERTY_FEATURES, ROOM_PRESETS, VISIT_INFO } from '../lib/content'
-import { Avatar, Empty, Field, LISTING_COLORS, LISTING_STATUS, MemberSelect, Modal, MultiContact, PageHeader, Progress, ScopeFilter, Tabs, DueBadge } from '../lib/ui'
-import { daysUntil, fmtDate, fullName, money } from '../lib/utils'
+import { Letterhead, Avatar, Empty, Field, LISTING_COLORS, LISTING_STATUS, MemberSelect, Modal, MultiContact, PageHeader, Progress, ScopeFilter, Tabs, DueBadge } from '../lib/ui'
+import { daysUntil, fmtDate, fullName, money, printElement } from '../lib/utils'
 import { ShowingForm } from './Showings'
 import { createVisit } from './Visits'
 import DrivePanel from '../components/DrivePanel'
+import DocumentsPanel from '../components/DocumentsPanel'
 
 export default function Listings({ openId, go }: PageProps) {
   const { db, me, mine, upsert } = useStore()
@@ -70,7 +71,7 @@ export default function Listings({ openId, go }: PageProps) {
   )
 }
 
-type Tab = 'infos' | 'fiche' | 'pieces' | 'docs' | 'marketing' | 'visites' | 'horaire' | 'print'
+type Tab = 'infos' | 'fiche' | 'pieces' | 'docs' | 'classeur' | 'marketing' | 'visites' | 'horaire' | 'print'
 
 function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; go: PageProps['go'] }) {
   const { db, upsert, remove } = useStore()
@@ -92,7 +93,7 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
 
   return (
     <Modal title={l.address || 'Nouvelle inscription'} onClose={onClose} wide>
-      <Tabs<Tab> value={tab} onChange={setTab} tabs={[['infos', 'Infos & mandat'], ['fiche', 'Caractéristiques'], ['pieces', 'Pièces'], ['docs', 'Documents'], ['marketing', 'Plan marketing'], ['horaire', 'Horaire visites'], ['visites', `Rétroactions (${showings.length})`], ['print', 'Fiche imprimable']]} />
+      <Tabs<Tab> value={tab} onChange={setTab} tabs={[['infos', 'Infos & mandat'], ['fiche', 'Caractéristiques'], ['pieces', 'Pièces'], ['docs', 'Documents requis'], ['classeur', `Classeur (${l.documents?.length ?? 0})`], ['marketing', 'Plan marketing'], ['horaire', 'Horaire visites'], ['visites', `Rétroactions (${showings.length})`], ['print', 'Fiche imprimable']]} />
 
       {tab === 'infos' && (
         <div className="grid gap-4 lg:grid-cols-3">
@@ -211,6 +212,8 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
         </div>
       )}
 
+      {tab === 'classeur' && <DocumentsPanel title="Classeur de l’inscription" docs={l.documents ?? []} onChange={documents => upsert('listings', { ...l, documents })} />}
+
       {tab === 'marketing' && (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {MARKETING_PLAN.map(g => (
@@ -278,16 +281,10 @@ function PrintSheet({ l }: { l: Listing }) {
   const agent = db.members.find(m => m.id === l.agentId)
   return (
     <div>
-      <button className="btn-primary no-print mb-3" onClick={() => {
-        const w = window.open('', '_blank')
-        const el = document.getElementById('print-sheet')
-        if (!w || !el) return
-        w.document.write(`<html><head><title>Fiche — ${l.address}</title><style>body{font-family:system-ui;padding:24px;color:#0f172a}h1{margin:0}h2{border-bottom:2px solid #7c3aed;padding-bottom:4px;margin-top:20px;font-size:15px;text-transform:uppercase}table{width:100%;border-collapse:collapse}td,th{border:1px solid #e2e8f0;padding:4px 6px;font-size:12px;text-align:left}.g{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:13px}</style></head><body>${el.innerHTML}</body></html>`)
-        w.document.close(); w.print()
-      }}><Printer size={15} /> Imprimer / PDF</button>
+      <button className="btn-primary no-print mb-3" onClick={() => printElement('print-sheet', `Fiche — ${l.address}`)}><Printer size={15} /> Imprimer / PDF</button>
       <div id="print-sheet" className="space-y-3 text-sm">
+        <Letterhead title="Fiche d’inscription" subtitle={l.centris ? `Centris ${l.centris}` : undefined} memberId={agent?.id} />
         <h1 className="text-xl font-bold">{l.address}, {l.city}</h1>
-        <div>{db.agency.name} · {agent?.name} · {agent?.phone} · {agent?.email}</div>
         <h2 className="font-semibold">Coordonnées des vendeurs</h2>
         <div className="g grid grid-cols-2 gap-1">{sellers.map(s => <div key={s!.id}>{fullName(s)} — {s!.phone} — {s!.email}</div>)}</div>
         <h2 className="font-semibold">Propriété</h2>

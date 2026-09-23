@@ -9,8 +9,9 @@ import { Avatar, DueBadge, Empty, Field, ListingSelect, MemberSelect, Modal, Mul
 import { DocsTab, OffersTab, TrackingTab } from './DealTabs'
 import { docProgress, DRIVE_SUBFOLDERS } from '../lib/compliance'
 import DrivePanel from '../components/DrivePanel'
+import DocumentsPanel from '../components/DocumentsPanel'
 
-type DTab = 'process' | 'docs' | 'suivi' | 'offres'
+type DTab = 'process' | 'docs' | 'classeur' | 'suivi' | 'offres'
 import { daysUntil, fillTemplate, fmtDate, fullName, money, TPS, TVQ } from '../lib/utils'
 
 export const workflowOf = (d: Deal) => (d.kind === 'vente' ? SELL_WORKFLOW : BUY_WORKFLOW)
@@ -116,8 +117,9 @@ function DealDetail({ id, onClose, go }: { id: string; onClose: () => void; go: 
     <Modal title={d.title} onClose={onClose} wide>
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-3 lg:col-span-2">
-          <Tabs<DTab> value={tab} onChange={setTab} tabs={[['process', 'Processus'], ['docs', `Documents (${docProgress(d).done}/${docProgress(d).total})`], ['suivi', 'Fiche de suivi'], ['offres', `Offres & modifications (${d.offers?.length ?? 0})`]]} />
+          <Tabs<DTab> value={tab} onChange={setTab} tabs={[['process', 'Processus'], ['docs', `Documents requis (${docProgress(d).done}/${docProgress(d).total})`], ['classeur', `Classeur (${d.documents?.length ?? 0})`], ['suivi', 'Fiche de suivi'], ['offres', `Offres & modifications (${d.offers?.length ?? 0})`]]} />
           {tab === 'docs' && <DocsTab d={d} set={p => upsert('deals', { ...d, ...p })} />}
+          {tab === 'classeur' && <DocumentsPanel title="Classeur du dossier" docs={d.documents ?? []} onChange={documents => upsert('deals', { ...d, documents })} />}
           {tab === 'suivi' && <TrackingTab d={d} set={p => upsert('deals', { ...d, ...p })} />}
           {tab === 'offres' && <OffersTab d={d} set={p => upsert('deals', { ...d, ...p })} />}
           {tab === 'process' && <>

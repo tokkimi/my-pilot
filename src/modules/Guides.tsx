@@ -3,7 +3,7 @@ import { Printer } from 'lucide-react'
 import type { PageProps } from '../App'
 import { useStore } from '../lib/store'
 import { BUYER_GUIDE, SELLER_GUIDE } from '../lib/content'
-import { PageHeader, Tabs } from '../lib/ui'
+import { Letterhead, PageHeader, Tabs } from '../lib/ui'
 
 export default function Guides(_: PageProps) {
   const { db, me } = useStore()
@@ -16,8 +16,8 @@ export default function Guides(_: PageProps) {
         actions={<button className="btn-primary" onClick={() => window.print()}><Printer size={16} /> Imprimer / PDF</button>} />
       <Tabs value={tab} onChange={setTab} tabs={[['acheteur', 'Guide acheteur'], ['vendeur', 'Guide vendeur']]} />
       <article className="card mx-auto max-w-3xl p-8">
-        <div className="mb-6 border-b-4 border-brand-600 pb-4">
-          <div className="text-xs font-semibold uppercase tracking-widest text-brand-600">{db.agency.name}</div>
+        <Letterhead />
+        <div className="mb-6 pb-2">
           <h1 className="mt-1 text-2xl font-bold">DÉMARRONS ENSEMBLE VOTRE PROJET {tab === 'acheteur' ? 'D’ACHAT' : 'DE VENTE'} IMMOBILIER</h1>
           <p className="mt-2 text-sm text-slate-600">
             {tab === 'acheteur'

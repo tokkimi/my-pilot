@@ -145,5 +145,26 @@ export function seed(): DB {
     objections: OBJECTIONS_SEED.map(o => ({ ...o, id: uid() })),
     expenses,
     visits: [],
+    ledger: [
+      { id: uid(), kind: 'revenu', date: d(-20), ownerId: 'm1', category: 'commission', description: 'Rétribution — 32 rue Saint-Louis', counterpart: 'Agence', amount: 21420, tps: 1071, tvq: 2136.65, deductiblePct: 100, paymentMethod: 'Virement', receipts: [], dealId: 'd4', invoiceId: '', createdBy: 'm1' },
+      { id: uid(), kind: 'depense', date: d(-16), ownerId: 'm1', category: 'mise_en_valeur', description: 'Photos professionnelles + drone — rue des Érables', counterpart: 'Photographe', amount: 350, tps: 17.5, tvq: 34.91, deductiblePct: 100, paymentMethod: 'Carte de crédit', receipts: [], dealId: 'd3', invoiceId: '', createdBy: 'm1' },
+      { id: uid(), kind: 'depense', date: d(-12), ownerId: 'm1', category: 'publicite', description: 'Publicité Facebook / Instagram', counterpart: 'Meta', amount: 200, tps: 10, tvq: 19.95, deductiblePct: 100, paymentMethod: 'Carte de crédit', receipts: [], dealId: '', invoiceId: '', createdBy: 'm1' },
+      { id: uid(), kind: 'depense', date: d(-9), ownerId: 'm1', category: 'repas', description: 'Dîner client — Nathalie Bouchard', counterpart: 'Restaurant', amount: 68, tps: 3.4, tvq: 6.78, deductiblePct: 50, paymentMethod: 'Carte de crédit', receipts: [], dealId: '', invoiceId: '', createdBy: 'm1' },
+      { id: uid(), kind: 'depense', date: d(-30), ownerId: 'm1', category: 'cotisations', description: 'Cotisation annuelle OACIQ', counterpart: 'OACIQ', amount: 690, tps: 0, tvq: 0, deductiblePct: 100, paymentMethod: 'Virement', receipts: [], dealId: '', invoiceId: '', createdBy: 'm1' },
+      { id: uid(), kind: 'depense', date: d(-5), ownerId: 'm1', category: 'vehicule', description: 'Essence', counterpart: 'Station-service', amount: 82, tps: 4.1, tvq: 8.18, deductiblePct: 100, paymentMethod: 'Carte de débit', receipts: [], dealId: '', invoiceId: '', createdBy: 'm1' },
+      { id: uid(), kind: 'revenu', date: d(-20), ownerId: 'agence', category: 'redevances', description: 'Part d’agence — 32 rue Saint-Louis', counterpart: 'Transaction', amount: 9180, tps: 459, tvq: 915.71, deductiblePct: 100, paymentMethod: 'Virement', receipts: [], dealId: 'd4', invoiceId: '', createdBy: 'm1' },
+      { id: uid(), kind: 'depense', date: d(-25), ownerId: 'agence', category: 'loyer', description: 'Loyer du bureau', counterpart: 'Propriétaire', amount: 1800, tps: 90, tvq: 179.55, deductiblePct: 100, paymentMethod: 'Prélèvement', receipts: [], dealId: '', invoiceId: '', createdBy: 'm1' },
+      { id: uid(), kind: 'depense', date: d(-15), ownerId: 'agence', category: 'logiciels', description: 'Abonnements logiciels', counterpart: 'Divers', amount: 240, tps: 12, tvq: 23.94, deductiblePct: 100, paymentMethod: 'Carte de crédit', receipts: [], dealId: '', invoiceId: '', createdBy: 'm1' },
+    ],
+    trips: [
+      { id: uid(), ownerId: 'm1', date: d(-16), from: 'Bureau', to: '1245 rue des Érables, Laval', purpose: 'Séance photo', km: 18, dealId: 'd3' },
+      { id: uid(), ownerId: 'm1', date: d(-7), from: 'Bureau', to: 'Laval — RDV Nathalie Bouchard', purpose: 'Évaluation vendeur', km: 24, dealId: '' },
+    ],
+    acctYears: [{ id: `m1-${new Date().getFullYear()}`, ownerId: 'm1', year: new Date().getFullYear(), totalKm: 18000, regime: 'autonome', notes: '' }],
+    invoices: [
+      { id: uid(), kind: 'devis', number: `DEV-${new Date().getFullYear()}-001`, date: d(-3), due: d(27), ownerId: 'agence', contactId: 'c9', client: { name: 'Olivier Fortin', email: 'o.fortin@exemple.com', address: 'Montréal', phone: '514 555-0109' },
+        lines: [{ desc: 'Analyse de rentabilité — 6-plex (comparables, TGA, MRB)', qty: 1, unit: 'forfait', price: 750 }, { desc: 'Visite et relevé des logements', qty: 3, unit: 'heure', price: 95 }],
+        discountPct: 0, taxable: true, notes: 'Merci de votre confiance.', terms: 'Devis valable 30 jours. Paiement à la livraison du rapport.', status: 'envoye', payments: [], sentAt: d(-3), fromQuoteId: '', dealId: '', createdBy: 'm1' },
+    ],
   }
 }

@@ -1,13 +1,16 @@
-import { agencyDb, currentUser, json, loadAgencies, loadUsers, newUser, PLAN_SEATS, publicUser, sameOrigin, seedAgencyDb, trackActivity, USERS, type User } from '../server/platform.js'
+import { agencyDb, currentUser, json, renewCookie, loadAgencies, loadUsers, newUser, PLAN_SEATS, publicUser, sameOrigin, seedAgencyDb, trackActivity, USERS, type User } from '../server/platform.js'
 import { mutate, readJson, StorageUnavailable } from '../server/storage.js'
 import { allowed, revokeGoogle } from '../server/google.js'
 import type { DB, Member } from '../src/lib/types.js'
 
 type AgencyDoc = Omit<DB, 'members' | 'currentUserId'>
-const COLLS = ['contacts', 'activities', 'listings', 'deals', 'tasks', 'events', 'showings', 'partners', 'platforms', 'templates', 'posts', 'objections', 'expenses', 'visits'] as const
+const COLLS = ['contacts', 'activities', 'listings', 'deals', 'tasks', 'events', 'showings', 'partners', 'platforms', 'templates', 'posts', 'objections', 'expenses', 'visits', 'ledger', 'trips', 'acctYears', 'invoices'] as const
+/** Collections comptables privées : chacun voit la sienne; « agence » réservée aux administrateurs. */
+const PRIVATE = ['ledger', 'trips', 'acctYears', 'invoices']
+const canSee = (ownerId: unknown, u: User) => u.role === 'superadmin' || ownerId === u.id || (ownerId === 'agence' && u.role === 'admin')
 type Op = { t: 'upsert'; c: string; item: { id: string } & Record<string, unknown> } | { t: 'remove'; c: string; id: string } | { t: 'patch'; p: Record<string, unknown> }
 
-const toMember = (u: User): Member => { const g = allowed(u); return { id: u.id, name: u.name, role: u.role === 'superadmin' ? 'admin' : u.role, title: u.title, phone: u.phone, email: u.email, color: u.color, split: u.split, licence: u.licence, active: u.active, googleDrive: g.drive, googleCalendar: g.calendar, googleEmail: u.googleEmail ?? '', driveUrl: (u as User & { driveUrl?: string }).driveUrl ?? '' } }
+const toMember = (u: User): Member => { const g = allowed(u); return { id: u.id, name: u.name, role: u.role === 'superadmin' ? 'admin' : u.role, title: u.title, phone: u.phone, email: u.email, color: u.color, split: u.split, licence: u.licence, active: u.active, googleDrive: g.drive, googleCalendar: g.calendar, googleEmail: u.googleEmail ?? '', driveUrl: (u as User & { driveUrl?: string }).driveUrl ?? '', tpsNo: u.tpsNo ?? '', tvqNo: u.tvqNo ?? '' } }
 
 async function context(req: Request) {
   const u = await currentUser(req)
@@ -27,8 +30,9 @@ export async function GET(req: Request) {
     let { data } = await readJson<AgencyDoc>(agencyDb(agencyId))
     if (!data) data = await mutate<AgencyDoc>(agencyDb(agencyId), () => seedAgencyDb(agency.name, {}, false), d => d)
     const members = (await loadUsers()).filter(x => x.agencyId === agencyId).map(toMember)
+    for (const c of PRIVATE) (data as Record<string, unknown>)[c] = (((data as Record<string, unknown>)[c] as { ownerId: string }[] | undefined) ?? []).filter(x => canSee(x.ownerId, u))
     if (u.role !== 'superadmin') await trackActivity(u, false)
-    return json({ db: { ...data, visits: data.visits ?? [], members, currentUserId: u.role === 'superadmin' ? members[0]?.id ?? u.id : u.id }, me: publicUser(u), agency })
+    return json({ db: { ...data, visits: data.visits ?? [], members, currentUserId: u.role === 'superadmin' ? members[0]?.id ?? u.id : u.id }, me: publicUser(u), agency }, 200, { 'set-cookie': renewCookie(u) })
   } catch (e) { return fail(e) }
 }
 
@@ -63,7 +67,7 @@ export async function POST(req: Request) {
               const before = allowed(existing)
               const drive = m.googleDrive ?? before.drive, calendar = m.googleCalendar ?? before.calendar
               if (existing.googleEmail && ((before.drive && !drive) || (before.calendar && !calendar) || m.active === false)) toRevoke.add(existing.id)
-              out = out.map(x => x.id === m.id ? { ...x, name: m.name, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, active: x.id === u.id ? true : m.active, role: x.id === u.id ? x.role : role, googleDrive: drive, googleCalendar: calendar, driveUrl: m.driveUrl ?? '' } : x)
+              out = out.map(x => x.id === m.id ? { ...x, name: m.name, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, active: x.id === u.id ? true : m.active, role: x.id === u.id ? x.role : role, googleDrive: drive, googleCalendar: calendar, driveUrl: m.driveUrl ?? '', tpsNo: m.tpsNo ?? '', tvqNo: m.tvqNo ?? '' } : x)
             } else {
               const email = String(m.email || '').trim().toLowerCase()
               if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errors.push(`Courriel invalide pour ${m.name}.`); continue }
@@ -92,7 +96,11 @@ export async function POST(req: Request) {
             continue
           }
           if (!(COLLS as readonly string[]).includes(o.c)) continue
-          const list = ((d[o.c] as { id: string }[] | undefined) ?? [])
+          const list = ((d[o.c] as { id: string; ownerId?: string }[] | undefined) ?? [])
+          if (PRIVATE.includes(o.c)) {
+            const existing = list.find(x => x.id === (o.t === 'upsert' ? o.item?.id : o.id))
+            if ((existing && !canSee(existing.ownerId, u)) || (o.t === 'upsert' && !canSee(o.item?.ownerId, u))) { errors.push('Accès refusé à cette comptabilité.'); continue }
+          }
           if (o.t === 'upsert') {
             if (!o.item?.id) continue
             d[o.c] = list.some(x => x.id === o.item.id) ? list.map(x => (x.id === o.item.id ? o.item : x)) : [o.item, ...list]

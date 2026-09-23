@@ -2,7 +2,7 @@ import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { currentUser, json, sameOrigin, uid } from '../server/platform.js'
 import { getFile, putFile, removeFile, storageMode, StorageUnavailable } from '../server/storage.js'
 
-const ALLOWED = /^(image\/(jpeg|png|webp|heic|heif)|video\/(mp4|webm|quicktime)|audio\/(webm|ogg|mp4|mpeg|wav|x-m4a|aac)|application\/pdf)(;.*)?$/
+const ALLOWED = /^(image\/(jpeg|png|webp|heic|heif|gif)|video\/(mp4|webm|quicktime)|audio\/(webm|ogg|mp4|mpeg|wav|x-m4a|aac)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet)|vnd\.ms-excel|zip)|text\/(plain|csv))(;.*)?$/
 const MAX = 300 * 1024 * 1024
 
 const allowedPath = (p: string, agencyId: string, superadmin: boolean) =>
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
         onBeforeGenerateToken: async pathname => {
           if (!u) throw new Error('Non connecté')
           if (!allowedPath(pathname, u.agencyId, u.role === 'superadmin')) throw new Error('Chemin refusé')
-          return { allowedContentTypes: ['image/*', 'video/*', 'audio/*', 'application/pdf'], maximumSizeInBytes: MAX, addRandomSuffix: false }
+          return { allowedContentTypes: ['image/*', 'video/*', 'audio/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'text/plain', 'text/csv'], maximumSizeInBytes: MAX, addRandomSuffix: false }
         },
       })
       return json(result)

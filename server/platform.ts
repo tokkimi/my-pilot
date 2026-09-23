@@ -14,6 +14,8 @@ export interface User {
   googleDrive?: boolean; googleCalendar?: boolean
   /** compte Google relié */
   googleEmail?: string; googleScopes?: string; googleConnectedAt?: string
+  /** incrémenté pour invalider toutes les sessions (réinitialisation du mot de passe) */
+  sessionVersion?: number; tpsNo?: string; tvqNo?: string
 }
 export type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
 export interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string }
@@ -48,13 +50,16 @@ export const publicUser = (u: User) => {
 const COOKIE = 'ip_session'
 const secret = () => process.env.SESSION_SECRET || 'dev-secret-change-me'
 const sign = (v: string) => createHmac('sha256', secret()).update(v).digest('base64url')
-export function sessionCookie(userId: string, maxAgeDays = 30) {
-  const payload = Buffer.from(JSON.stringify({ u: userId, e: Date.now() + maxAgeDays * 86400000 })).toString('base64url')
+// Session persistante : l'utilisateur reste connecté jusqu'à ce qu'il clique « Se déconnecter ».
+// Le cookie est renouvelé à chaque ouverture de l'application (400 jours = maximum permis par les navigateurs).
+const SESSION_DAYS = 400
+export function sessionCookie(userId: string, version = 0) {
+  const payload = Buffer.from(JSON.stringify({ u: userId, v: version, e: Date.now() + SESSION_DAYS * 86400000 })).toString('base64url')
   const secure = process.env.VERCEL ? '; Secure' : ''
-  return `${COOKIE}=${payload}.${sign(payload)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeDays * 86400}${secure}`
+  return `${COOKIE}=${payload}.${sign(payload)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}${secure}`
 }
 export const clearCookie = () => `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`
-function readSession(req: Request): string | null {
+function readSession(req: Request): { u: string; v: number } | null {
   const raw = (req.headers.get('cookie') || '').split(/;\s*/).find(c => c.startsWith(COOKIE + '='))?.slice(COOKIE.length + 1)
   if (!raw) return null
   const [payload, sig] = raw.split('.')
@@ -62,19 +67,21 @@ function readSession(req: Request): string | null {
   const expected = sign(payload)
   if (expected.length !== sig.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) return null
   try {
-    const { u, e } = JSON.parse(Buffer.from(payload, 'base64url').toString())
-    return e > Date.now() ? u : null
+    const { u, e, v } = JSON.parse(Buffer.from(payload, 'base64url').toString())
+    return e > Date.now() ? { u, v: v ?? 0 } : null
   } catch { return null }
 }
+/** Cookie renouvelé (session glissante). */
+export const renewCookie = (u: User) => sessionCookie(u.id, u.sessionVersion ?? 0)
 
 export async function loadUsers() { return (await readJson<User[]>(USERS)).data ?? [] }
 export async function loadAgencies() { return (await readJson<Agency[]>(AGENCIES)).data ?? [] }
 
 export async function currentUser(req: Request): Promise<User | null> {
-  const id = readSession(req)
-  if (!id) return null
-  const u = (await loadUsers()).find(x => x.id === id)
-  return u && u.active ? u : null
+  const sess = readSession(req)
+  if (!sess) return null
+  const u = (await loadUsers()).find(x => x.id === sess.u)
+  return u && u.active && (u.sessionVersion ?? 0) === sess.v ? u : null
 }
 
 // ---------- Initialisation : super-admin + agence de test illimitée ----------

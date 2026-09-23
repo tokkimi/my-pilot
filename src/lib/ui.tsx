@@ -39,14 +39,15 @@ export function Modal({ title, onClose, children, wide, footer }: { title: strin
     return () => window.removeEventListener('keydown', k)
   }, [onClose])
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 sm:p-8" onMouseDown={onClose}>
-      <div className={`card w-full ${wide ? 'max-w-5xl' : 'max-w-2xl'} my-auto`} onMouseDown={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-900/40 sm:items-start sm:p-8" onMouseDown={onClose}>
+      <div className={`card w-full ${wide ? 'max-w-5xl' : 'max-w-2xl'} max-sm:min-h-[92vh] max-sm:rounded-b-none max-sm:rounded-t-3xl sm:my-auto`} onMouseDown={e => e.stopPropagation()}>
+        <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" />
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
           <h2 className="font-semibold text-slate-900">{title}</h2>
           <button className="btn-ghost p-1" onClick={onClose} aria-label="Fermer"><X size={18} /></button>
         </div>
-        <div className="max-h-[75vh] overflow-y-auto p-5">{children}</div>
-        {footer && <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3">{footer}</div>}
+        <div className="overflow-y-auto p-4 sm:max-h-[75vh] sm:p-5">{children}</div>
+        {footer && <div className="safe-bottom sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-slate-200 bg-white px-5 py-3">{footer}</div>}
       </div>
     </div>
   )
@@ -185,6 +186,27 @@ export function ScopeFilter() {
           {s === 'moi' ? 'Mes dossiers' : 'Toute l’équipe'}
         </button>
       ))}
+    </div>
+  )
+}
+
+/** En-tête de marque de l'agence (logo, coordonnées) pour les documents imprimables. */
+export function Letterhead({ title, subtitle, memberId }: { title?: string; subtitle?: string; memberId?: string }) {
+  const { db } = useStore()
+  const a = db.agency
+  const m = db.members.find(x => x.id === memberId)
+  const color = a.brandColor || '#6d28d9'
+  return (
+    <div className="mb-4 flex flex-wrap items-start justify-between gap-4 border-b-4 pb-3" style={{ borderColor: color }}>
+      <div className="flex items-center gap-3">
+        {a.logo && <img src={a.logo} alt={a.name} className="h-16 w-auto max-w-[180px] object-contain" />}
+        <div>
+          <div className="text-lg font-bold" style={{ color }}>{a.name}</div>
+          <div className="text-xs text-slate-600">{[a.address || a.office, a.phone, a.email, a.website].filter(Boolean).join(' · ')}</div>
+          {m && <div className="text-xs text-slate-600">{m.name}{m.title ? ` — ${m.title}` : ''}{m.licence ? ` · Permis ${m.licence}` : ''}{m.phone ? ` · ${m.phone}` : ''}</div>}
+        </div>
+      </div>
+      {title && <div className="text-right"><div className="text-xl font-extrabold uppercase tracking-wide" style={{ color }}>{title}</div>{subtitle && <div className="text-sm text-slate-600">{subtitle}</div>}</div>}
     </div>
   )
 }

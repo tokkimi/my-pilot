@@ -1,16 +1,18 @@
 export type ID = string
 
 export type Role = 'admin' | 'courtier' | 'adjointe' | 'agent'
-export interface Agency { name: string; office: string; phone: string; email: string; website: string; linktree: string }
+export interface Agency { name: string; office: string; phone: string; email: string; website: string; linktree: string
+  /** logo (image redimensionnée en data URL) et couleur de marque, repris dans les documents */ logo?: string; brandColor?: string; address?: string; tpsNo?: string; tvqNo?: string; licence?: string }
 export interface Member { id: ID; name: string; role: Role; title: string; phone: string; email: string; color: string; split: number; licence: string; active: boolean
-  /** accès Google autorisés par l'admin de l'agence */ googleDrive?: boolean; googleCalendar?: boolean; googleEmail?: string; driveUrl?: string }
+  /** accès Google autorisés par l'admin de l'agence */ googleDrive?: boolean; googleCalendar?: boolean; googleEmail?: string; driveUrl?: string
+  /** numéros de taxes du courtier (travailleur autonome) */ tpsNo?: string; tvqNo?: string }
 
 export type ContactType = 'vendeur' | 'acheteur' | 'prospect' | 'ancien_client' | 'sphere' | 'investisseur' | 'locataire'
 export type Stage = 'nouveau' | 'contacte' | 'rdv' | 'mandat' | 'actif' | 'sous_offre' | 'conclu' | 'perdu'
 export interface Contact {
   id: ID; type: ContactType; firstName: string; lastName: string; email: string; phone: string; address: string; city: string
   birthday: string; source: string; tags: string[]; ownerId: ID; stage: Stage; budget: number; criteria: string; motivation: string
-  timeline: string; notes: string; createdAt: string; lastContact: string; referredBy: string; closingDate: string; driveUrl?: string
+  timeline: string; notes: string; createdAt: string; lastContact: string; referredBy: string; closingDate: string; driveUrl?: string; documents?: FileDoc[]
 }
 export type ActivityKind = 'appel' | 'courriel' | 'texto' | 'rencontre' | 'note' | 'visite'
 export interface Activity { id: ID; contactId: ID; kind: ActivityKind; date: string; summary: string; memberId: ID }
@@ -23,7 +25,7 @@ export interface Listing {
   bedrooms: number; bathrooms: number; yearBuilt: number; lot: string; livingArea: string; taxesMun: number; taxesScol: number; condoFees: number
   mortgageBalance: number; features: Record<string, string[]>; rooms: Room[]; marketing: Record<string, boolean>; docs: Record<string, boolean>
   schedule: Record<string, string>; visitInfo: Record<string, string>; extInfo: string; intInfo: string; notes: string; photoUrl: string
-  certificatRedo: string; certificatYear: string; createdAt: string; soldPrice: number; soldDate: string; driveUrl?: string; driveFolderId?: string
+  certificatRedo: string; certificatYear: string; createdAt: string; soldPrice: number; soldDate: string; driveUrl?: string; driveFolderId?: string; documents?: FileDoc[]
 }
 
 export type DealKind = 'vente' | 'achat'
@@ -35,6 +37,7 @@ export interface Deal {
   /** type de dossier, situation (condo, compagnie…) et statut de chaque document requis */ docType?: string; situation?: Record<string, boolean>; docs?: Record<string, DocStatus>; docsDue?: string; notices?: DocNotice[]
   /** fiche de suivi (numéros de dossiers, preuves, dates) */ fields?: Record<string, string>
   /** registre des offres et modifications */ offers?: Offer[]
+  documents?: FileDoc[]
 }
 
 export type Priority = 'basse' | 'normale' | 'haute'
@@ -79,10 +82,33 @@ export interface Visit {
   driveFolderId?: string; driveUrl?: string
 }
 
+/** Document classé dans le classeur d'un client, d'une inscription ou d'un dossier. */
+export interface FileDoc { id: ID; media: MediaRef; category: string; providerId: ID; provider: string; date: string; notes: string; addedBy: ID; checklistId?: string }
+
 export type DocStatus = 'inclus' | 'a_venir' | 'na' | 'manquant'
 export interface DocNotice { id: ID; date: string; by: ID; to: ID; due: string; missing: string[]; kind: 'avis' | 'rappel' }
 export type OfferKind = 'PA' | 'CP' | 'MO' | 'AS' | 'Annexe' | 'Avis'
 export interface Offer { id: ID; kind: OfferKind; number: string; date: string; price: number; status: 'en_attente' | 'acceptee' | 'refusee' | 'contre_proposition' | 'expiree'; signedSeller: boolean; ackBuyer: boolean; proof: boolean; notes: string }
+
+// ---------- Comptabilité ----------
+/** « agence » = panneau comptable de l'agence; sinon l'id du membre (panneau personnel). */
+export type Owner = ID | 'agence'
+export interface LedgerEntry {
+  id: ID; kind: 'revenu' | 'depense'; date: string; ownerId: Owner; category: string; description: string; counterpart: string
+  /** montant avant taxes */ amount: number; tps: number; tvq: number; deductiblePct: number; paymentMethod: string
+  receipts: MediaRef[]; dealId: ID; invoiceId: ID; createdBy: ID
+}
+export interface Trip { id: ID; ownerId: Owner; date: string; from: string; to: string; purpose: string; km: number; dealId: ID }
+export interface AcctYear { id: ID; ownerId: Owner; year: number; totalKm: number; regime: 'autonome' | 'societe'; notes: string }
+export interface InvoiceLine { desc: string; qty: number; unit: string; price: number }
+export interface Payment { id: ID; date: string; amount: number; method: string }
+export interface Invoice {
+  id: ID; kind: 'devis' | 'facture'; number: string; date: string; due: string; ownerId: Owner
+  contactId: ID; client: { name: string; email: string; address: string; phone: string }
+  lines: InvoiceLine[]; discountPct: number; taxable: boolean; notes: string; terms: string
+  status: 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'paye' | 'partiel' | 'annule'
+  payments: Payment[]; sentAt: string; fromQuoteId: ID; dealId: ID; createdBy: ID
+}
 
 export interface DB {
   version: number
@@ -91,5 +117,6 @@ export interface DB {
   members: Member[]; contacts: Contact[]; activities: Activity[]; listings: Listing[]; deals: Deal[]; tasks: Task[]
   events: CalEvent[]; showings: Showing[]; partners: Partner[]; platforms: Platform[]; templates: Template[]; posts: Post[]
   objections: Objection[]; expenses: Expense[]; visits: Visit[]
+  ledger: LedgerEntry[]; trips: Trip[]; acctYears: AcctYear[]; invoices: Invoice[]
 }
 export type Coll = Exclude<keyof DB, 'version' | 'agency' | 'currentUserId'>

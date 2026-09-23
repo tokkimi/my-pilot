@@ -1,0 +1,22 @@
+{
+  "name": "ImmoPilot — CRM immobilier",
+  "short_name": "ImmoPilot",
+  "description": "CRM, visites terrain, dossiers et comptabilité pour agences et courtiers immobiliers.",
+  "lang": "fr-CA",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#6d28d9",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Démarrer une visite", "url": "/app#/visits", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Contacts", "url": "/app#/contacts", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

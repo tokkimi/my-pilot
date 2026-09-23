@@ -10,13 +10,15 @@ const FEATURES = [
   { icon: Users, title: 'CRM & prospects', text: 'Vendeurs, acheteurs, anciens clients, sphère : historique, modèles courriel/texto, import CSV.' },
   { icon: KanbanSquare, title: 'Pipeline visuel', text: 'Du premier appel à la vente : glissez-déposez vos prospects, repérez ceux sans suivi.' },
   { icon: Home, title: 'Inscriptions complètes', text: 'Fiche prête pour la saisie Centris : caractéristiques, pièces, documents, horaire de visites.' },
-  { icon: FileCheck2, title: 'Dossiers & délais', text: 'Processus vendeur et acheteur étape par étape, tableau blanc des délais, tâches générées.' },
+  { icon: ClipboardList, title: 'Dossiers, conformité & délais', text: 'Processus vendeur et acheteur, documents requis selon la situation, avis de documents manquants, tableau blanc des délais.' },
   { icon: BookOpen, title: 'SOP & scripts', text: 'Vos procédures en mode présentation : découverte, prix, commission, close des 3 oui, objections.' },
   { icon: Megaphone, title: 'Marketing & réseaux', text: 'Calendrier de contenu, légendes générées, plan de mise en marché par inscription.' },
   { icon: CalendarDays, title: 'Agenda & tâches', text: 'RDV, visites, inspections, notaire : export vers Google Agenda et iCloud.' },
   { icon: Calculator, title: 'Calculateurs', text: 'Bilan du vendeur, rétribution, taxe de bienvenue, hypothèque, rendement de plex.' },
   { icon: Grid3x3, title: 'Toutes vos plateformes', text: 'Centris, JLR, NexOne, eZsign, Rechat… en un clic, avec un guide d’utilisation pour chacune.' },
-  { icon: Wallet, title: 'Commissions & dépenses', text: 'Revenus par courtier, projections, partage, dépenses marketing exportables.' },
+  { icon: Wallet, title: 'Comptabilité & déclarations', text: 'Un panneau pour l’agence et un pour chaque courtier : revenus, dépenses avec justificatifs, TPS/TVQ, kilométrage — le détail pour les déclarations en un clic.' },
+  { icon: FileCheck2, title: 'Devis & factures', text: 'Émettez et envoyez vos devis et factures au logo de l’agence, convertissez un devis en facture, suivez les paiements.' },
+  { icon: Smartphone, title: 'Application mobile', text: 'S’installe sur l’écran d’accueil comme une appli, menu en bulle, session qui reste ouverte jusqu’à la déconnexion.' },
   { icon: ShieldCheck, title: 'Équipe & rôles', text: 'Une agence, plusieurs profils : administrateur, courtiers, adjointes, membres d’équipe.' },
 ]
 const VISIT_STEPS = [

@@ -77,7 +77,7 @@ export async function POST(req: Request) {
       case 'resetPassword': {
         const password = tempPassword()
         const { salt, hash } = hashPassword(password)
-        await mutate<User[]>(USERS, () => [], l => l.map(u => u.id === b.id ? { ...u, salt, hash, failed: 0, lockedUntil: '', mustChangePassword: true } : u))
+        await mutate<User[]>(USERS, () => [], l => l.map(u => u.id === b.id ? { ...u, salt, hash, failed: 0, lockedUntil: '', mustChangePassword: true, sessionVersion: (u.sessionVersion ?? 0) + 1 } : u))
         return json({ password })
       }
       case 'updateLead': {

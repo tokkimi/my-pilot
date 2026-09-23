@@ -5,6 +5,7 @@ import { useStore } from '../lib/store'
 import type { ActivityKind, Contact, ContactType, Stage } from '../lib/types'
 import { newContact, newTask } from '../lib/seed'
 import { createVisit } from './Visits'
+import DocumentsPanel from '../components/DocumentsPanel'
 import { Avatar, CONTACT_TYPES, Empty, Field, MemberSelect, Modal, PageHeader, ScopeFilter, STAGE_COLORS, STAGES, LISTING_STATUS } from '../lib/ui'
 import { download, fmtDate, fullName, money, toCSV, today, uid, fillTemplate } from '../lib/utils'
 
@@ -217,6 +218,7 @@ export function ContactDetail({ id, onClose, onEdit, go }: { id: string; onClose
             </div>
           )}
 
+          <DocumentsPanel title="Classeur du client" docs={c.documents ?? []} onChange={documents => upsert('contacts', { ...c, documents })} />
           <div>
             <div className="mb-2 text-sm font-semibold">Historique</div>
             {acts.length === 0 ? <Empty>Aucune interaction consignée.</Empty> : (
