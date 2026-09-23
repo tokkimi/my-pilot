@@ -1,3 +1,4 @@
+import Connections from './modules/Connections'
 import Operations from './modules/Operations'
 import { tr } from './lib/i18n'
 import { useEffect, useState, type ComponentType } from 'react'
@@ -35,6 +36,7 @@ export type Page = keyof typeof PAGES
 export interface PageProps { go: (p: Page, id?: string) => void; openId?: string }
 
 const PAGES = {
+  connections: { label: 'Connexions', icon: Cloud, C: Connections, group: 'Réseau' },
   operations: { label: 'Pilotage', icon: ClipboardList, C: Operations, group: 'Général' },
   dashboard: { label: 'Tableau de bord', icon: LayoutDashboard, C: Dashboard, group: 'Général' },
   contacts: { label: 'Contacts & prospects', icon: Users, C: Contacts, group: 'CRM' },
@@ -186,5 +188,6 @@ function BubbleNav({ current, go, openMenu }: { current: Page; go: (p: Page) => 
     </nav>
   )
 }
+
 
 
