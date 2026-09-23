@@ -61,7 +61,7 @@ export async function POST(req: Request) {
             if (o.t !== 'upsert') continue
             const m = o.item as unknown as Member & { password?: string }
             const existing = out.find(x => x.id === m.id)
-            const role = (['admin', 'courtier', 'adjointe', 'agent'] as const).includes(m.role as never) ? m.role : 'agent'
+            const role = (['admin', 'courtier', 'adjointe', 'marketing', 'agent'] as const).includes(m.role as never) ? m.role : 'agent'
             if (existing) {
               if (existing.agencyId !== agencyId) continue
               const before = allowed(existing)

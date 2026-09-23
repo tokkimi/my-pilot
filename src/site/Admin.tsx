@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Building2, ExternalLink, Inbox, KeyRound, LogOut, Plus, RefreshCw, Users, Activity, ScanLine } from 'lucide-react'
+import { Building2, ExternalLink, Globe, Inbox, KeyRound, LogOut, Plus, RefreshCw, Users, Activity, ScanLine } from 'lucide-react'
+import SiteActivity, { type PlatformEntry } from './AdminSite'
 
 // Console des propriétaires de la plateforme : statistiques d'utilisation, agences, utilisateurs, demandes du site.
 type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
@@ -7,10 +8,10 @@ interface Agency { id: string; name: string; plan: Plan; seats: number; status: 
 interface User { id: string; email: string; name: string; role: string; agencyId: string; active: boolean; title: string; createdAt: string; lastLoginAt: string; lastSeenAt: string; loginCount: number; mustChangePassword: boolean; googleEmail?: string; googleDrive?: boolean; googleCalendar?: boolean }
 interface Lead { id: string; createdAt: string; name: string; email: string; phone: string; agency: string; role: string; agents: string; interest: string; message: string; status: string; notes: string }
 interface Usage { agencyId: string; contacts: number; listings: number; deals: number; tasks: number; visits: number; visitsDone: number; events: number; media: number }
-interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; storage: string; email?: { configured: boolean; from: string; ok: boolean; domains: { name: string; status: string }[]; error: string }; google: { configured: boolean; picker: boolean; redirect: string } }
+interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; finance?: PlatformEntry[]; storage: string; email?: { configured: boolean; from: string; ok: boolean; domains: { name: string; status: string }[]; error: string }; google: { configured: boolean; picker: boolean; redirect: string } }
 
 const PLAN_LABEL: Record<Plan, string> = { essai: 'Essai (30 j)', solo: 'Courtier solo', equipe: 'Équipe', agence: 'Agence', entreprise: 'Entreprise', illimite: 'Illimité (interne)' }
-const ROLE_LABEL: Record<string, string> = { superadmin: 'Super-admin', admin: 'Admin agence', courtier: 'Courtier', adjointe: 'Adjointe', agent: 'Membre' }
+const ROLE_LABEL: Record<string, string> = { superadmin: 'Fondateur (super-admin)', admin: 'Admin agence', courtier: 'Courtier', adjointe: 'Adjointe', marketing: 'Équipe marketing', agent: 'Membre' }
 const fmt = (s: string) => (s ? new Date(s).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' }) : '—')
 const ago = (s: string) => { if (!s) return 'jamais'; const d = Math.floor((Date.now() - new Date(s).getTime()) / 86400000); return d <= 0 ? 'aujourd’hui' : d === 1 ? 'hier' : `il y a ${d} j` }
 
@@ -25,7 +26,7 @@ async function api(body?: object) {
 export default function Admin() {
   const [data, setData] = useState<Data | null>(null)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'overview' | 'agencies' | 'users' | 'leads'>('overview')
+  const [tab, setTab] = useState<'overview' | 'site' | 'agencies' | 'users' | 'leads'>('overview')
   const [secret, setSecret] = useState<{ title: string; email: string; password: string } | null>(null)
   const [pw, setPw] = useState<{ current: string; next: string; msg: string } | null>(null)
   const changePw = async () => {
@@ -47,8 +48,8 @@ export default function Admin() {
       <header className="bg-ink text-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
           <a href="/" className="font-bold">🏡 ImmoPilot</a><span className="badge bg-brand-600 text-white">Console propriétaires</span>
-          <nav className="ml-4 flex gap-1 text-sm">
-            {([['overview', 'Vue d’ensemble', Activity], ['agencies', 'Agences', Building2], ['users', 'Utilisateurs', Users], ['leads', `Demandes${newLeads ? ` (${newLeads})` : ''}`, Inbox]] as const).map(([k, l, I]) => (
+          <nav className="flex max-w-full gap-1 overflow-x-auto text-sm sm:ml-4">
+            {([['overview', 'Vue d’ensemble', Activity], ['site', 'Activité du site', Globe], ['agencies', 'Agences', Building2], ['users', 'Utilisateurs', Users], ['leads', `Demandes${newLeads ? ` (${newLeads})` : ''}`, Inbox]] as const).map(([k, l, I]) => (
               <button key={k} onClick={() => setTab(k)} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 ${tab === k ? 'bg-white/15' : 'hover:bg-white/10'}`}><I size={15} />{l}</button>
             ))}
           </nav>
@@ -61,6 +62,7 @@ export default function Admin() {
       </header>
       <main className="mx-auto max-w-7xl p-4 sm:p-6">
         {tab === 'overview' && <Overview data={data} />}
+        {tab === 'site' && <SiteActivity data={data} run={run} onSecret={setSecret} />}
         {tab === 'agencies' && <Agencies data={data} run={run} onSecret={setSecret} />}
         {tab === 'users' && <UsersTab data={data} run={run} onSecret={setSecret} />}
         {tab === 'leads' && <Leads data={data} run={run} />}

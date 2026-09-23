@@ -12,7 +12,7 @@ import DrivePanel from '../components/DrivePanel'
 import DocumentsPanel from '../components/DocumentsPanel'
 
 type DTab = 'process' | 'docs' | 'classeur' | 'suivi' | 'offres'
-import { daysUntil, fillTemplate, fmtDate, fullName, money, TPS, TVQ } from '../lib/utils'
+import { daysUntil, fillTemplate, fmtDate, fullName, money, TPS, TVQ, toFriendly } from '../lib/utils'
 
 export const workflowOf = (d: Deal) => (d.kind === 'vente' ? SELL_WORKFLOW : BUY_WORKFLOW)
 export function dealProgress(d: Deal) {
@@ -108,10 +108,10 @@ function DealDetail({ id, onClose, go }: { id: string; onClose: () => void; go: 
     alert(`${n} échéance(s) ajoutée(s) au calendrier`)
   }
   const recap = db.templates.find(t => t.name.startsWith('Récapitulatif des délais'))
-  const recapBody = recap ? fillTemplate(recap.body, {
+  const recapBody = recap ? toFriendly(fillTemplate(recap.body, {
     prenom: clients.map(c => c!.firstName).join(' et '), adresse: listing?.address ?? d.title, courtier: me.name,
     inspection: fmtDate(d.dates.inspection), financement: fmtDate(d.dates.financement), acte: fmtDate(d.dates.acte), occupation: fmtDate(d.dates.occupation),
-  }) : ''
+  })) : ''
 
   return (
     <Modal title={d.title} onClose={onClose} wide>

@@ -30,7 +30,7 @@ export const PARTNER_CATS: Record<PartnerCat, string> = {
   notaire: 'Notaire', arpenteur: 'Arpenteur-géomètre', inspecteur: 'Inspecteur', hypothecaire: 'Courtier hypothécaire', photographe: 'Photographe / drone', home_staging: 'Home staging',
   entrepreneur: 'Entrepreneur', demenageur: 'Déménageur', evaluateur: 'Évaluateur agréé', avocat: 'Avocat / fiscaliste', autre: 'Autre',
 }
-export const ROLES = { admin: 'Administrateur', courtier: 'Courtier', adjointe: 'Adjointe', agent: 'Membre d’équipe' }
+export const ROLES = { admin: 'Administrateur', courtier: 'Courtier', adjointe: 'Adjointe', marketing: 'Équipe marketing', agent: 'Membre d’équipe' }
 
 export function Modal({ title, onClose, children, wide, footer }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; footer?: ReactNode }) {
   useEffect(() => {

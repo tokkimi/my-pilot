@@ -1,3 +1,4 @@
+import SendTemplate from '../components/SendTemplate'
 import { useMemo, useRef, useState } from 'react'
 import { Download, Mail, MessageSquare, Phone, Plus, Search, Trash2, Upload, Pencil } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -7,7 +8,7 @@ import { newContact, newTask } from '../lib/seed'
 import { createVisit } from './Visits'
 import DocumentsPanel from '../components/DocumentsPanel'
 import { Avatar, CONTACT_TYPES, Empty, Field, MemberSelect, Modal, PageHeader, ScopeFilter, STAGE_COLORS, STAGES, LISTING_STATUS } from '../lib/ui'
-import { download, fmtDate, fullName, money, toCSV, today, uid, fillTemplate } from '../lib/utils'
+import { download, fmtDate, fullName, money, toCSV, today, uid } from '../lib/utils'
 
 export default function Contacts({ openId, go }: PageProps) {
   const { db, mine, upsert } = useStore()
@@ -140,8 +141,6 @@ export function ContactDetail({ id, onClose, onEdit, go }: { id: string; onClose
   const listings = db.listings.filter(l => l.sellerIds.includes(id))
   const deals = db.deals.filter(d => d.contactIds.includes(id))
   const tasks = db.tasks.filter(t => t.contactId === id && !t.done)
-  const tpl = db.templates.find(t => t.id === tplId)
-  const filled = tpl ? fillTemplate(tpl.body, { prenom: c.firstName, nom: c.lastName, courtier: me.name, annee: String(new Date().getFullYear() + 1), adresse: c.address, ville: c.city }) : ''
 
   const log = () => {
     if (!summary.trim()) return
@@ -194,20 +193,11 @@ export function ContactDetail({ id, onClose, onEdit, go }: { id: string; onClose
 
           <div className="rounded-lg border border-slate-200 p-3">
             <div className="mb-2 text-sm font-semibold">Envoyer un modèle</div>
-            <select className="input" value={tplId} onChange={e => setTplId(e.target.value)}>
-              <option value="">— Choisir un modèle —</option>
+            <select className="input" value="" onChange={e => setTplId(e.target.value)}>
+              <option value="">— Choisir un modèle (courriel, texto) —</option>
               {db.templates.map(t => <option key={t.id} value={t.id}>{t.channel === 'texto' ? '💬' : t.channel === 'courriel' ? '✉️' : '📣'} {t.name}</option>)}
             </select>
-            {tpl && (
-              <div className="mt-2 space-y-2">
-                <textarea className="input min-h-28 text-sm" readOnly value={filled} />
-                <div className="flex gap-2">
-                  {tpl.channel === 'courriel' && c.email && <a className="btn-primary" href={`mailto:${c.email}?subject=${encodeURIComponent(fillTemplate(tpl.subject, { adresse: c.address, prenom: c.firstName }))}&body=${encodeURIComponent(filled)}`}>Ouvrir dans le courriel</a>}
-                  {tpl.channel === 'texto' && c.phone && <a className="btn-primary" href={`sms:${c.phone}?&body=${encodeURIComponent(filled)}`}>Ouvrir en texto</a>}
-                  <button className="btn-outline" onClick={() => navigator.clipboard?.writeText(filled)}>Copier</button>
-                </div>
-              </div>
-            )}
+            {tplId && <SendTemplate template={db.templates.find(t => t.id === tplId)} contactId={c.id} onClose={() => setTplId('')} />}
           </div>
 
           {(listings.length > 0 || deals.length > 0 || tasks.length > 0) && (

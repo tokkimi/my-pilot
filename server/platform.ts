@@ -4,7 +4,7 @@ import { mutate, readJson, writeJson } from './storage.js'
 import { seed } from '../src/lib/seed.js'
 import type { DB } from '../src/lib/types.js'
 
-export type PlatformRole = 'superadmin' | 'admin' | 'courtier' | 'adjointe' | 'agent'
+export type PlatformRole = 'superadmin' | 'admin' | 'courtier' | 'adjointe' | 'marketing' | 'agent'
 export interface User {
   id: string; email: string; name: string; role: PlatformRole; agencyId: string; active: boolean
   title: string; phone: string; color: string; split: number; licence: string
@@ -18,7 +18,7 @@ export interface User {
   sessionVersion?: number; tpsNo?: string; tvqNo?: string
 }
 export type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
-export interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string }
+export interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string; monthlyFee?: number }
 export interface Lead { id: string; createdAt: string; name: string; email: string; phone: string; agency: string; role: string; agents: string; interest: string; message: string; status: 'nouveau' | 'contacte' | 'converti' | 'archive'; notes: string }
 export interface Activity { days: Record<string, { logins: number; active: string[] }> }
 
@@ -26,6 +26,9 @@ export const USERS = 'platform/users.json'
 export const AGENCIES = 'platform/agencies.json'
 export const LEADS = 'platform/leads.json'
 export const ACTIVITY = 'platform/activity.json'
+export const FINANCE = 'platform/finance.json'
+/** Écriture comptable de la plateforme ImmoPilot (abonnements, formations, frais d'exploitation) */
+export interface PlatformEntry { id: string; date: string; kind: 'revenu' | 'depense'; category: string; description: string; amount: number; tps: number; tvq: number; agencyId: string; reference: string; createdAt: string }
 export const agencyDb = (id: string) => `agencies/${id}/db.json`
 
 export const uid = (p = '') => p + randomBytes(9).toString('base64url')

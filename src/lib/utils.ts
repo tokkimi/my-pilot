@@ -95,3 +95,13 @@ export function printElement(id: string, title: string) {
   w.document.close()
   w.onload = () => setTimeout(() => w.print(), 300)
 }
+
+// Champs automatiques des modèles : stockés sous forme {cle}, affichés aux utilisateurs sous forme [Libellé]
+export const VAR_LABELS: Record<string, string> = {
+  prenom: 'Prénom du client', nom: 'Nom du client', adresse: 'Adresse', ville: 'Ville', prix: 'Prix', lien: 'Lien de la fiche',
+  courtier: 'Votre nom', inspection: 'Date d’inspection', financement: 'Date de financement', acte: 'Date de l’acte',
+  occupation: 'Date d’occupation', date: 'Date du jour', annee: 'Année', chambres: 'Nombre de chambres', sdb: 'Salles de bain',
+}
+export const toFriendly = (s: string) => s.replace(/\{(\w+)\}/g, (m, k) => (VAR_LABELS[k] ? `[${VAR_LABELS[k]}]` : m))
+export const fromFriendly = (s: string) => Object.entries(VAR_LABELS).reduce((t, [k, l]) => t.split(`[${l}]`).join(`{${k}}`), s)
+export const unfilledFields = (s: string) => [...new Set(Object.values(VAR_LABELS).filter(l => s.includes(`[${l}]`)))]

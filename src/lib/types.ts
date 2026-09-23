@@ -1,6 +1,6 @@
 export type ID = string
 
-export type Role = 'admin' | 'courtier' | 'adjointe' | 'agent'
+export type Role = 'admin' | 'courtier' | 'adjointe' | 'marketing' | 'agent'
 export interface Agency { name: string; office: string; phone: string; email: string; website: string; linktree: string
   /** logo (image redimensionnée en data URL) et couleur de marque, repris dans les documents */ logo?: string; brandColor?: string; address?: string; tpsNo?: string; tvqNo?: string; licence?: string }
 export interface Member { id: ID; name: string; role: Role; title: string; phone: string; email: string; color: string; split: number; licence: string; active: boolean

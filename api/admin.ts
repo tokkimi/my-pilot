@@ -1,6 +1,6 @@
 // Console des propriétaires de la plateforme (super-administrateurs).
 import { randomBytes } from 'node:crypto'
-import { ACTIVITY, AGENCIES, agencyDb, currentUser, hashPassword, json, LEADS, loadAgencies, loadUsers, newUser, PLAN_SEATS, publicUser, sameOrigin, seedAgencyDb, uid, USERS, type Activity, type Agency, type Lead, type Plan, type User } from '../server/platform.js'
+import { ACTIVITY, AGENCIES, FINANCE, type PlatformEntry, agencyDb, currentUser, hashPassword, json, LEADS, loadAgencies, loadUsers, newUser, PLAN_SEATS, publicUser, sameOrigin, seedAgencyDb, uid, USERS, type Activity, type Agency, type Lead, type Plan, type User } from '../server/platform.js'
 import { mutate, readJson, storageMode, StorageUnavailable, writeJson } from '../server/storage.js'
 import type { DB } from '../src/lib/types.js'
 import { googleConfigured } from '../server/google.js'
@@ -18,6 +18,7 @@ export async function GET(req: Request) {
     const [users, agencies, leads, activity] = await Promise.all([
       loadUsers(), loadAgencies(), readJson<Lead[]>(LEADS).then(r => r.data ?? []), readJson<Activity>(ACTIVITY).then(r => r.data ?? { days: {} }),
     ])
+    const finance = (await readJson<PlatformEntry[]>(FINANCE)).data ?? []
     const usage = await Promise.all(agencies.map(async a => {
       const d = (await readJson<Partial<DB>>(agencyDb(a.id))).data ?? {}
       const visits = d.visits ?? []
@@ -29,7 +30,7 @@ export async function GET(req: Request) {
         media: visits.reduce((s, v) => s + (v.rooms ?? []).reduce((t, r) => t + (r.media?.length ?? 0), 0) + (v.voiceNotes?.length ?? 0) + (v.photos?.length ?? 0), 0),
       }
     }))
-    return json({ users: users.map(publicUser), agencies, leads, activity, usage, storage: storageMode(), email: await emailStatus(), google: { configured: googleConfigured(), picker: !!(process.env.GOOGLE_API_KEY && process.env.GOOGLE_APP_ID), redirect: `${new URL(req.url).origin}/api/google-callback` } })
+    return json({ users: users.map(publicUser), agencies, leads, activity, usage, finance, storage: storageMode(), email: await emailStatus(), google: { configured: googleConfigured(), picker: !!(process.env.GOOGLE_API_KEY && process.env.GOOGLE_APP_ID), redirect: `${new URL(req.url).origin}/api/google-callback` } })
   } catch (e) { return fail(e) }
 }
 
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
         return json({ agency, password })
       }
       case 'updateAgency': {
-        const out = await mutate<Agency[]>(AGENCIES, () => [], l => l.map(a => a.id === b.id ? { ...a, ...pick(b.patch, ['name', 'plan', 'seats', 'status', 'contactEmail', 'notes', 'trialEnds']) } : a))
+        const out = await mutate<Agency[]>(AGENCIES, () => [], l => l.map(a => a.id === b.id ? { ...a, ...pick(b.patch, ['name', 'plan', 'seats', 'status', 'contactEmail', 'notes', 'trialEnds', 'monthlyFee']) } : a))
         return json({ agency: out.find(a => a.id === b.id) })
       }
       case 'createUser': {
@@ -83,6 +84,35 @@ export async function POST(req: Request) {
       case 'updateLead': {
         await mutate<Lead[]>(LEADS, () => [], l => l.map(x => x.id === b.id ? { ...x, ...pick(b.patch, ['status', 'notes']) } : x))
         return json({ ok: true })
+      }
+      case 'saveEntry': {
+        const e = b.entry as PlatformEntry
+        if (!e?.id || !/^\d{4}-\d{2}-\d{2}$/.test(e.date) || !['revenu', 'depense'].includes(e.kind)) return json({ error: 'Écriture invalide.' }, 400)
+        const clean: PlatformEntry = { id: String(e.id), date: e.date, kind: e.kind, category: String(e.category || ''), description: String(e.description || ''), amount: +e.amount || 0, tps: +e.tps || 0, tvq: +e.tvq || 0, agencyId: String(e.agencyId || ''), reference: String(e.reference || ''), createdAt: e.createdAt || new Date().toISOString() }
+        await mutate<PlatformEntry[]>(FINANCE, () => [], l => [...l.filter(x => x.id !== clean.id), clean])
+        return json({ ok: true })
+      }
+      case 'deleteEntry': {
+        await mutate<PlatformEntry[]>(FINANCE, () => [], l => l.filter(x => x.id !== b.id))
+        return json({ ok: true })
+      }
+      case 'billMonth': {
+        // Inscrit les abonnements du mois (une écriture par agence payante, sans doublon)
+        const month = /^\d{4}-\d{2}$/.test(b.month) ? String(b.month) : new Date().toISOString().slice(0, 7)
+        const paying = (await loadAgencies()).filter(a => a.status === 'actif' && (a.monthlyFee ?? 0) > 0 && a.plan !== 'essai' && a.plan !== 'illimite')
+        let added = 0
+        await mutate<PlatformEntry[]>(FINANCE, () => [], l => {
+          const out = [...l]
+          for (const a of paying) {
+            const id = `abo-${a.id}-${month}`
+            if (out.some(x => x.id === id)) continue
+            const amount = Math.round(a.monthlyFee! * 100) / 100
+            out.push({ id, date: `${month}-01`, kind: 'revenu', category: 'abonnement', description: `Abonnement ${a.plan} — ${a.name} (${month})`, amount, tps: Math.round(amount * 5) / 100, tvq: Math.round(amount * 9.975) / 100, agencyId: a.id, reference: id.toUpperCase(), createdAt: new Date().toISOString() })
+            added++
+          }
+          return out
+        })
+        return json({ added })
       }
       case 'deleteLead': {
         await mutate<Lead[]>(LEADS, () => [], l => l.filter(x => x.id !== b.id))

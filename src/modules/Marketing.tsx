@@ -5,7 +5,7 @@ import { useStore } from '../lib/store'
 import type { Post } from '../lib/types'
 import { newPost } from '../lib/seed'
 import { Empty, Field, ListingSelect, Modal, PageHeader } from '../lib/ui'
-import { fillTemplate, fmtDate, money, copy } from '../lib/utils'
+import { fillTemplate, fmtDate, money, copy, toFriendly } from '../lib/utils'
 
 const NETWORKS = ['Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'YouTube', 'Google Business', 'Infolettre']
 const STATUS: Record<Post['status'], [string, string]> = { idee: ['Idées', 'bg-slate-100'], planifie: ['Planifiés', 'bg-amber-50'], publie: ['Publiés', 'bg-emerald-50'] }
@@ -63,7 +63,7 @@ function PostForm({ post, onClose }: { post: Post; onClose: () => void }) {
     const l = db.listings.find(x => x.id === p.listingId)
     const tpl = db.templates.find(t => t.channel === 'reseaux' && t.name.toLowerCase().includes(p.kind === 'Vendu' ? 'vendu' : 'nouveauté'))
     if (!tpl) return
-    set('caption', fillTemplate(tpl.body, { adresse: l?.address ?? '', ville: l?.city.replace(/\s/g, '') ?? '', chambres: String(l?.bedrooms ?? ''), sdb: String(l?.bathrooms ?? ''), prix: l ? money(l.price) : '', courtier: me.name }))
+    set('caption', toFriendly(fillTemplate(tpl.body, { adresse: l?.address ?? '', ville: l?.city.replace(/\s/g, '') ?? '', chambres: String(l?.bedrooms ?? ''), sdb: String(l?.bathrooms ?? ''), prix: l ? money(l.price) : '', courtier: me.name })))
   }
   return (
     <Modal title={exists ? 'Modifier la publication' : 'Nouvelle publication'} onClose={onClose}
