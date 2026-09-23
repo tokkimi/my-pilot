@@ -116,7 +116,7 @@ body { background: radial-gradient(ellipse at 0% 10%,#7da6c5 0,transparent 46%),
 
 /* Mobile feature cards form one swipeable row rather than a long column. */
 @media(max-width:767px) {
-  #fonctionnalites>div>.grid {
+  #fonctionnalites>div>.grid, #marketing>.grid {
     display:grid;
     grid-template-columns:none;
     grid-auto-flow:column;
@@ -130,5 +130,6 @@ body { background: radial-gradient(ellipse at 0% 10%,#7da6c5 0,transparent 46%),
     scrollbar-width:thin;
     scrollbar-color:#526e8980 transparent;
   }
-  #fonctionnalites>div>.grid>.card { scroll-snap-align:start; min-width:0; }
+  #fonctionnalites>div>.grid>.card, #marketing>.grid>.card { scroll-snap-align:start; min-width:0; }
 }
+
