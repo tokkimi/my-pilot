@@ -1,6 +1,7 @@
-import type { Contact, DB, Deal, Listing, Task, CalEvent, Showing, Partner, Expense, Post } from './types'
-import { OBJECTIONS_SEED, PLATFORMS_SEED, TEMPLATES_SEED } from './content'
-import { addDays, isoDate, isoDateTime, uid } from './utils'
+import type { Contact, DB, Deal, Listing, Task, CalEvent, Showing, Partner, Expense, Post } from './types.js'
+import { OBJECTIONS_SEED, TEMPLATES_SEED } from './content.js'
+import { PLATFORM_CATALOG } from './platforms.js'
+import { addDays, isoDate, isoDateTime, uid } from './utils.js'
 
 export const newContact = (ownerId: string, p: Partial<Contact> = {}): Contact => ({
   id: uid(), type: 'prospect', firstName: '', lastName: '', email: '', phone: '', address: '', city: '', birthday: '', source: '', tags: [],
@@ -135,7 +136,7 @@ export function seed(): DB {
     events,
     showings,
     partners,
-    platforms: PLATFORMS_SEED.map(p => ({ ...p, id: uid(), account: '', notes: '' })),
+    platforms: PLATFORM_CATALOG.map(p => ({ key: p.key, name: p.name, url: p.url, category: p.category, usage: p.usage, id: uid(), account: '', notes: '' })),
     templates: TEMPLATES_SEED.map(p => ({ ...p, id: uid(), channel: p.channel as 'courriel' | 'texto' | 'reseaux' })),
     posts: [
       newPost({ date: d(1), caption: 'Nouveauté à vendre — 1245 rue des Érables, Laval', listingId: 'l1', status: 'planifie', format: 'reel' }),
@@ -143,5 +144,6 @@ export function seed(): DB {
     ],
     objections: OBJECTIONS_SEED.map(o => ({ ...o, id: uid() })),
     expenses,
+    visits: [],
   }
 }

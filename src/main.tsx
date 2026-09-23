@@ -1,13 +1,47 @@
-import { StrictMode } from 'react'
+import { StrictMode, Suspense, lazy, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App'
-import { StoreProvider } from './lib/store'
+import { StoreProvider, type Session } from './lib/store'
+import { setMediaContext } from './lib/media'
+import type { DB } from './lib/types'
+import Landing from './site/Landing'
+
+const App = lazy(() => import('./App'))
+const Admin = lazy(() => import('./site/Admin'))
+const Login = lazy(() => import('./site/Login'))
+
+const Loading = ({ text = 'Chargement…' }: { text?: string }) => <div className="flex min-h-screen items-center justify-center text-slate-500">{text}</div>
+
+function RemoteApp() {
+  const [state, setState] = useState<{ db: DB; session: Session; agency?: string } | { error: string } | null>(null)
+  useEffect(() => {
+    ;(async () => {
+      const me = await fetch('/api/auth').then(r => r.json()).catch(() => null)
+      if (!me?.user) { location.href = '/connexion'; return }
+      const agency = new URLSearchParams(location.search).get('agency') ?? undefined
+      if (me.user.role === 'superadmin' && !agency) { location.href = '/admin'; return }
+      const r = await fetch('/api/data' + (agency ? `?agency=${encodeURIComponent(agency)}` : ''))
+      const b = await r.json().catch(() => ({}))
+      if (!r.ok) { setState({ error: b.error || 'Impossible de charger l’espace.' }); return }
+      setMediaContext(me.storage, b.agency.id)
+      setState({ db: b.db, session: { user: b.me, agency: b.agency }, agency })
+    })()
+  }, [])
+  if (!state) return <Loading text="Ouverture de votre espace…" />
+  if ('error' in state) return <div className="flex min-h-screen items-center justify-center p-6"><div className="card max-w-md p-6 text-center"><p className="text-rose-600">{state.error}</p><a className="btn-primary mt-4" href="/connexion">Retour</a></div></div>
+  return <StoreProvider mode="remote" initial={state.db} session={state.session} agencyParam={state.agency}><App /></StoreProvider>
+}
+
+const path = location.pathname.replace(/\/+$/, '') || '/'
+const page =
+  path === '/demo' ? <StoreProvider mode="local"><App /></StoreProvider>
+  : path === '/app' ? <RemoteApp />
+  : path === '/connexion' ? <Login />
+  : path === '/admin' ? <Admin />
+  : <Landing />
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <StoreProvider>
-      <App />
-    </StoreProvider>
+    <Suspense fallback={<Loading />}>{page}</Suspense>
   </StrictMode>,
 )

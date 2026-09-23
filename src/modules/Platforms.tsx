@@ -1,17 +1,19 @@
 import { useState } from 'react'
-import { ExternalLink, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { BookOpen, ExternalLink, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { guideFor, logoUrl, type PlatformGuide } from '../lib/platforms'
 import type { PageProps } from '../App'
 import { useStore } from '../lib/store'
 import type { Platform } from '../lib/types'
 import { Field, Modal, PageHeader } from '../lib/ui'
 import { uid } from '../lib/utils'
 
-const favicon = (url: string) => { try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64` } catch { return '' } }
+const favicon = (url: string) => { try { return logoUrl(new URL(url).hostname, 64) } catch { return '' } }
 
 export default function Platforms(_: PageProps) {
   const { db } = useStore()
   const [q, setQ] = useState('')
   const [editing, setEditing] = useState<Platform | null>(null)
+  const [guide, setGuide] = useState<{ g: PlatformGuide; p: Platform } | null>(null)
   const list = db.platforms.filter(p => !q || `${p.name} ${p.usage} ${p.category} ${p.account}`.toLowerCase().includes(q.toLowerCase()))
   const cats = [...new Set(list.map(p => p.category))]
   return (
@@ -40,6 +42,7 @@ export default function Platforms(_: PageProps) {
                     {p.url && <ExternalLink size={12} className="shrink-0 text-slate-400" />}
                   </div>
                   <div className="text-xs text-slate-500">{p.usage}</div>
+                  {guideFor(p) && <button className="mt-1 flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline" onClick={() => setGuide({ g: guideFor(p)!, p })}><BookOpen size={12} /> Guide d’utilisation</button>}
                   {p.account && <div className="mt-1 truncate text-xs"><span className="text-slate-400">Compte :</span> {p.account}</div>}
                 </div>
                 <button className="btn-ghost p-1 opacity-0 group-hover:opacity-100" onClick={() => setEditing(p)}><Pencil size={14} /></button>
@@ -49,7 +52,34 @@ export default function Platforms(_: PageProps) {
         </section>
       ))}
       {editing && <PlatformForm p={editing} onClose={() => setEditing(null)} />}
+      {guide && <GuideModal g={guide.g} p={guide.p} onClose={() => setGuide(null)} onEdit={() => { setEditing(guide.p); setGuide(null) }} />}
     </div>
+  )
+}
+
+const LEVEL: Record<PlatformGuide['integration']['level'], [string, string]> = { lien: ['Accès en un clic', 'bg-slate-100 text-slate-700'], export: ['Import / export CSV', 'bg-sky-100 text-sky-700'], api: ['Intégration API', 'bg-emerald-100 text-emerald-700'] }
+
+function GuideModal({ g, p, onClose, onEdit }: { g: PlatformGuide; p: Platform; onClose: () => void; onEdit: () => void }) {
+  return (
+    <Modal title={`Guide — ${g.name}`} onClose={onClose} footer={<>
+      <button className="btn-ghost mr-auto" onClick={onEdit}><Pencil size={14} /> Modifier le compte / les notes</button>
+      {(p.url || g.url) && <a className="btn-primary" href={p.url || g.url} target="_blank" rel="noreferrer"><ExternalLink size={15} /> Ouvrir {g.name}</a>}
+    </>}>
+      <div className="space-y-4 text-sm">
+        <div className="flex items-center gap-3">
+          {g.domain && <img src={logoUrl(g.domain)} alt="" className="h-10 w-10 rounded" onError={e => { e.currentTarget.style.display = 'none' }} />}
+          <div><div className="font-semibold">{g.category}</div><span className={`badge ${LEVEL[g.integration.level][1]}`}>{LEVEL[g.integration.level][0]}</span></div>
+        </div>
+        <div><h3 className="mb-1 font-semibold">C’est quoi?</h3><p className="text-slate-700">{g.what}</p></div>
+        <div><h3 className="mb-1 font-semibold">Quand l’utiliser dans nos processus</h3><ul className="list-disc space-y-1 pl-5 text-slate-700">{g.when.map(x => <li key={x}>{x}</li>)}</ul></div>
+        <div><h3 className="mb-1 font-semibold">Comment faire</h3><ol className="list-decimal space-y-1 pl-5 text-slate-700">{g.how.map(x => <li key={x}>{x}</li>)}</ol></div>
+        {g.tips && <div className="rounded-lg bg-amber-50 p-3 text-amber-900">💡 {g.tips.join(' ')}</div>}
+        <div className="rounded-lg bg-brand-50 p-3 text-brand-700"><b>Avec ImmoPilot :</b> {g.integration.text}</div>
+        {p.account && <p className="text-slate-600">Compte utilisé : <b>{p.account}</b></p>}
+        {p.notes && <p className="whitespace-pre-wrap text-slate-600">{p.notes}</p>}
+        {g.source && <p className="text-xs text-slate-400">Source : <a className="underline" href={g.source} target="_blank" rel="noreferrer">{g.source}</a></p>}
+      </div>
+    </Modal>
   )
 }
 

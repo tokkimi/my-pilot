@@ -1,7 +1,7 @@
 import { useEffect, useState, type ComponentType } from 'react'
 import {
   LayoutDashboard, Users, KanbanSquare, Home, FileCheck2, CheckSquare, CalendarDays, Eye, Megaphone, Mail, BookOpen, Calculator,
-  FileText, Grid3x3, Handshake, UserCog, Wallet, Settings, Menu, X, Search,
+  FileText, Grid3x3, Handshake, UserCog, Wallet, Settings, Menu, X, Search, ScanLine, LogOut, Cloud, CloudOff, Loader2, KeyRound, Shield,
 } from 'lucide-react'
 import { useStore } from './lib/store'
 import { Avatar, ROLES } from './lib/ui'
@@ -24,6 +24,8 @@ import Team from './modules/Team'
 import Finance from './modules/Finance'
 import SettingsPage from './modules/Settings'
 import GlobalSearch from './modules/GlobalSearch'
+import Visits from './modules/Visits'
+import { AccountModal } from './modules/Account'
 
 export type Page = keyof typeof PAGES
 export interface PageProps { go: (p: Page, id?: string) => void; openId?: string }
@@ -34,6 +36,7 @@ const PAGES = {
   pipeline: { label: 'Pipeline', icon: KanbanSquare, C: Pipeline, group: 'CRM' },
   tasks: { label: 'Tâches', icon: CheckSquare, C: Tasks, group: 'CRM' },
   calendar: { label: 'Calendrier', icon: CalendarDays, C: CalendarPage, group: 'CRM' },
+  visits: { label: 'Visites terrain', icon: ScanLine, C: Visits, group: 'Immobilier' },
   listings: { label: 'Inscriptions', icon: Home, C: Listings, group: 'Immobilier' },
   deals: { label: 'Dossiers & transactions', icon: FileCheck2, C: Deals, group: 'Immobilier' },
   showings: { label: 'Visites & rétroactions', icon: Eye, C: Showings, group: 'Immobilier' },
@@ -55,8 +58,9 @@ function readHash(): { page: Page; id?: string } {
 }
 
 export default function App() {
-  const { db, me, patch } = useStore()
+  const { db, me, patch, mode, session, sync, syncError } = useStore()
   const [route, setRoute] = useState(readHash)
+  const [account, setAccount] = useState(!!session?.user.mustChangePassword)
   const [nav, setNav] = useState(false)
   const [search, setSearch] = useState(false)
 
@@ -99,13 +103,33 @@ export default function App() {
           ))}
         </nav>
         <div className="border-t border-white/10 p-3">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Profil actif</div>
-          <div className="flex items-center gap-2">
-            <Avatar memberId={me.id} size={32} />
-            <select className="min-w-0 flex-1 rounded-md bg-white/5 px-2 py-1.5 text-sm text-white outline-none" value={me.id} onChange={e => patch({ currentUserId: e.target.value })}>
-              {db.members.filter(m => m.active).map(m => <option key={m.id} value={m.id} className="text-slate-900">{m.name} — {ROLES[m.role]}</option>)}
-            </select>
-          </div>
+          {mode === 'local' ? (
+            <>
+              <div className="mb-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-slate-500"><span>Profil (démo)</span><a href="/connexion" className="normal-case text-brand-100 hover:underline">Se connecter →</a></div>
+              <div className="flex items-center gap-2">
+                <Avatar memberId={me.id} size={32} />
+                <select className="min-w-0 flex-1 rounded-md bg-white/5 px-2 py-1.5 text-sm text-white outline-none" value={me.id} onChange={e => patch({ currentUserId: e.target.value })}>
+                  {db.members.filter(m => m.active).map(m => <option key={m.id} value={m.id} className="text-slate-900">{m.name} — {ROLES[m.role]}</option>)}
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <Avatar memberId={me.id} size={32} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm text-white">{session?.user.name}</div>
+                  <div className="truncate text-[11px] text-slate-400">{session?.user.role === 'superadmin' ? 'Super-admin' : ROLES[me.role]} · {session?.agency.name}</div>
+                </div>
+                <span title={syncError || (sync === 'ok' ? 'Enregistré' : 'Enregistrement…')}>{sync === 'ok' ? <Cloud size={16} className="text-emerald-400" /> : sync === 'saving' ? <Loader2 size={16} className="animate-spin" /> : <CloudOff size={16} className="text-rose-400" />}</span>
+              </div>
+              <div className="mt-2 flex gap-1 text-xs">
+                {session?.user.role === 'superadmin' && <a href="/admin" className="flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><Shield size={12} /> Console</a>}
+                <button onClick={() => setAccount(true)} className="flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><KeyRound size={12} /> Compte</button>
+                <button onClick={async () => { await fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); location.href = '/connexion' }} className="ml-auto flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><LogOut size={12} /> Quitter</button>
+              </div>
+            </>
+          )}
         </div>
       </aside>
       {nav && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setNav(false)} />}
@@ -116,10 +140,12 @@ export default function App() {
         <button className="ml-auto" onClick={() => setSearch(true)}><Search size={20} /></button>
       </header>
 
+      {mode === 'local' && <div className="no-print bg-amber-100 px-4 py-1.5 text-center text-xs text-amber-900">Mode démonstration — données enregistrées dans ce navigateur seulement. <a href="/connexion" className="font-semibold underline">Se connecter</a> pour l’espace sécurisé partagé de votre agence.</div>}
       <main className="mx-auto max-w-7xl p-4 sm:p-6">
         <Cur key={route.page} go={go} openId={route.id} />
       </main>
       {search && <GlobalSearch go={go} onClose={() => setSearch(false)} />}
+      {account && <AccountModal onClose={() => setAccount(false)} forced={!!session?.user.mustChangePassword} />}
     </div>
   )
 }

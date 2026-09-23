@@ -7,16 +7,18 @@ import { Avatar, Field, Modal, PageHeader, ROLES } from '../lib/ui'
 import { money, uid } from '../lib/utils'
 
 export default function Team(_: PageProps) {
-  const { db, patch } = useStore()
+  const { db, patch, isAdmin, mode } = useStore()
   const [editing, setEditing] = useState<Member | null>(null)
   const a = db.agency
   const setA = (k: keyof typeof a, v: string) => patch({ agency: { ...a, [k]: v } })
   return (
     <div>
       <PageHeader title="Équipe" subtitle="Une agence, plusieurs profils : courtiers, adjointes et membres d’équipe"
-        actions={<button className="btn-primary" onClick={() => setEditing({ id: uid(), name: '', role: 'courtier', title: 'Courtier immobilier', phone: '', email: '', color: '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'), split: 70, licence: '', active: true })}><Plus size={16} /> Membre</button>} />
+        actions={isAdmin && <button className="btn-primary" onClick={() => setEditing({ id: uid(), name: '', role: 'courtier', title: 'Courtier immobilier', phone: '', email: '', color: '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'), split: 70, licence: '', active: true })}><Plus size={16} /> Membre</button>} />
 
-      <section className="card mb-5 p-4">
+      {!isAdmin && <p className="mb-4 rounded-lg bg-slate-100 p-3 text-sm text-slate-600">Seul un administrateur de l’agence peut modifier l’équipe et les informations de l’agence.</p>}
+      {mode === 'remote' && isAdmin && <p className="mb-4 rounded-lg bg-brand-50 p-3 text-sm text-brand-700">Chaque membre ajouté reçoit son propre accès (courriel + mot de passe temporaire à lui transmettre). Il devra choisir son mot de passe à la première connexion.</p>}
+      <fieldset disabled={!isAdmin} className="card mb-5 p-4">
         <h2 className="mb-3 font-semibold">Agence</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Nom de l’agence / équipe"><input className="input" value={a.name} onChange={e => setA('name', e.target.value)} /></Field>
@@ -26,7 +28,7 @@ export default function Team(_: PageProps) {
           <Field label="Site Web"><input className="input" value={a.website} onChange={e => setA('website', e.target.value)} /></Field>
           <Field label="Linktree"><input className="input" value={a.linktree} onChange={e => setA('linktree', e.target.value)} /></Field>
         </div>
-      </section>
+      </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {db.members.map(m => {
@@ -35,7 +37,7 @@ export default function Team(_: PageProps) {
           const contacts = db.contacts.filter(c => c.ownerId === m.id).length
           const tasks = db.tasks.filter(t => t.assigneeId === m.id && !t.done).length
           return (
-            <button key={m.id} onClick={() => setEditing(m)} className={`card p-4 text-left hover:shadow-md ${m.active ? '' : 'opacity-50'}`}>
+            <button key={m.id} onClick={() => isAdmin && setEditing(m)} className={`card p-4 text-left hover:shadow-md ${m.active ? '' : 'opacity-50'}`}>
               <div className="flex items-center gap-3">
                 <Avatar memberId={m.id} size={44} />
                 <div className="min-w-0"><div className="truncate font-semibold">{m.name}</div><div className="text-xs text-slate-500">{ROLES[m.role]} · {m.title}</div></div>
@@ -55,19 +57,29 @@ export default function Team(_: PageProps) {
 }
 
 function MemberForm({ m: init, onClose }: { m: Member; onClose: () => void }) {
-  const { upsert } = useStore()
+  const { upsert, db, mode } = useStore()
   const [m, setM] = useState(init)
+  const isNew = !db.members.some(x => x.id === m.id)
+  const [password, setPassword] = useState(() => 'IP-' + crypto.randomUUID().replace(/-/g, '').slice(0, 12))
+  const needsAccess = mode === 'remote' && isNew
   const set = <K extends keyof Member>(k: K, v: Member[K]) => setM(x => ({ ...x, [k]: v }))
   return (
     <Modal title={m.name || 'Nouveau membre'} onClose={onClose}
-      footer={<><button className="btn-ghost" onClick={onClose}>Annuler</button><button className="btn-primary" onClick={() => { if (m.name) { upsert('members', m); onClose() } }}>Enregistrer</button></>}>
+      footer={<><button className="btn-ghost" onClick={onClose}>Annuler</button><button className="btn-primary" onClick={() => {
+        if (!m.name) return
+        if (needsAccess && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m.email)) return alert('Courriel valide requis pour créer l’accès.')
+        upsert('members', (needsAccess ? { ...m, password } : m) as Member)
+        if (needsAccess) alert(`Accès créé.\n\nCourriel : ${m.email}\nMot de passe temporaire : ${password}\nConnexion : ${location.origin}/connexion\n\nTransmettez ces informations au membre.`)
+        onClose()
+      }}>{needsAccess ? 'Créer l’accès' : 'Enregistrer'}</button></>}>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Nom complet"><input className="input" value={m.name} onChange={e => set('name', e.target.value)} /></Field>
         <Field label="Rôle"><select className="input" value={m.role} onChange={e => set('role', e.target.value as Role)}>{Object.entries(ROLES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
         <Field label="Titre"><input className="input" value={m.title} onChange={e => set('title', e.target.value)} /></Field>
         <Field label="No de permis OACIQ"><input className="input" value={m.licence} onChange={e => set('licence', e.target.value)} /></Field>
         <Field label="Téléphone"><input className="input" value={m.phone} onChange={e => set('phone', e.target.value)} /></Field>
-        <Field label="Courriel"><input className="input" value={m.email} onChange={e => set('email', e.target.value)} /></Field>
+        <Field label={needsAccess ? 'Courriel de connexion *' : 'Courriel'}><input className="input" type="email" value={m.email} disabled={mode === 'remote' && !isNew} onChange={e => set('email', e.target.value)} /></Field>
+        {needsAccess && <Field label="Mot de passe temporaire"><input className="input font-mono" value={password} onChange={e => setPassword(e.target.value)} /></Field>}
         <Field label="Partage de commission (% au courtier)"><input className="input" type="number" value={m.split} onChange={e => set('split', +e.target.value)} /></Field>
         <Field label="Couleur"><input className="input h-10" type="color" value={m.color} onChange={e => set('color', e.target.value)} /></Field>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand-600" checked={m.active} onChange={e => set('active', e.target.checked)} /> Membre actif</label>

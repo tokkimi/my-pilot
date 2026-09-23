@@ -8,6 +8,7 @@ import { DAYS, FLOORINGS, LISTING_DOCS, MARKETING_PLAN, PROPERTY_FEATURES, ROOM_
 import { Avatar, Empty, Field, LISTING_COLORS, LISTING_STATUS, MemberSelect, Modal, MultiContact, PageHeader, Progress, ScopeFilter, Tabs, DueBadge } from '../lib/ui'
 import { daysUntil, fmtDate, fullName, money } from '../lib/utils'
 import { ShowingForm } from './Showings'
+import { createVisit } from './Visits'
 
 export default function Listings({ openId, go }: PageProps) {
   const { db, me, mine, upsert } = useStore()
@@ -140,6 +141,7 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
             <div className="flex flex-col gap-2">
               {l.address && <a className="btn-outline" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/${encodeURIComponent(l.address + ' ' + l.city)}`}><MapPin size={15} /> Street View / carte</a>}
               {l.centris && <a className="btn-outline" target="_blank" rel="noreferrer" href={`https://www.centris.ca/fr/propriete~a-vendre?q=${l.centris}`}><ExternalLink size={15} /> Voir sur Centris</a>}
+              <button className="btn-primary" onClick={() => { const v = createVisit(l.agentId, { type: l.status === 'preparation' ? 'evaluation' : 'photo', listingId: l.id, title: l.address, address: `${l.address}, ${l.city}`, contactIds: l.sellerIds, status: 'en_cours', startedAt: new Date().toISOString() }); upsert('visits', v); go('visits', v.id) }}>▶ Démarrer une visite (mesures, vidéo, plan)</button>
               {deal ? <button className="btn-outline" onClick={() => go('deals', deal.id)}>📁 Ouvrir le dossier de vente</button>
                 : <button className="btn-primary" onClick={() => { const d = newDeal(l.agentId, { kind: 'vente', title: `Vente — ${l.address}`, listingId: l.id, contactIds: l.sellerIds, price: l.price, commissionPct: l.commissionPct }); upsert('deals', d); go('deals', d.id) }}>Créer le dossier de vente</button>}
               <button className="btn-ghost text-rose-600" onClick={() => { if (confirm('Supprimer cette inscription?')) { remove('listings', l.id); onClose() } }}><Trash2 size={15} /> Supprimer</button>

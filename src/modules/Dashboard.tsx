@@ -6,9 +6,14 @@ import { dateDone } from './Deals'
 import { Avatar, DueBadge, EVENT_TYPES, PageHeader, ScopeFilter, STAGES, Stat, Empty } from '../lib/ui'
 import { daysToAnniversary, daysUntil, fmtDate, fullName, money, parseDate } from '../lib/utils'
 import type { Stage } from '../lib/types'
+import { useState } from 'react'
+import { Play, ScanLine } from 'lucide-react'
+import { StartVisit, VISIT_TYPES, normalizeVisit, upcomingVisits } from './Visits'
 
 export default function Dashboard({ go }: PageProps) {
   const { db, me, mine, upsert } = useStore()
+  const [startVisit, setStartVisit] = useState(false)
+  const visits = upcomingVisits((db.visits ?? []).map(normalizeVisit).filter(v => mine(v.agentId)))
   const listings = db.listings.filter(l => mine(l.agentId))
   const deals = db.deals.filter(d => mine(d.agentId))
   const contacts = db.contacts.filter(c => mine(c.ownerId))
@@ -39,7 +44,7 @@ export default function Dashboard({ go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title={`${hello}, ${me.name.split(' ')[0]} 👋`} subtitle={now.toLocaleDateString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={<ScopeFilter />} />
+      <PageHeader title={`${hello}, ${me.name.split(' ')[0]} 👋`} subtitle={now.toLocaleDateString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={<><ScopeFilter /><button className="btn-primary" onClick={() => setStartVisit(true)}><Play size={16} /> Démarrer une visite</button></>} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Inscriptions en vigueur" value={active.length} sub={`${listings.filter(l => l.status === 'preparation').length} en préparation`} icon={<Home size={20} />} />
@@ -83,6 +88,21 @@ export default function Dashboard({ go }: PageProps) {
           )}
           <button className="btn-ghost mt-2 w-full justify-center" onClick={() => go('tasks')}>Toutes les tâches →</button>
         </section>
+
+        {visits.length > 0 && (
+          <section className="card p-4 lg:col-span-3">
+            <h2 className="mb-3 flex items-center gap-2 font-semibold"><ScanLine size={18} className="text-brand-600" /> Visites terrain à venir / en cours</h2>
+            <div className="flex gap-2 overflow-x-auto">
+              {visits.slice(0, 8).map(v => (
+                <button key={v.id} onClick={() => go('visits', v.id)} className="min-w-56 rounded-lg border border-slate-200 p-3 text-left text-sm hover:border-brand-300">
+                  <div className="text-xs text-slate-500">{VISIT_TYPES[v.type].icon} {VISIT_TYPES[v.type].label}</div>
+                  <div className="truncate font-semibold">{v.title}</div>
+                  <div className="text-xs text-slate-500">{fmtDate(v.date, true)} {v.status === 'en_cours' && <span className="text-rose-600">● en cours</span>}</div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="card p-4">
           <h2 className="mb-3 flex items-center gap-2 font-semibold"><CalendarDays size={18} className="text-sky-600" /> 7 prochains jours</h2>
@@ -150,6 +170,7 @@ export default function Dashboard({ go }: PageProps) {
           </div>
         </section>
       </div>
+      {startVisit && <StartVisit agentId={me.id} onClose={() => setStartVisit(false)} onStart={v => { upsert('visits', v); setStartVisit(false); go('visits', v.id) }} />}
     </div>
   )
 }

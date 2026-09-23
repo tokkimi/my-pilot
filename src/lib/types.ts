@@ -43,11 +43,34 @@ export interface Showing { id: ID; listingId: ID; date: string; broker: string; 
 export type PartnerCat = 'notaire' | 'arpenteur' | 'inspecteur' | 'hypothecaire' | 'photographe' | 'home_staging' | 'entrepreneur' | 'demenageur' | 'evaluateur' | 'avocat' | 'autre'
 export interface Partner { id: ID; category: PartnerCat; name: string; company: string; phone: string; email: string; website: string; notes: string; rating: number }
 
-export interface Platform { id: ID; name: string; url: string; category: string; account: string; notes: string; usage: string }
+export interface Platform { id: ID; name: string; url: string; category: string; account: string; notes: string; usage: string; key?: string }
 export interface Template { id: ID; name: string; channel: 'courriel' | 'texto' | 'reseaux'; category: string; subject: string; body: string }
 export interface Post { id: ID; date: string; platforms: string[]; format: 'publication' | 'reel' | 'story' | 'video' | 'infolettre'; caption: string; listingId: ID; status: 'idee' | 'planifie' | 'publie'; kind: string }
 export interface Objection { id: ID; objection: string; response: string; category: string }
 export interface Expense { id: ID; date: string; category: string; vendor: string; amount: number; memberId: ID; listingId: ID; notes: string }
+
+// ---------- Visites terrain ----------
+export interface MediaRef { id: ID; kind: 'video' | 'audio' | 'photo' | 'plan' | 'document'; mime: string; name: string; size: number; createdAt: string
+  /** chemin serveur (mode connecté) */ path?: string
+  /** clé IndexedDB (mode démo) */ local?: string
+  /** image miniature (data URL) */ thumb?: string }
+export interface Measure { id: ID; label: string; value: number; unit: 'pi' | 'm'; method: 'ar' | 'reference' | 'manuel' | 'vocal'; note: string }
+export interface VisitRoom {
+  id: ID; name: string; level: string; length: number; width: number; height: number; unit: 'pi' | 'm'
+  floor: string; condition: '' | 'excellent' | 'bon' | 'moyen' | 'a_renover'; notes: string; likes: string; dislikes: string
+  media: MediaRef[]; measures: Measure[]
+}
+export interface VoiceNote { id: ID; transcript: string; audio?: MediaRef; duration: number; createdAt: string; roomId: ID }
+export interface PlanShape { id: ID; roomId: ID; label: string; x: number; y: number; w: number; h: number; kind: 'piece' | 'porte' | 'fenetre' | 'escalier' }
+export interface FloorPlan { id: ID; level: string; shapes: PlanShape[]; image?: MediaRef; imageOpacity: number; imageScale: number }
+export interface Visitor { id: ID; name: string; phone: string; email: string; broker: string; interest: 'faible' | 'moyen' | 'fort'; consent: boolean; notes: string }
+export type VisitType = 'evaluation' | 'acheteur' | 'libre' | 'inspection' | 'photo'
+export interface Visit {
+  id: ID; type: VisitType; title: string; address: string; listingId: ID; contactIds: ID[]; agentId: ID
+  date: string; startedAt: string; endedAt: string; status: 'planifiee' | 'en_cours' | 'terminee'
+  rooms: VisitRoom[]; voiceNotes: VoiceNote[]; notes: string; plans: FloorPlan[]; answers: Record<string, string>
+  visitors: Visitor[]; rating: number; interest: '' | 'faible' | 'moyen' | 'fort'; summary: string; photos: MediaRef[]; createdAt: string
+}
 
 export interface DB {
   version: number
@@ -55,6 +78,6 @@ export interface DB {
   currentUserId: ID
   members: Member[]; contacts: Contact[]; activities: Activity[]; listings: Listing[]; deals: Deal[]; tasks: Task[]
   events: CalEvent[]; showings: Showing[]; partners: Partner[]; platforms: Platform[]; templates: Template[]; posts: Post[]
-  objections: Objection[]; expenses: Expense[]
+  objections: Objection[]; expenses: Expense[]; visits: Visit[]
 }
 export type Coll = Exclude<keyof DB, 'version' | 'agency' | 'currentUserId'>

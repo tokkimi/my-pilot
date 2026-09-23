@@ -4,6 +4,7 @@ import type { PageProps } from '../App'
 import { useStore } from '../lib/store'
 import type { ActivityKind, Contact, ContactType, Stage } from '../lib/types'
 import { newContact, newTask } from '../lib/seed'
+import { createVisit } from './Visits'
 import { Avatar, CONTACT_TYPES, Empty, Field, MemberSelect, Modal, PageHeader, ScopeFilter, STAGE_COLORS, STAGES, LISTING_STATUS } from '../lib/ui'
 import { download, fmtDate, fullName, money, toCSV, today, uid, fillTemplate } from '../lib/utils'
 
@@ -186,6 +187,7 @@ export function ContactDetail({ id, onClose, onEdit, go }: { id: string; onClose
             <div className="mt-2 flex flex-wrap gap-2">
               <button className="btn-ghost text-xs" onClick={() => { upsert('tasks', newTask(me.id, { title: `Suivi — ${fullName(c)}`, contactId: id, due: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10) })); alert('Tâche de suivi créée (J+3)') }}>+ Tâche de suivi J+3</button>
               <button className="btn-ghost text-xs" onClick={() => go('deals')}>+ Ouvrir un dossier</button>
+              <button className="btn-ghost text-xs" onClick={() => { const v = createVisit(me.id, { type: c.type === 'acheteur' ? 'acheteur' : 'evaluation', contactIds: [c.id], title: `${c.type === 'acheteur' ? 'Visite' : 'Évaluation'} — ${fullName(c)}`, address: [c.address, c.city].filter(Boolean).join(', '), status: 'en_cours', startedAt: new Date().toISOString() }); upsert('visits', v); go('visits', v.id) }}>▶ Démarrer une visite</button>
             </div>
           </div>
 
