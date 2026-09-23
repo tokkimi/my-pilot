@@ -82,7 +82,8 @@ export async function POST(req: Request) {
         return json({ password })
       }
       case 'updateLead': {
-        await mutate<Lead[]>(LEADS, () => [], l => l.map(x => x.id === b.id ? { ...x, ...pick(b.patch, ['status', 'notes']) } : x))
+        const log = typeof b.log === 'string' && b.log ? [{ at: new Date().toISOString(), by: me.name, text: b.log.slice(0, 500) }] : []
+        await mutate<Lead[]>(LEADS, () => [], l => l.map(x => x.id === b.id ? { ...x, ...pick(b.patch, ['status', 'notes', 'scheduledAt']), history: [...(x.history ?? []), ...log] } : x))
         return json({ ok: true })
       }
       case 'saveEntry': {

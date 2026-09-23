@@ -19,7 +19,7 @@ export interface User {
 }
 export type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
 export interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string; monthlyFee?: number }
-export interface Lead { id: string; createdAt: string; name: string; email: string; phone: string; agency: string; role: string; agents: string; interest: string; message: string; status: 'nouveau' | 'contacte' | 'converti' | 'archive'; notes: string }
+export interface Lead { id: string; createdAt: string; name: string; email: string; phone: string; agency: string; role: string; agents: string; interest: string; message: string; status: 'nouveau' | 'contacte' | 'converti' | 'archive'; notes: string; scheduledAt?: string; history?: { at: string; by: string; text: string }[] }
 export interface Activity { days: Record<string, { logins: number; active: string[] }> }
 
 export const USERS = 'platform/users.json'

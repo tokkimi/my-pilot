@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Building2, ExternalLink, Globe, Inbox, KeyRound, LogOut, Plus, RefreshCw, Users, Activity, ScanLine } from 'lucide-react'
 import SiteActivity, { type PlatformEntry } from './AdminSite'
+import LeadsInbox from './AdminLeads'
 
 // Console des propriétaires de la plateforme : statistiques d'utilisation, agences, utilisateurs, demandes du site.
 type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
 interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string }
 interface User { id: string; email: string; name: string; role: string; agencyId: string; active: boolean; title: string; createdAt: string; lastLoginAt: string; lastSeenAt: string; loginCount: number; mustChangePassword: boolean; googleEmail?: string; googleDrive?: boolean; googleCalendar?: boolean }
-interface Lead { id: string; createdAt: string; name: string; email: string; phone: string; agency: string; role: string; agents: string; interest: string; message: string; status: string; notes: string }
+import type { Lead } from './AdminLeads'
 interface Usage { agencyId: string; contacts: number; listings: number; deals: number; tasks: number; visits: number; visitsDone: number; events: number; media: number }
 interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; finance?: PlatformEntry[]; storage: string; email?: { configured: boolean; from: string; ok: boolean; domains: { name: string; status: string }[]; error: string }; google: { configured: boolean; picker: boolean; redirect: string } }
 
@@ -36,7 +37,14 @@ export default function Admin() {
     setPw({ ...pw, msg: r.ok ? 'Mot de passe modifié ✓' : b.error || 'Erreur' })
   }
   const load = () => api().then(setData).catch(e => setError(e.message))
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    // ouvre directement les nouvelles demandes s'il y en a, puis actualise chaque minute
+    api().then((d: Data) => { setData(d); if (d.leads.some(l => l.status === 'nouveau')) setTab('leads') }).catch(e => setError(e.message))
+    const t = setInterval(() => { if (document.visibilityState === 'visible') void load() }, 60000)
+    return () => clearInterval(t)
+  }, [])
+  const unread = data?.leads.filter(l => l.status === 'nouveau').length ?? 0
+  useEffect(() => { document.title = `${unread ? `(${unread}) ` : ''}Console ImmoPilot` }, [unread])
   const run = async (body: object, after?: (b: any) => void) => { try { const b = await api(body); after?.(b); await load() } catch (e) { alert((e as Error).message) } }
 
   if (error) return <div className="flex min-h-screen items-center justify-center p-6"><div className="card max-w-md p-6 text-center"><p className="text-rose-600">{error}</p><a href="/connexion" className="btn-primary mt-4">Connexion</a></div></div>
@@ -49,8 +57,8 @@ export default function Admin() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
           <a href="/" className="font-bold">🏡 ImmoPilot</a><span className="badge bg-brand-600 text-white">Console propriétaires</span>
           <nav className="flex max-w-full gap-1 overflow-x-auto text-sm sm:ml-4">
-            {([['overview', 'Vue d’ensemble', Activity], ['site', 'Activité du site', Globe], ['agencies', 'Agences', Building2], ['users', 'Utilisateurs', Users], ['leads', `Demandes${newLeads ? ` (${newLeads})` : ''}`, Inbox]] as const).map(([k, l, I]) => (
-              <button key={k} onClick={() => setTab(k)} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 ${tab === k ? 'bg-white/15' : 'hover:bg-white/10'}`}><I size={15} />{l}</button>
+            {([['overview', 'Vue d’ensemble', Activity], ['leads', 'Nouvelles demandes', Inbox], ['site', 'Activité du site', Globe], ['agencies', 'Agences', Building2], ['users', 'Utilisateurs', Users]] as const).map(([k, l, I]) => (
+              <button key={k} onClick={() => setTab(k)} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 ${tab === k ? 'bg-white/15' : 'hover:bg-white/10'}`}><I size={15} />{l}{k === 'leads' && newLeads > 0 && <span className="rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">{newLeads}</span>}</button>
             ))}
           </nav>
           <div className="ml-auto flex gap-2 text-sm">
@@ -65,7 +73,7 @@ export default function Admin() {
         {tab === 'site' && <SiteActivity data={data} run={run} onSecret={setSecret} />}
         {tab === 'agencies' && <Agencies data={data} run={run} onSecret={setSecret} />}
         {tab === 'users' && <UsersTab data={data} run={run} onSecret={setSecret} />}
-        {tab === 'leads' && <Leads data={data} run={run} />}
+        {tab === 'leads' && <LeadsInbox leads={data.leads} run={run} onSecret={setSecret} />}
       </main>
       {pw && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
@@ -224,35 +232,6 @@ function UsersTab({ data, run, onSecret }: { data: Data; run: (b: object, after?
   )
 }
 
-function Leads({ data, run }: { data: Data; run: (b: object) => Promise<void> }) {
-  const [status, setStatus] = useState('')
-  const list = data.leads.filter(l => !status || l.status === status)
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {['', 'nouveau', 'contacte', 'converti', 'archive'].map(s => <button key={s} onClick={() => setStatus(s)} className={`badge border px-3 py-1 ${status === s ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-200 bg-white'}`}>{s || 'Toutes'} ({data.leads.filter(l => !s || l.status === s).length})</button>)}
-      </div>
-      {list.length === 0 && <div className="card p-6 text-center text-sm text-slate-500">Aucune demande pour le moment. Les demandes du formulaire de contact du site apparaîtront ici.</div>}
-      {list.map(l => (
-        <div key={l.id} className="card p-4">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <div className="font-semibold">{l.name} <span className="font-normal text-slate-500">· {l.agency || 'sans agence'} · {l.role} · {l.agents || '?'} courtier(s)</span></div>
-              <div className="text-sm"><a className="text-brand-700 hover:underline" href={`mailto:${l.email}?subject=${encodeURIComponent('ImmoPilot — ' + l.interest)}`}>{l.email}</a>{l.phone && <> · <a href={`tel:${l.phone}`} className="hover:underline">{l.phone}</a></>}</div>
-            </div>
-            <div className="text-right text-xs text-slate-500"><span className="badge bg-brand-50 text-brand-700">{l.interest}</span><div className="mt-1">{fmt(l.createdAt)}</div></div>
-          </div>
-          {l.message && <p className="mt-2 whitespace-pre-wrap rounded-lg bg-slate-50 p-2 text-sm">{l.message}</p>}
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <select className="input w-auto py-1" value={l.status} onChange={e => run({ action: 'updateLead', id: l.id, patch: { status: e.target.value } })}>{['nouveau', 'contacte', 'converti', 'archive'].map(s => <option key={s}>{s}</option>)}</select>
-            <input className="input flex-1 py-1" placeholder="Notes internes…" defaultValue={l.notes} onBlur={e => e.target.value !== l.notes && run({ action: 'updateLead', id: l.id, patch: { notes: e.target.value } })} />
-            <button className="btn-ghost py-1 text-xs text-rose-600" onClick={() => confirm('Supprimer cette demande?') && run({ action: 'deleteLead', id: l.id })}>Supprimer</button>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 function GoogleSetup({ g, connected }: { g: Data['google']; connected: number }) {
   const [open, setOpen] = useState(!g.configured)

@@ -14,17 +14,15 @@ type Secret = (s: { title: string; email: string; password: string }) => void
 
 const PLAN_LABEL: Record<Plan, string> = { essai: 'Essai', solo: 'Courtier solo', equipe: 'Équipe', agence: 'Agence', entreprise: 'Entreprise', illimite: 'Illimité (interne)' }
 const ROLE_ORDER: [string, string][] = [['admin', 'Direction de l’agence'], ['courtier', 'Courtiers'], ['adjointe', 'Adjointes et soutien administratif'], ['marketing', 'Équipe marketing'], ['agent', 'Autres membres']]
-const LEAD_STATUS: Record<string, string> = { nouveau: 'Nouveau', contacte: 'Contacté', converti: 'Converti', archive: 'Archivé' }
 const REV_CATS = { abonnement: 'Abonnements', formation: 'Formations', implantation: 'Implantation et migration', autre_revenu: 'Autres revenus' }
 const DEP_CATS = { hebergement: 'Hébergement et infrastructure (Vercel, stockage)', logiciels: 'Logiciels et services (courriel, Google)', marketing: 'Publicité et marketing', honoraires: 'Honoraires professionnels', salaires: 'Salaires et sous-traitance', formation_frais: 'Frais de formation (salles, déplacements)', bureau: 'Frais de bureau', autre_depense: 'Autres dépenses' }
 const money = (n: number) => n.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })
 const day = (s: string) => (s ? new Date(s).toLocaleDateString('fr-CA', { dateStyle: 'medium' }) : '—')
 const within = (s: string, d: number) => !!s && Date.now() - new Date(s).getTime() < d * 86400000
-export const leadType = (l: Lead) => (/^abonnement/i.test(l.interest) ? 'abonnement' : /formation/i.test(l.interest) ? 'formation' : /d[ée]mo/i.test(l.interest) ? 'demo' : 'autre')
-const TYPE_LABEL = { abonnement: 'Demandes d’abonnement', formation: 'Cours et formations', demo: 'Démonstrations', autre: 'Autres demandes' }
+export const leadType = (l: Pick<Lead, 'interest'>) => (/^abonnement/i.test(l.interest) ? 'abonnement' : /formation/i.test(l.interest) ? 'formation' : /d[ée]mo/i.test(l.interest) ? 'demo' : 'autre')
 
 export default function SiteActivity({ data, run, onSecret }: { data: SiteData; run: Run; onSecret: Secret }) {
-  const [view, setView] = useState<'fil' | 'inscrits' | 'demandes' | 'compta'>('fil')
+  const [view, setView] = useState<'fil' | 'inscrits' | 'compta'>('fil')
   const members = data.users.filter(u => u.role !== 'superadmin')
   const open = (t: string) => data.leads.filter(l => leadType(l) === t && l.status === 'nouveau').length
   const mrr = data.agencies.filter(a => a.status === 'actif' && a.plan !== 'essai' && a.plan !== 'illimite').reduce((s, a) => s + (a.monthlyFee ?? 0), 0)
@@ -38,13 +36,12 @@ export default function SiteActivity({ data, run, onSecret }: { data: SiteData; 
         <Kpi icon={Receipt} label="Revenu mensuel récurrent" value={money(mrr)} sub={`${money(mrr * 12)} par an`} />
       </div>
       <div className="flex flex-wrap gap-1 border-b border-slate-200">
-        {([['fil', 'Fil d’activité'], ['inscrits', 'Inscrits'], ['demandes', 'Demandes reçues'], ['compta', 'Comptabilité ImmoPilot']] as const).map(([k, l]) => (
+        {([['fil', 'Fil d’activité'], ['inscrits', 'Inscrits'], ['compta', 'Comptabilité ImmoPilot']] as const).map(([k, l]) => (
           <button key={k} onClick={() => setView(k)} className={`-mb-px border-b-2 px-3 py-2 text-sm ${view === k ? 'border-brand-600 font-medium text-brand-700' : 'border-transparent text-slate-600 hover:text-slate-900'}`}>{l}</button>
         ))}
       </div>
       {view === 'fil' && <Feed data={data} />}
       {view === 'inscrits' && <Directory data={data} run={run} onSecret={onSecret} />}
-      {view === 'demandes' && <Requests data={data} run={run} />}
       {view === 'compta' && <Books data={data} run={run} />}
     </div>
   )
@@ -119,37 +116,6 @@ function Directory({ data, run, onSecret }: { data: SiteData; run: Run; onSecret
           </section>
         )
       })}
-    </div>
-  )
-}
-
-function Requests({ data, run }: { data: SiteData; run: Run }) {
-  const [showDone, setShowDone] = useState(false)
-  return (
-    <div>
-      <label className="mb-3 flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" checked={showDone} onChange={e => setShowDone(e.target.checked)} /> Afficher les demandes converties et archivées</label>
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-        {(Object.keys(TYPE_LABEL) as (keyof typeof TYPE_LABEL)[]).map(t => {
-          const list = data.leads.filter(l => leadType(l) === t && (showDone || l.status === 'nouveau' || l.status === 'contacte')).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-          return (
-            <section key={t}>
-              <h3 className="mb-2 text-sm font-semibold">{TYPE_LABEL[t]} <span className="text-slate-400">({list.length})</span></h3>
-              <div className="space-y-2">
-                {list.length === 0 && <p className="rounded-lg border border-dashed border-slate-300 p-3 text-center text-xs text-slate-500">Rien à traiter</p>}
-                {list.map(l => (
-                  <div key={l.id} className="card p-3 text-sm">
-                    <div className="flex items-start justify-between gap-2"><div className="font-medium">{l.name}</div><span className="text-xs text-slate-400">{day(l.createdAt)}</span></div>
-                    <div className="text-xs text-slate-500">{l.interest}{l.agency && ` · ${l.agency}`}{l.agents && ` · ${l.agents} pers.`}</div>
-                    <div className="mt-1 text-xs"><a className="text-brand-700 underline" href={`mailto:${l.email}`}>{l.email}</a>{l.phone && <> · <a href={`tel:${l.phone}`}>{l.phone}</a></>}</div>
-                    {l.message && <p className="mt-1 line-clamp-3 text-xs text-slate-600">{l.message}</p>}
-                    <select className="input mt-2 py-1 text-xs" value={l.status} onChange={e => run({ action: 'updateLead', id: l.id, patch: { status: e.target.value } })}>{Object.entries(LEAD_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )
-        })}
-      </div>
     </div>
   )
 }
