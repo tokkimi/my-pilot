@@ -29,7 +29,7 @@ export async function GET(req: Request) {
         media: visits.reduce((s, v) => s + (v.rooms ?? []).reduce((t, r) => t + (r.media?.length ?? 0), 0) + (v.voiceNotes?.length ?? 0) + (v.photos?.length ?? 0), 0),
       }
     }))
-    return json({ users: users.map(publicUser), agencies, leads, activity, usage, storage: storageMode(), google: { configured: googleConfigured(), picker: !!(process.env.GOOGLE_API_KEY && process.env.GOOGLE_APP_ID), redirect: `${new URL(req.url).origin}/api/google-callback` } })
+    return json({ users: users.map(publicUser), agencies, leads, activity, usage, storage: storageMode(), email: await emailStatus(), google: { configured: googleConfigured(), picker: !!(process.env.GOOGLE_API_KEY && process.env.GOOGLE_APP_ID), redirect: `${new URL(req.url).origin}/api/google-callback` } })
   } catch (e) { return fail(e) }
 }
 
@@ -100,4 +100,15 @@ function fail(e: unknown) {
   if (e instanceof StorageUnavailable) return json({ error: e.message }, 503)
   console.error(e)
   return json({ error: 'Erreur serveur.' }, 500)
+}
+
+// État de Resend : clé valide et domaines d'envoi (affiché dans l'administration)
+async function emailStatus() {
+  const key = process.env.RESEND_API_KEY, from = process.env.RESEND_FROM || ''
+  if (!key) return { configured: false, from, ok: false, domains: [] as { name: string; status: string }[], error: '' }
+  try {
+    const r = await fetch('https://api.resend.com/domains', { headers: { authorization: `Bearer ${key}` } })
+    const b = await r.json().catch(() => ({})) as { data?: { name: string; status: string }[]; message?: string }
+    return { configured: true, from, ok: r.ok || r.status === 401 && /restricted/i.test(b.message ?? ''), domains: (b.data ?? []).map(d => ({ name: d.name, status: d.status })), error: r.ok ? '' : b.message ?? `HTTP ${r.status}` }
+  } catch (e) { return { configured: true, from, ok: false, domains: [], error: (e as Error).message } }
 }

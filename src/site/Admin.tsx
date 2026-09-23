@@ -7,7 +7,7 @@ interface Agency { id: string; name: string; plan: Plan; seats: number; status: 
 interface User { id: string; email: string; name: string; role: string; agencyId: string; active: boolean; title: string; createdAt: string; lastLoginAt: string; lastSeenAt: string; loginCount: number; mustChangePassword: boolean; googleEmail?: string; googleDrive?: boolean; googleCalendar?: boolean }
 interface Lead { id: string; createdAt: string; name: string; email: string; phone: string; agency: string; role: string; agents: string; interest: string; message: string; status: string; notes: string }
 interface Usage { agencyId: string; contacts: number; listings: number; deals: number; tasks: number; visits: number; visitsDone: number; events: number; media: number }
-interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; storage: string; google: { configured: boolean; picker: boolean; redirect: string } }
+interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; storage: string; email?: { configured: boolean; from: string; ok: boolean; domains: { name: string; status: string }[]; error: string }; google: { configured: boolean; picker: boolean; redirect: string } }
 
 const PLAN_LABEL: Record<Plan, string> = { essai: 'Essai (30 j)', solo: 'Courtier solo', equipe: 'Équipe', agence: 'Agence', entreprise: 'Entreprise', illimite: 'Illimité (interne)' }
 const ROLE_LABEL: Record<string, string> = { superadmin: 'Super-admin', admin: 'Admin agence', courtier: 'Courtier', adjointe: 'Adjointe', agent: 'Membre' }
@@ -107,6 +107,12 @@ function Overview({ data }: { data: Data }) {
   return (
     <div className="space-y-5">
       {data.storage !== 'blob' && <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Stockage : <b>{data.storage}</b>. En production, connectez un Blob Store Vercel au projet pour conserver les données.</div>}
+      {data.email && <div className={`rounded-lg p-3 text-sm ${data.email.ok ? 'bg-emerald-50 text-emerald-900' : 'bg-amber-50 text-amber-900'}`}>
+        Courriels (Resend) : <b>{!data.email.configured ? 'non configuré' : data.email.ok ? 'connecté' : `erreur — ${data.email.error}`}</b>
+        {data.email.configured && <> · expéditeur : {data.email.from}</>}
+        {data.email.domains.length > 0 && <> · domaines : {data.email.domains.map(d => `${d.name} (${d.status})`).join(', ')}</>}
+        {data.email.ok && /resend\.dev/.test(data.email.from) && <div className="mt-1 text-xs">Adresse de test Resend : les envois ne partent que vers le courriel du compte Resend. Vérifiez votre domaine dans Resend pour écrire aux clients.</div>}
+      </div>}
       <GoogleSetup g={data.google} connected={data.users.filter(u => u.googleEmail).length} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="Agences" value={data.agencies.length} sub={`${data.agencies.filter(a => a.status === 'actif').length} actives · ${data.agencies.filter(a => a.plan === 'essai').length} en essai`} />
