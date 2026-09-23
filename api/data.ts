@@ -1,12 +1,13 @@
 import { agencyDb, currentUser, json, loadAgencies, loadUsers, newUser, PLAN_SEATS, publicUser, sameOrigin, seedAgencyDb, trackActivity, USERS, type User } from '../server/platform.js'
 import { mutate, readJson, StorageUnavailable } from '../server/storage.js'
+import { allowed, revokeGoogle } from '../server/google.js'
 import type { DB, Member } from '../src/lib/types.js'
 
 type AgencyDoc = Omit<DB, 'members' | 'currentUserId'>
 const COLLS = ['contacts', 'activities', 'listings', 'deals', 'tasks', 'events', 'showings', 'partners', 'platforms', 'templates', 'posts', 'objections', 'expenses', 'visits'] as const
 type Op = { t: 'upsert'; c: string; item: { id: string } & Record<string, unknown> } | { t: 'remove'; c: string; id: string } | { t: 'patch'; p: Record<string, unknown> }
 
-const toMember = (u: User): Member => ({ id: u.id, name: u.name, role: u.role === 'superadmin' ? 'admin' : u.role, title: u.title, phone: u.phone, email: u.email, color: u.color, split: u.split, licence: u.licence, active: u.active })
+const toMember = (u: User): Member => { const g = allowed(u); return { id: u.id, name: u.name, role: u.role === 'superadmin' ? 'admin' : u.role, title: u.title, phone: u.phone, email: u.email, color: u.color, split: u.split, licence: u.licence, active: u.active, googleDrive: g.drive, googleCalendar: g.calendar, googleEmail: u.googleEmail ?? '', driveUrl: (u as User & { driveUrl?: string }).driveUrl ?? '' } }
 
 async function context(req: Request) {
   const u = await currentUser(req)
@@ -48,17 +49,21 @@ export async function POST(req: Request) {
       if (!isAdmin) errors.push('Seul un administrateur peut gérer l’équipe.')
       else {
         const agency = (await loadAgencies()).find(a => a.id === agencyId)!
+        const toRevoke = new Set<string>()
         await mutate<User[]>(USERS, () => [], list => {
           let out = [...list]
           for (const o of memberOps) {
-            if (o.t === 'remove') { out = out.map(x => x.id === o.id && x.agencyId === agencyId && x.id !== u.id ? { ...x, active: false } : x); continue }
+            if (o.t === 'remove') { const t = out.find(x => x.id === o.id); if (t?.googleEmail) toRevoke.add(t.id); out = out.map(x => x.id === o.id && x.agencyId === agencyId && x.id !== u.id ? { ...x, active: false } : x); continue }
             if (o.t !== 'upsert') continue
             const m = o.item as unknown as Member & { password?: string }
             const existing = out.find(x => x.id === m.id)
             const role = (['admin', 'courtier', 'adjointe', 'agent'] as const).includes(m.role as never) ? m.role : 'agent'
             if (existing) {
               if (existing.agencyId !== agencyId) continue
-              out = out.map(x => x.id === m.id ? { ...x, name: m.name, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, active: x.id === u.id ? true : m.active, role: x.id === u.id ? x.role : role } : x)
+              const before = allowed(existing)
+              const drive = m.googleDrive ?? before.drive, calendar = m.googleCalendar ?? before.calendar
+              if (existing.googleEmail && ((before.drive && !drive) || (before.calendar && !calendar) || m.active === false)) toRevoke.add(existing.id)
+              out = out.map(x => x.id === m.id ? { ...x, name: m.name, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, active: x.id === u.id ? true : m.active, role: x.id === u.id ? x.role : role, googleDrive: drive, googleCalendar: calendar, driveUrl: m.driveUrl ?? '' } : x)
             } else {
               const email = String(m.email || '').trim().toLowerCase()
               if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errors.push(`Courriel invalide pour ${m.name}.`); continue }
@@ -66,11 +71,12 @@ export async function POST(req: Request) {
               const seats = agency.seats || PLAN_SEATS[agency.plan]
               if (seats && out.filter(x => x.agencyId === agencyId && x.active).length >= seats) { errors.push(`Limite de ${seats} utilisateur(s) atteinte pour votre forfait.`); continue }
               if (!m.password || m.password.length < 8) { errors.push('Mot de passe temporaire de 8 caractères minimum requis.'); continue }
-              out.push({ ...newUser({ email, name: m.name, role, agencyId, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, mustChangePassword: true }, m.password), id: m.id })
+              out.push({ ...newUser({ email, name: m.name, role, agencyId, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, mustChangePassword: true, googleDrive: !!m.googleDrive, googleCalendar: !!m.googleCalendar }, m.password), id: m.id, driveUrl: m.driveUrl ?? '' } as User)
             }
           }
           return out
         })
+        for (const id of toRevoke) await revokeGoogle(id).catch(() => undefined)
       }
     }
 

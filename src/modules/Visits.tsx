@@ -10,7 +10,10 @@ import { newContact, newShowing, newTask } from '../lib/seed'
 import { SOP_SELLER } from '../lib/content'
 import { Avatar, Empty, Field, ListingSelect, MemberSelect, Modal, MultiContact, PageHeader, ScopeFilter, Stat } from '../lib/ui'
 import { daysUntil, fmtDate, fullName, isoDateTime, uid } from '../lib/utils'
-import { deleteMedia, saveMedia, useMediaUrl } from '../lib/media'
+import { deleteMedia, mediaBlob, saveMedia, useMediaUrl } from '../lib/media'
+import { createDossierFolder, ensureFolder, googleStatus, uploadToDrive } from '../lib/google'
+import DrivePanel from '../components/DrivePanel'
+import { HardDrive } from 'lucide-react'
 import VoiceRecorder, { type VoiceResult } from '../visit/VoiceRecorder'
 import VideoRecorder from '../visit/Camera'
 import MeasureTool, { type MeasureOut } from '../visit/Measure'
@@ -230,6 +233,7 @@ function VisitSession({ visit: v, onClose, go }: { visit: Visit; onClose: () => 
             <Field label="Courtier"><MemberSelect value={v.agentId} onChange={id => save({ agentId: id })} /></Field>
             <Field label="Unité de mesure"><select className="input" value={unit} onChange={e => { const u = e.target.value as 'pi' | 'm'; setUnit(u); save({ rooms: v.rooms.map(r => ({ ...r, unit: u })) }) }}><option value="pi">Pieds (pi)</option><option value="m">Mètres (m)</option></select></Field>
             {v.address && <a className="btn-outline self-end" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/${encodeURIComponent(v.address)}`}><MapPin size={15} /> Itinéraire / Street View</a>}
+            <div className="sm:col-span-2"><DrivePanel category="Visites" name={`${v.date.slice(0, 10)} — ${v.title}`} folderId={v.driveFolderId} url={v.driveUrl} subfolders={['Vidéos', 'Photos', 'Notes vocales', 'Plans']} onLink={(id, u) => save({ driveFolderId: id, driveUrl: u })} compact /></div>
             {(QUESTIONS[v.type] ?? []).length > 0 && (
               <div className="sm:col-span-2">
                 <div className="mb-2 mt-2 text-sm font-semibold">{v.type === 'evaluation' ? 'Questions de découverte (SOP)' : v.type === 'inspection' ? 'Points d’inspection' : 'Questions à l’acheteur'}</div>
@@ -525,7 +529,33 @@ function PlanTab({ visit: v, unit, save, store }: { visit: Visit; unit: 'pi' | '
 }
 
 function Report({ visit: v, go, onDelete, listingName, me }: { visit: Visit; go: PageProps['go']; onDelete: () => void; listingName?: string; me: string }) {
-  const { db, upsert } = useStore()
+  const { db, upsert, mode } = useStore()
+  const [exporting, setExporting] = useState('')
+  const exportDrive = async () => {
+    try {
+      const st = await googleStatus(true)
+      if (!st.connected || !st.connected.scopes.includes('drive.file')) return alert('Reliez d’abord votre compte Google Drive (menu « Google Drive & Agenda »).')
+      setExporting('Création du dossier…')
+      const main = await createDossierFolder('Visites', `${v.date.slice(0, 10)} — ${v.title}`, ['Vidéos', 'Photos', 'Notes vocales', 'Plans'])
+      const sub = async (n: string) => (await ensureFolder(n, main.id)).id
+      const folders = { video: await sub('Vidéos'), photo: await sub('Photos'), audio: await sub('Notes vocales'), plan: await sub('Plans') } as Record<string, string>
+      const media = [...v.photos, ...v.rooms.flatMap(r => r.media.map(m => ({ ...m, name: `${r.name} — ${m.name}` }))), ...v.voiceNotes.flatMap(n => (n.audio ? [n.audio] : [])), ...v.plans.flatMap(p => (p.image ? [p.image] : []))]
+      let i = 0
+      for (const m of media) {
+        i++
+        setExporting(`Envoi ${i}/${media.length} : ${m.name}`)
+        const blob = await mediaBlob(m)
+        if (blob) await uploadToDrive(blob, m.name, folders[m.kind] ?? main.id)
+      }
+      const report = document.getElementById('visit-report')?.innerHTML ?? ''
+      await uploadToDrive(new Blob([`<html><head><meta charset="utf-8"><title>${v.title}</title></head><body style="font-family:system-ui;padding:24px">${report}</body></html>`], { type: 'text/html' }), `Rapport — ${v.title}.html`, main.id)
+      const transcripts = v.voiceNotes.map(n => `[${v.rooms.find(r => r.id === n.roomId)?.name ?? 'Général'}] ${n.transcript}`).join('\n\n')
+      if (transcripts) await uploadToDrive(new Blob([transcripts], { type: 'text/plain' }), 'Transcriptions des notes vocales.txt', folders.audio)
+      upsert('visits', { ...v, driveFolderId: main.id, driveUrl: main.webViewLink })
+      setExporting('')
+      alert(`Visite exportée dans Google Drive (${media.length} fichier(s) + rapport).`)
+    } catch (e) { setExporting(''); alert((e as Error).message) }
+  }
   const clients = v.contactIds.map(id => db.contacts.find(c => c.id === id)).filter(Boolean)
   const unit = v.rooms[0]?.unit ?? 'pi'
   const total = v.rooms.filter(r => r.level !== 'Extérieur').reduce((s, r) => s + area(r), 0)
@@ -560,6 +590,8 @@ function Report({ visit: v, go, onDelete, listingName, me }: { visit: Visit; go:
         <button className="btn-outline" onClick={toListing}><FileText size={15} /> Copier les pièces dans l’inscription</button>
         {v.type === 'acheteur' && <button className="btn-outline" onClick={toShowing}><ImageIcon size={15} /> Créer la rétroaction</button>}
         <button className="btn-outline" onClick={followUp}><Plus size={15} /> Tâche de suivi</button>
+        {mode === 'remote' && <button className="btn-outline" onClick={exportDrive} disabled={!!exporting}><HardDrive size={15} /> {exporting || 'Exporter vers Google Drive'}</button>}
+        {v.driveUrl && <a className="btn-ghost" href={v.driveUrl} target="_blank" rel="noreferrer">Dossier Drive →</a>}
         {listing && <button className="btn-ghost" onClick={() => go('listings', listing.id)}>Ouvrir l’inscription →</button>}
         <button className="btn-ghost ml-auto text-rose-600" onClick={onDelete}><Trash2 size={15} /> Supprimer la visite</button>
       </div>

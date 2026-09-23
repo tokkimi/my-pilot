@@ -14,7 +14,7 @@ export default function Team(_: PageProps) {
   return (
     <div>
       <PageHeader title="Équipe" subtitle="Une agence, plusieurs profils : courtiers, adjointes et membres d’équipe"
-        actions={isAdmin && <button className="btn-primary" onClick={() => setEditing({ id: uid(), name: '', role: 'courtier', title: 'Courtier immobilier', phone: '', email: '', color: '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'), split: 70, licence: '', active: true })}><Plus size={16} /> Membre</button>} />
+        actions={isAdmin && <button className="btn-primary" onClick={() => setEditing({ id: uid(), name: '', role: 'courtier', title: 'Courtier immobilier', phone: '', email: '', color: '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'), split: 70, licence: '', active: true, googleDrive: false, googleCalendar: false })}><Plus size={16} /> Membre</button>} />
 
       {!isAdmin && <p className="mb-4 rounded-lg bg-slate-100 p-3 text-sm text-slate-600">Seul un administrateur de l’agence peut modifier l’équipe et les informations de l’agence.</p>}
       {mode === 'remote' && isAdmin && <p className="mb-4 rounded-lg bg-brand-50 p-3 text-sm text-brand-700">Chaque membre ajouté reçoit son propre accès (courriel + mot de passe temporaire à lui transmettre). Il devra choisir son mot de passe à la première connexion.</p>}
@@ -47,6 +47,7 @@ export default function Team(_: PageProps) {
                 {[['Inscr.', listings], ['Dossiers', deals.length], ['Contacts', contacts], ['Tâches', tasks]].map(([k, v]) => <div key={k} className="rounded-lg bg-slate-50 p-1.5"><div className="font-bold">{v}</div><div className="text-[10px] text-slate-500">{k}</div></div>)}
               </div>
               <div className="mt-2 text-xs text-slate-500">Volume ouvert : {money(deals.reduce((s, d) => s + d.price, 0))} · partage {m.split} %</div>
+              <div className="mt-1 flex gap-1 text-[11px]">{m.googleDrive && <span className="badge bg-emerald-50 text-emerald-700">Drive</span>}{m.googleCalendar && <span className="badge bg-sky-50 text-sky-700">Agenda</span>}{m.googleEmail && <span className="badge bg-slate-100">relié</span>}</div>
             </button>
           )
         })}
@@ -83,6 +84,13 @@ function MemberForm({ m: init, onClose }: { m: Member; onClose: () => void }) {
         <Field label="Partage de commission (% au courtier)"><input className="input" type="number" value={m.split} onChange={e => set('split', +e.target.value)} /></Field>
         <Field label="Couleur"><input className="input h-10" type="color" value={m.color} onChange={e => set('color', e.target.value)} /></Field>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand-600" checked={m.active} onChange={e => set('active', e.target.checked)} /> Membre actif</label>
+        <div className="rounded-lg border border-slate-200 p-3 sm:col-span-2">
+          <div className="mb-1 text-sm font-semibold">Accès aux outils Google</div>
+          <p className="mb-2 text-xs text-slate-500">Autorisez ce membre à relier son propre compte Google. Vous pourrez retirer l’accès en tout temps (le compte sera alors déconnecté).</p>
+          <label className="flex items-center gap-2 py-1 text-sm"><input type="checkbox" className="accent-brand-600" checked={!!m.googleDrive} onChange={e => set('googleDrive', e.target.checked)} /> Google Drive — dossiers des inscriptions, transactions et visites</label>
+          <label className="flex items-center gap-2 py-1 text-sm"><input type="checkbox" className="accent-brand-600" checked={!!m.googleCalendar} onChange={e => set('googleCalendar', e.target.checked)} /> Google Agenda — envoi des rendez-vous et visites</label>
+          {m.googleEmail && <p className="mt-1 text-xs text-emerald-700">Compte relié : {m.googleEmail}</p>}
+        </div>
       </div>
     </Modal>
   )

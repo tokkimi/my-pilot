@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import { ACTIVITY, AGENCIES, agencyDb, currentUser, hashPassword, json, LEADS, loadAgencies, loadUsers, newUser, PLAN_SEATS, publicUser, sameOrigin, seedAgencyDb, uid, USERS, type Activity, type Agency, type Lead, type Plan, type User } from '../server/platform.js'
 import { mutate, readJson, storageMode, StorageUnavailable, writeJson } from '../server/storage.js'
 import type { DB } from '../src/lib/types.js'
+import { googleConfigured } from '../server/google.js'
 
 const tempPassword = () => 'IP-' + randomBytes(9).toString('base64url')
 
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
         media: visits.reduce((s, v) => s + (v.rooms ?? []).reduce((t, r) => t + (r.media?.length ?? 0), 0) + (v.voiceNotes?.length ?? 0) + (v.photos?.length ?? 0), 0),
       }
     }))
-    return json({ users: users.map(publicUser), agencies, leads, activity, usage, storage: storageMode() })
+    return json({ users: users.map(publicUser), agencies, leads, activity, usage, storage: storageMode(), google: { configured: googleConfigured(), picker: !!(process.env.GOOGLE_API_KEY && process.env.GOOGLE_APP_ID), redirect: `${new URL(req.url).origin}/api/google-callback` } })
   } catch (e) { return fail(e) }
 }
 

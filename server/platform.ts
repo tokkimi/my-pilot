@@ -10,6 +10,10 @@ export interface User {
   title: string; phone: string; color: string; split: number; licence: string
   salt: string; hash: string; createdAt: string; lastLoginAt: string; lastSeenAt: string; loginCount: number
   failed: number; lockedUntil: string; mustChangePassword: boolean
+  /** autorisations Google données par l'admin de l'agence (undefined = défaut selon le rôle) */
+  googleDrive?: boolean; googleCalendar?: boolean
+  /** compte Google relié */
+  googleEmail?: string; googleScopes?: string; googleConnectedAt?: string
 }
 export type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
 export interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string }

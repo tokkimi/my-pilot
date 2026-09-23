@@ -5,7 +5,12 @@ import { useStore } from '../lib/store'
 import type { Deal, DealKind } from '../lib/types'
 import { newDeal, newEvent, newTask } from '../lib/seed'
 import { BUY_WORKFLOW, DEAL_DATES, SELL_WORKFLOW } from '../lib/content'
-import { Avatar, DueBadge, Empty, Field, ListingSelect, MemberSelect, Modal, MultiContact, PageHeader, Progress, ScopeFilter } from '../lib/ui'
+import { Avatar, DueBadge, Empty, Field, ListingSelect, MemberSelect, Modal, MultiContact, PageHeader, Progress, ScopeFilter, Tabs } from '../lib/ui'
+import { DocsTab, OffersTab, TrackingTab } from './DealTabs'
+import { docProgress, DRIVE_SUBFOLDERS } from '../lib/compliance'
+import DrivePanel from '../components/DrivePanel'
+
+type DTab = 'process' | 'docs' | 'suivi' | 'offres'
 import { daysUntil, fillTemplate, fmtDate, fullName, money, TPS, TVQ } from '../lib/utils'
 
 export const workflowOf = (d: Deal) => (d.kind === 'vente' ? SELL_WORKFLOW : BUY_WORKFLOW)
@@ -76,6 +81,7 @@ function DealDetail({ id, onClose, go }: { id: string; onClose: () => void; go: 
   const { db, me, upsert, remove } = useStore()
   const d = db.deals.find(x => x.id === id)!
   const set = <K extends keyof Deal>(k: K, v: Deal[K]) => upsert('deals', { ...d, [k]: v })
+  const [tab, setTab] = useState<DTab>('process')
   const wf = workflowOf(d)
   const agent = db.members.find(m => m.id === d.agentId)
   const gross = d.price * d.commissionPct / 100
@@ -110,6 +116,11 @@ function DealDetail({ id, onClose, go }: { id: string; onClose: () => void; go: 
     <Modal title={d.title} onClose={onClose} wide>
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-3 lg:col-span-2">
+          <Tabs<DTab> value={tab} onChange={setTab} tabs={[['process', 'Processus'], ['docs', `Documents (${docProgress(d).done}/${docProgress(d).total})`], ['suivi', 'Fiche de suivi'], ['offres', `Offres & modifications (${d.offers?.length ?? 0})`]]} />
+          {tab === 'docs' && <DocsTab d={d} set={p => upsert('deals', { ...d, ...p })} />}
+          {tab === 'suivi' && <TrackingTab d={d} set={p => upsert('deals', { ...d, ...p })} />}
+          {tab === 'offres' && <OffersTab d={d} set={p => upsert('deals', { ...d, ...p })} />}
+          {tab === 'process' && <>
           <div className="flex flex-wrap gap-2">
             <button className="btn-outline" onClick={genTasks}><ListPlus size={15} /> Générer les tâches de l’étape</button>
             <button className="btn-outline" onClick={genEvents}><CalendarPlus size={15} /> Échéances → calendrier</button>
@@ -139,9 +150,11 @@ function DealDetail({ id, onClose, go }: { id: string; onClose: () => void; go: 
               </div>
             )
           })}
+          </>}
         </div>
 
         <div className="space-y-3">
+          <DrivePanel category="Dossiers" name={d.title} folderId={d.driveFolderId} url={d.driveUrl} subfolders={DRIVE_SUBFOLDERS} onLink={(fid, u) => upsert('deals', { ...d, driveFolderId: fid, driveUrl: u })} />
           <div className="rounded-lg border border-slate-200 p-3">
             <div className="grid gap-2">
               <Field label="Titre du dossier"><input className="input" value={d.title} onChange={e => set('title', e.target.value)} /></Field>

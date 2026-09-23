@@ -14,6 +14,9 @@ export const SELL_WORKFLOW: Phase[] = [
       { id: 'm5', label: 'Déclaration du vendeur signée' },
       { id: 'm6', label: 'Documents requis récupérés (taxes, hypothèque, certificat, copropriété)' },
       { id: 'm7', label: 'Décision certificat de localisation (à refaire ? commandé par ?)' },
+      { id: 'm8', label: 'Identité du vendeur vérifiée et formulaire CANAFE complété' },
+      { id: 'm9', label: 'Consentement Loi 25 signé' },
+      { id: 'm10', label: 'Dossier de signature électronique et dossier Drive créés', hint: 'Bouton « Créer le dossier » à droite' },
     ],
   },
   {
@@ -24,6 +27,9 @@ export const SELL_WORKFLOW: Phase[] = [
       { id: 'n4', label: 'Envoyer le courriel contenant le lien de la fiche descriptive' },
       { id: 'n5', label: 'Réseaux sociaux : publication « nouveauté à vendre »' },
       { id: 'n6', label: 'Gérer Immocontact (demandes de visites)' },
+      { id: 'n7', label: 'Envoyer la fiche au vendeur pour validation' },
+      { id: 'n8', label: 'Ouvrir l’inscription dans le logiciel de l’agence (ex. NexOne) et y déposer les documents' },
+      { id: 'n9', label: 'Mesures des pièces prises (visite terrain) ou reprises de l’ancienne fiche' },
     ],
   },
   {
@@ -34,6 +40,8 @@ export const SELL_WORKFLOW: Phase[] = [
       { id: 'k4', label: 'Présentation en primeur aux courtiers' },
       { id: 'k5', label: 'Visite libre planifiée' },
       { id: 'k6', label: 'Rapport de mise en marché envoyé au vendeur' },
+      { id: 'k7', label: 'Visite vidéo publiée (lien Instagram / YouTube ajouté à la fiche)' },
+      { id: 'k8', label: 'Modifications au contrat consignées (baisse de prix, prolongation)' },
     ],
   },
   {
@@ -46,6 +54,8 @@ export const SELL_WORKFLOW: Phase[] = [
       { id: 'p6', label: 'Inscrire la transaction au tableau blanc et suivre les délais' },
       { id: 'p7', label: 'Informer l’arpenteur de la date de l’acte de vente + coordonnées du notaire' },
       { id: 'p8', label: 'Commander Pancarte Express « VENDU »' },
+      { id: 'p9', label: 'Ouvrir la transaction dans le logiciel de l’agence' },
+      { id: 'p10', label: 'Accusés de réception reçus (P.A. par l’acheteur, D.V., acceptation hypothécaire)' },
     ],
   },
   {
@@ -65,6 +75,9 @@ export const SELL_WORKFLOW: Phase[] = [
       { id: 'z3', label: 'Retirer pancarte et boîte à clé' },
       { id: 'z4', label: 'Demander un avis Google / témoignage' },
       { id: 'z5', label: 'Plan d’action après-vente (anniversaire d’achat, fête, Noël)' },
+      { id: 'z6', label: 'Réception du dossier confirmée par le notaire' },
+      { id: 'z7', label: 'Facture de l’agence acheminée au notaire' },
+      { id: 'z8', label: 'Rétribution reçue et tableau des ventes mis à jour' },
     ],
   },
 ]
@@ -78,6 +91,7 @@ export const BUY_WORKFLOW: Phase[] = [
       { id: 'a4', label: 'Mise en lien avec un courtier hypothécaire partenaire' },
       { id: 'a5', label: 'Préapprobation hypothécaire reçue' },
       { id: 'a6', label: 'Alertes immobilières activées (critères validés)' },
+      { id: 'a7', label: 'Identité vérifiée, formulaire CANAFE et consentement Loi 25' },
     ],
   },
   {
@@ -94,6 +108,8 @@ export const BUY_WORKFLOW: Phase[] = [
       { id: 'o3', label: 'Négociation / contre-offres' },
       { id: 'o4', label: 'Offre acceptée', dateKey: 'paAcceptee' },
       { id: 'o5', label: 'Courriel récapitulatif des délais envoyé à l’acheteur' },
+      { id: 'o6', label: 'Accusés de réception signés (D.V., P.A., contre-propositions)' },
+      { id: 'o7', label: 'Entente de référencement / partage de rétribution (s’il y a lieu)' },
     ],
   },
   {
@@ -104,6 +120,7 @@ export const BUY_WORKFLOW: Phase[] = [
       { id: 'v4', label: 'Évaluation agréée (si nécessaire)' },
       { id: 'v5', label: 'Financement final confirmé', dateKey: 'financement' },
       { id: 'v6', label: 'Documents transmis au courtier hypothécaire' },
+      { id: 'v7', label: 'Accusé de réception du vendeur pour l’acceptation hypothécaire' },
     ],
   },
   {
@@ -113,6 +130,9 @@ export const BUY_WORKFLOW: Phase[] = [
       { id: 'n3', label: 'Remise des clés / cadeau', dateKey: 'occupation' },
       { id: 'n4', label: 'Références professionnels (entrepreneurs, fiscalistes…)' },
       { id: 'n5', label: 'Demander un avis / témoignage' },
+      { id: 'n6', label: 'Désactiver le portail de recherche du client' },
+      { id: 'n7', label: 'Ouvrir la transaction dans le logiciel de l’agence et y déposer les documents' },
+      { id: 'n8', label: 'Rétribution reçue et tableau des ventes mis à jour' },
     ],
   },
 ]

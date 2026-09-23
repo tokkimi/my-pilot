@@ -8,11 +8,14 @@ import { daysToAnniversary, daysUntil, fmtDate, fullName, money, parseDate } fro
 import type { Stage } from '../lib/types'
 import { useState } from 'react'
 import { Play, ScanLine } from 'lucide-react'
+import { docProgress } from '../lib/compliance'
+import { FileWarning } from 'lucide-react'
 import { StartVisit, VISIT_TYPES, normalizeVisit, upcomingVisits } from './Visits'
 
 export default function Dashboard({ go }: PageProps) {
   const { db, me, mine, upsert } = useStore()
   const [startVisit, setStartVisit] = useState(false)
+  const myMissing = db.deals.filter(d => d.status === 'ouvert' && d.agentId === me.id).map(d => ({ d, p: docProgress(d) })).filter(x => x.p.missing.length > 0)
   const visits = upcomingVisits((db.visits ?? []).map(normalizeVisit).filter(v => mine(v.agentId)))
   const listings = db.listings.filter(l => mine(l.agentId))
   const deals = db.deals.filter(d => mine(d.agentId))
@@ -88,6 +91,21 @@ export default function Dashboard({ go }: PageProps) {
           )}
           <button className="btn-ghost mt-2 w-full justify-center" onClick={() => go('tasks')}>Toutes les tâches →</button>
         </section>
+
+        {myMissing.length > 0 && (
+          <section className="card border-amber-200 p-4 lg:col-span-3">
+            <h2 className="mb-2 flex items-center gap-2 font-semibold"><FileWarning size={18} className="text-amber-600" /> Mes documents manquants</h2>
+            <div className="flex gap-2 overflow-x-auto">
+              {myMissing.map(({ d, p }) => (
+                <button key={d.id} onClick={() => go('deals', d.id)} className="min-w-60 rounded-lg border border-slate-200 p-3 text-left text-sm hover:border-amber-400">
+                  <div className="truncate font-semibold">{d.title}</div>
+                  <div className="text-xs text-slate-500">{p.missing.length} document(s) · {p.pct} % complet{d.docsDue ? ` · échéance ${fmtDate(d.docsDue)}` : ''}</div>
+                  <div className="mt-1 truncate text-xs text-amber-700">{p.missing.slice(0, 2).map(x => x.label).join(' · ')}</div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         {visits.length > 0 && (
           <section className="card p-4 lg:col-span-3">

@@ -4,10 +4,10 @@ import { Building2, ExternalLink, Inbox, KeyRound, LogOut, Plus, RefreshCw, User
 // Console des propriétaires de la plateforme : statistiques d'utilisation, agences, utilisateurs, demandes du site.
 type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
 interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string }
-interface User { id: string; email: string; name: string; role: string; agencyId: string; active: boolean; title: string; createdAt: string; lastLoginAt: string; lastSeenAt: string; loginCount: number; mustChangePassword: boolean }
+interface User { id: string; email: string; name: string; role: string; agencyId: string; active: boolean; title: string; createdAt: string; lastLoginAt: string; lastSeenAt: string; loginCount: number; mustChangePassword: boolean; googleEmail?: string; googleDrive?: boolean; googleCalendar?: boolean }
 interface Lead { id: string; createdAt: string; name: string; email: string; phone: string; agency: string; role: string; agents: string; interest: string; message: string; status: string; notes: string }
 interface Usage { agencyId: string; contacts: number; listings: number; deals: number; tasks: number; visits: number; visitsDone: number; events: number; media: number }
-interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; storage: string }
+interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; storage: string; google: { configured: boolean; picker: boolean; redirect: string } }
 
 const PLAN_LABEL: Record<Plan, string> = { essai: 'Essai (30 j)', solo: 'Courtier solo', equipe: 'Équipe', agence: 'Agence', entreprise: 'Entreprise', illimite: 'Illimité (interne)' }
 const ROLE_LABEL: Record<string, string> = { superadmin: 'Super-admin', admin: 'Admin agence', courtier: 'Courtier', adjointe: 'Adjointe', agent: 'Membre' }
@@ -107,6 +107,7 @@ function Overview({ data }: { data: Data }) {
   return (
     <div className="space-y-5">
       {data.storage !== 'blob' && <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Stockage : <b>{data.storage}</b>. En production, connectez un Blob Store Vercel au projet pour conserver les données.</div>}
+      <GoogleSetup g={data.google} connected={data.users.filter(u => u.googleEmail).length} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="Agences" value={data.agencies.length} sub={`${data.agencies.filter(a => a.status === 'actif').length} actives · ${data.agencies.filter(a => a.plan === 'essai').length} en essai`} />
         <Tile label="Utilisateurs" value={users.length} sub={`${users.filter(u => u.active).length} actifs`} />
@@ -196,7 +197,7 @@ function UsersTab({ data, run, onSecret }: { data: Data; run: (b: object, after?
       </section>
       <input className="input" placeholder="Rechercher un utilisateur…" value={q} onChange={e => setQ(e.target.value)} />
       <section className="card overflow-x-auto">
-        <table className="w-full"><thead><tr><th className="th">Utilisateur</th><th className="th">Agence</th><th className="th">Rôle</th><th className="th">Dernière connexion</th><th className="th">Dernière activité</th><th className="th">Connexions</th><th className="th">Statut</th><th className="th" /></tr></thead>
+        <table className="w-full"><thead><tr><th className="th">Utilisateur</th><th className="th">Agence</th><th className="th">Rôle</th><th className="th">Dernière connexion</th><th className="th">Dernière activité</th><th className="th">Connexions</th><th className="th">Google</th><th className="th">Statut</th><th className="th" /></tr></thead>
           <tbody>{list.map(u => (
             <tr key={u.id}>
               <td className="td font-medium">{u.name}<div className="text-xs text-slate-500">{u.email}{u.mustChangePassword && ' · mot de passe temporaire'}</div></td>
@@ -205,6 +206,7 @@ function UsersTab({ data, run, onSecret }: { data: Data; run: (b: object, after?
               <td className="td text-xs">{fmt(u.lastLoginAt)}</td>
               <td className="td text-xs">{ago(u.lastSeenAt)}</td>
               <td className="td">{u.loginCount}</td>
+              <td className="td text-xs">{u.googleEmail || <span className="text-slate-400">—</span>}</td>
               <td className="td">{u.role === 'superadmin' ? '—' : <button className={`badge ${u.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`} onClick={() => run({ action: 'updateUser', id: u.id, patch: { active: !u.active } })}>{u.active ? 'actif' : 'désactivé'}</button>}</td>
               <td className="td"><button className="btn-ghost py-1 text-xs" onClick={() => confirm(`Réinitialiser le mot de passe de ${u.email}?`) && run({ action: 'resetPassword', id: u.id }, b => onSecret({ title: `Nouveau mot de passe — ${u.name}`, email: u.email, password: b.password }))}><KeyRound size={13} /> Réinitialiser</button></td>
             </tr>
@@ -241,5 +243,28 @@ function Leads({ data, run }: { data: Data; run: (b: object) => Promise<void> })
         </div>
       ))}
     </div>
+  )
+}
+
+function GoogleSetup({ g, connected }: { g: Data['google']; connected: number }) {
+  const [open, setOpen] = useState(!g.configured)
+  return (
+    <section className={`card p-4 ${g.configured ? '' : 'border-amber-300'}`}>
+      <button className="flex w-full items-center justify-between text-left" onClick={() => setOpen(!open)}>
+        <span className="font-semibold">Intégration Google (Drive & Agenda) — {g.configured ? <span className="text-emerald-700">active · {connected} compte(s) relié(s){g.picker ? '' : ' · sélecteur de fichiers inactif'}</span> : <span className="text-amber-700">à configurer</span>}</span>
+        <span className="text-slate-400">{open ? '▾' : '▸'}</span>
+      </button>
+      {open && (
+        <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-slate-700">
+          <li>Sur <a className="text-brand-700 underline" href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noreferrer">console.cloud.google.com</a>, créez un projet « ImmoPilot ».</li>
+          <li>Activez les API <b>Google Drive API</b>, <b>Google Calendar API</b> et <b>Google Picker API</b> (API et services → Bibliothèque).</li>
+          <li>Écran de consentement OAuth : type « Externe », nom ImmoPilot, logo, courriel de soutien, domaine <code>immopilot-crm.vercel.app</code>, liens vers la politique de confidentialité. Portées : <code>drive.file</code>, <code>calendar.events</code>, <code>openid</code>, <code>email</code>.</li>
+          <li>Identifiants → Créer un « ID client OAuth » (application Web). URI de redirection autorisé : <code className="break-all">{g.redirect}</code></li>
+          <li>Identifiants → Créer une « clé API » (restreinte à l’API Picker et au domaine du site).</li>
+          <li>Dans Vercel → projet → Settings → Environment Variables, ajoutez <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, <code>GOOGLE_API_KEY</code> et <code>GOOGLE_APP_ID</code> (numéro du projet), puis redéployez.</li>
+          <li>Tant que l’application n’est pas vérifiée par Google, ajoutez les courriels des utilisateurs comme « testeurs » (100 max.). Demandez ensuite la vérification (Agenda est une portée sensible).</li>
+        </ol>
+      )}
+    </section>
   )
 }

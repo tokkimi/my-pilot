@@ -1,7 +1,7 @@
 import { useEffect, useState, type ComponentType } from 'react'
 import {
   LayoutDashboard, Users, KanbanSquare, Home, FileCheck2, CheckSquare, CalendarDays, Eye, Megaphone, Mail, BookOpen, Calculator,
-  FileText, Grid3x3, Handshake, UserCog, Wallet, Settings, Menu, X, Search, ScanLine, LogOut, Cloud, CloudOff, Loader2, KeyRound, Shield,
+  FileText, Grid3x3, Handshake, UserCog, Wallet, Settings, Menu, X, Search, ScanLine, ShieldCheck, LogOut, Cloud, CloudOff, Loader2, KeyRound, Shield, HardDrive,
 } from 'lucide-react'
 import { useStore } from './lib/store'
 import { Avatar, ROLES } from './lib/ui'
@@ -25,6 +25,8 @@ import Finance from './modules/Finance'
 import SettingsPage from './modules/Settings'
 import GlobalSearch from './modules/GlobalSearch'
 import Visits from './modules/Visits'
+import GooglePage from './modules/Google'
+import Compliance from './modules/Compliance'
 import { AccountModal } from './modules/Account'
 
 export type Page = keyof typeof PAGES
@@ -39,6 +41,7 @@ const PAGES = {
   visits: { label: 'Visites terrain', icon: ScanLine, C: Visits, group: 'Immobilier' },
   listings: { label: 'Inscriptions', icon: Home, C: Listings, group: 'Immobilier' },
   deals: { label: 'Dossiers & transactions', icon: FileCheck2, C: Deals, group: 'Immobilier' },
+  compliance: { label: 'Conformité des dossiers', icon: ShieldCheck, C: Compliance, group: 'Immobilier' },
   showings: { label: 'Visites & rétroactions', icon: Eye, C: Showings, group: 'Immobilier' },
   marketing: { label: 'Marketing & réseaux', icon: Megaphone, C: Marketing, group: 'Marketing' },
   templates: { label: 'Courriels & textos', icon: Mail, C: Templates, group: 'Marketing' },
@@ -46,6 +49,7 @@ const PAGES = {
   guides: { label: 'Guides clients', icon: FileText, C: Guides, group: 'Savoir' },
   tools: { label: 'Calculateurs', icon: Calculator, C: Tools, group: 'Savoir' },
   platforms: { label: 'Plateformes', icon: Grid3x3, C: Platforms, group: 'Réseau' },
+  google: { label: 'Google Drive & Agenda', icon: HardDrive, C: GooglePage, group: 'Réseau' },
   partners: { label: 'Partenaires', icon: Handshake, C: Partners, group: 'Réseau' },
   finance: { label: 'Commissions & dépenses', icon: Wallet, C: Finance, group: 'Agence' },
   team: { label: 'Équipe', icon: UserCog, C: Team, group: 'Agence' },
