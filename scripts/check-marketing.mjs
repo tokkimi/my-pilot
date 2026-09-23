@@ -40,3 +40,12 @@ assert.equal((await fetch(base + '/api/media?p=' + encodeURIComponent(media.path
 assert.equal((await fetch(base + '/api/media?p=' + encodeURIComponent(media.path), { headers: { cookie: founder }, method: 'DELETE' })).status, 200)
 await call('/api/data', client, { ops: [{ t: 'remove', c: 'marketingItems', id: item.id }, { t: 'remove', c: 'posts', id: post.id }] })
 console.log('PASS: roles, tenant isolation, idempotent founder agency, shared marketing persistence, approval authorization, and media ownership')
+const operation = { id:'qa-operation', kind:'goal', title:'Shared target', ownerId:clientData.me.id, due:'2026-10-01', status:'open', priority:'normal', notes:'', url:'', target:10, current:3, unit:'contacts', checklist:[] }
+assert.equal((await call('/api/data',client,{ops:[{t:'upsert',c:'operations',item:operation}]})).body.ok,true)
+assert.equal((await call('/api/data',member)).body.db.operations.find(x=>x.id===operation.id).current,3)
+assert.equal((await call('/api/data?agency='+id,founder)).body.db.operations.some(x=>x.id===operation.id),false)
+await call('/api/data',member,{ops:[{t:'upsert',c:'operations',item:{...operation,current:8}}]})
+assert.equal((await call('/api/data',client)).body.db.operations.find(x=>x.id===operation.id).current,8)
+await call('/api/data',client,{ops:[{t:'remove',c:'operations',id:operation.id}]})
+assert.equal((await call('/api/data',client)).body.db.operations.some(x=>x.id===operation.id),false)
+console.log('PASS: shared operations persistence, updates, deletion and tenant isolation')

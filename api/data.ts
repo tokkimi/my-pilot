@@ -4,7 +4,7 @@ import { allowed, revokeGoogle } from '../server/google.js'
 import type { DB, Member } from '../src/lib/types.js'
 
 type AgencyDoc = Omit<DB, 'members' | 'currentUserId'>
-const COLLS = ['contacts', 'activities', 'listings', 'deals', 'tasks', 'events', 'showings', 'partners', 'platforms', 'templates', 'posts', 'objections', 'expenses', 'visits', 'ledger', 'trips', 'acctYears', 'invoices', 'marketingItems'] as const
+const COLLS = ['contacts', 'activities', 'listings', 'deals', 'tasks', 'events', 'showings', 'partners', 'platforms', 'templates', 'posts', 'objections', 'expenses', 'visits', 'ledger', 'trips', 'acctYears', 'invoices', 'marketingItems', 'operations'] as const
 /** Collections comptables privées : chacun voit la sienne; « agence » réservée aux administrateurs. */
 const PRIVATE = ['ledger', 'trips', 'acctYears', 'invoices']
 const canSee = (ownerId: unknown, u: User) => u.role === 'superadmin' || ownerId === u.id || (ownerId === 'agence' && u.role === 'admin')
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
     if (u.role === 'superadmin' && !members.some(m => m.id === u.id)) members.unshift(toMember(u))
     for (const c of PRIVATE) (data as Record<string, unknown>)[c] = (((data as Record<string, unknown>)[c] as { ownerId: string }[] | undefined) ?? []).filter(x => canSee(x.ownerId, u))
     if (u.role !== 'superadmin') await trackActivity(u, false)
-    return json({ db: { ...data, marketingItems: data.marketingItems ?? [], visits: data.visits ?? [], members, currentUserId: u.id }, me: publicUser(u), agency }, 200, { 'set-cookie': renewCookie(u) })
+    return json({ db: { ...data, marketingItems: data.marketingItems ?? [], operations: data.operations ?? [], visits: data.visits ?? [], members, currentUserId: u.id }, me: publicUser(u), agency }, 200, { 'set-cookie': renewCookie(u) })
   } catch (e) { return fail(e) }
 }
 
@@ -133,3 +133,4 @@ function fail(e: unknown) {
   console.error(e)
   return json({ error: 'Erreur serveur.' }, 500)
 }
+

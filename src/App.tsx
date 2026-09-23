@@ -1,7 +1,8 @@
+import Operations from './modules/Operations'
 import { tr } from './lib/i18n'
 import { useEffect, useState, type ComponentType } from 'react'
 import {
-  LayoutDashboard, Users, KanbanSquare, Home, FileCheck2, CheckSquare, CalendarDays, Eye, Megaphone, Mail, BookOpen, Calculator,
+  ClipboardList, LayoutDashboard, Users, KanbanSquare, Home, FileCheck2, CheckSquare, CalendarDays, Eye, Megaphone, Mail, BookOpen, Calculator,
   FileText, Grid3x3, Handshake, UserCog, Wallet, Settings, Menu, X, Search, ScanLine, ShieldCheck, LogOut, Cloud, CloudOff, Loader2, KeyRound, Shield, HardDrive,
 } from 'lucide-react'
 import { useStore } from './lib/store'
@@ -34,6 +35,7 @@ export type Page = keyof typeof PAGES
 export interface PageProps { go: (p: Page, id?: string) => void; openId?: string }
 
 const PAGES = {
+  operations: { label: 'Pilotage', icon: ClipboardList, C: Operations, group: 'Général' },
   dashboard: { label: 'Tableau de bord', icon: LayoutDashboard, C: Dashboard, group: 'Général' },
   contacts: { label: 'Contacts & prospects', icon: Users, C: Contacts, group: 'CRM' },
   pipeline: { label: 'Pipeline', icon: KanbanSquare, C: Pipeline, group: 'CRM' },
@@ -184,4 +186,5 @@ function BubbleNav({ current, go, openMenu }: { current: Page; go: (p: Page) => 
     </nav>
   )
 }
+
 
