@@ -83,7 +83,7 @@ export default function App() {
   const groups = [...new Set(Object.values(PAGES).map(p => p.group))]
 
   return (
-    <div className="min-h-screen lg:pl-64">
+    <div className="app-shell min-h-screen lg:pl-64">
       <aside className={`no-print fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-ink text-slate-300 transition-transform lg:translate-x-0 ${nav ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between px-4 py-4">
           <div className="flex min-w-0 items-center gap-2">
@@ -184,3 +184,4 @@ function BubbleNav({ current, go, openMenu }: { current: Page; go: (p: Page) => 
     </nav>
   )
 }
+

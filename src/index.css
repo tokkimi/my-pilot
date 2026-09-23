@@ -71,3 +71,45 @@ button:focus-visible,a:focus-visible { outline:3px solid #6a92b8; outline-offset
 @media(max-width:640px) { .card { border-radius:19px; } main { padding-top:1.25rem !important; } .brand-logo{width:125px;} .login-glass form{padding:1.6rem;} }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; transition:none !important; animation:none !important; } }
 @media print { .card { backdrop-filter:none; background:white; box-shadow:none; } }
+
+/* Shared translucent surfaces: color remains visible through every panel. */
+body { background: radial-gradient(ellipse at 0% 10%,#7da6c5 0,transparent 46%),radial-gradient(ellipse at 92% 34%,#cab598 0,transparent 44%),radial-gradient(ellipse at 35% 95%,#89a9a5 0,transparent 48%),#dce5ec; background-attachment:fixed; }
+.card { background:linear-gradient(125deg,#ffffff55,#ffffff20); border:1px solid #ffffff9c; box-shadow:inset 0 1px 0 #ffffffe0,inset 0 -1px 0 #ffffff35,0 12px 32px #20354d12; backdrop-filter:blur(28px) saturate(145%); -webkit-backdrop-filter:blur(28px) saturate(145%); }
+.landing-glass { padding:16px; }
+.landing-glass>header { max-width:1440px; margin:auto; top:16px; border:1px solid #ffffffad; border-radius:24px; background:#ffffff45; box-shadow:inset 0 1px #ffffffd9,0 8px 32px #243f5514; backdrop-filter:blur(30px) saturate(155%); -webkit-backdrop-filter:blur(30px) saturate(155%); }
+.landing-glass>header>div:first-child { max-width:none; min-height:84px; padding:8px 22px; gap:24px; }
+.landing-glass>header nav { align-items:center; gap:22px; }
+.landing-glass>header a { white-space:nowrap; flex-shrink:0; }
+.landing-glass>header nav a { font-size:14px; line-height:20px; }
+.landing-glass>header .btn-primary,.landing-glass>header .btn-outline { min-height:44px; padding:10px 16px; justify-content:center; font-size:14px; }
+.landing-glass>header .brand-logo { width:112px; height:64px; object-fit:cover; flex-shrink:0; }
+.landing-glass>section { border-radius:32px; margin:20px auto; }
+.landing-glass section.bg-slate-50,.landing-glass section.bg-gradient-to-b { background:#ffffff16; border:1px solid #ffffff50; }
+.landing-hero { max-width:1440px; border:1px solid #ffffff70; background:linear-gradient(120deg,#ffffff25,#ffffff05); }
+.landing-hero>div { max-width:1280px; padding:72px 40px 88px; }
+.landing-glass #integrations { padding:48px 32px; background:linear-gradient(120deg,#5a8baf26,#d0ad7933); border:1px solid #ffffff70; }
+.landing-glass #integrations .card { min-height:132px; justify-content:center; gap:14px; border-radius:26px; background:linear-gradient(135deg,#ffffff38,#ffffff0c); }
+.landing-glass #integrations .card img { width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 4px 6px #18344d18); }
+.landing-glass #integrations .card span { font-size:14px; color:#28394a; }
+.platform-logo-card { background:#ffffff30; border-color:#ffffff80; backdrop-filter:blur(18px); }
+.landing-glass footer { background:#ffffff25; border-radius:24px; padding:28px; }
+.app-shell { margin:16px; min-height:calc(100dvh - 32px); border:1px solid #ffffff8c; border-radius:28px; background:#ffffff16; box-shadow:0 20px 70px #284b641a; }
+.app-shell aside.no-print { top:28px; bottom:28px; left:28px; width:240px; border:1px solid #ffffff75; border-radius:22px; background:linear-gradient(150deg,#213e59b0,#263e4a85); backdrop-filter:blur(32px) saturate(150%); }
+.app-shell main { padding:32px!important; }
+.app-shell aside nav button { min-height:42px; font-size:14px; }
+.app-shell aside nav button svg { flex-shrink:0; }
+.app-shell header { background:#ffffff48; border-color:#ffffff80; backdrop-filter:blur(24px); }
+.app-shell>nav>div { background:#19364cbf; backdrop-filter:blur(28px); border:1px solid #ffffff70; }
+@media(min-width:1024px) { .app-shell { padding-left:264px; } }
+@media(max-width:1279px) { .landing-glass>header nav,.landing-glass>header>div:first-child>div { display:none; } .landing-glass>header>div:first-child>button { display:block; } .landing-glass>header>div:nth-child(2) { display:flex; } }
+@media(max-width:767px) { .landing-glass { padding:8px; } .landing-glass>header { top:8px;border-radius:20px; } .landing-glass>header>div:first-child { min-height:68px;padding:4px 16px; } .landing-glass>header .brand-logo { width:96px;height:58px; } .landing-hero>div { padding:36px 20px; } .landing-hero h1 { font-size:2.65rem; } .landing-glass #integrations { padding:32px 16px; } .landing-glass #integrations>div { grid-template-columns:repeat(3,minmax(0,1fr));gap:10px; } .landing-glass #integrations .card { padding:12px 5px;min-height:110px;border-radius:20px; } .landing-glass #integrations .card span { font-size:12px; } .app-shell { margin:0;border:0;border-radius:0;min-height:100dvh; } .app-shell main { padding:20px 16px 120px!important; } .app-shell aside.no-print { top:12px;bottom:12px;left:0; } }
+@media print { body{background:white}.app-shell{margin:0;border:0;box-shadow:none}.card{background:white;backdrop-filter:none} }
+.landing-glass section[id] { scroll-margin-top:124px; }
+.landing-hero .bg-white { background:#ffffff45; border:1px solid #ffffffa0; backdrop-filter:blur(24px); box-shadow:inset 0 1px #ffffffd0,0 24px 60px #1c354f20; }
+.landing-hero .bg-slate-50 { background:#ffffff30; }
+.landing-glass #integrations>p:last-child { color:#526174; }
+@media(min-width:1280px) and (max-width:1399px) { .landing-glass>header nav {gap:14px}.landing-glass>header>div:first-child {gap:16px;padding-inline:16px}.landing-glass>header .brand-logo{width:96px}.landing-glass>header .btn-outline{display:none} }
+.app-shell main .grid>* { min-width:0; }
+.app-shell main .card { min-width:0; max-width:100%; }
+.app-shell main .card table { min-width:0; }
+@media(max-width:767px) { .app-shell main .card { overflow-x:auto; } .app-shell main h2 { overflow-wrap:anywhere; } }
