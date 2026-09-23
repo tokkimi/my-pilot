@@ -27,6 +27,13 @@ export default function Admin() {
   const [error, setError] = useState('')
   const [tab, setTab] = useState<'overview' | 'agencies' | 'users' | 'leads'>('overview')
   const [secret, setSecret] = useState<{ title: string; email: string; password: string } | null>(null)
+  const [pw, setPw] = useState<{ current: string; next: string; msg: string } | null>(null)
+  const changePw = async () => {
+    if (!pw) return
+    const r = await fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'password', current: pw.current, next: pw.next }) })
+    const b = await r.json().catch(() => ({}))
+    setPw({ ...pw, msg: r.ok ? 'Mot de passe modifié ✓' : b.error || 'Erreur' })
+  }
   const load = () => api().then(setData).catch(e => setError(e.message))
   useEffect(() => { void load() }, [])
   const run = async (body: object, after?: (b: any) => void) => { try { const b = await api(body); after?.(b); await load() } catch (e) { alert((e as Error).message) } }
@@ -47,6 +54,7 @@ export default function Admin() {
           </nav>
           <div className="ml-auto flex gap-2 text-sm">
             <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => void load()}><RefreshCw size={14} /> Actualiser</button>
+            <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => setPw({ current: '', next: '', msg: '' })}><KeyRound size={14} /> Mot de passe</button>
             <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={async () => { await fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); location.href = '/connexion' }}><LogOut size={14} /> Quitter</button>
           </div>
         </div>
@@ -57,6 +65,17 @@ export default function Admin() {
         {tab === 'users' && <UsersTab data={data} run={run} onSecret={setSecret} />}
         {tab === 'leads' && <Leads data={data} run={run} />}
       </main>
+      {pw && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="card w-full max-w-sm p-6">
+            <h2 className="mb-3 flex items-center gap-2 font-semibold"><KeyRound size={18} /> Changer mon mot de passe</h2>
+            <input className="input mb-2" type="password" placeholder="Mot de passe actuel" autoComplete="current-password" value={pw.current} onChange={e => setPw({ ...pw, current: e.target.value })} />
+            <input className="input" type="password" placeholder="Nouveau (8 caractères min.)" autoComplete="new-password" value={pw.next} onChange={e => setPw({ ...pw, next: e.target.value })} />
+            {pw.msg && <p className="mt-2 text-sm">{pw.msg}</p>}
+            <div className="mt-4 flex justify-end gap-2"><button className="btn-ghost" onClick={() => setPw(null)}>Fermer</button><button className="btn-primary" onClick={changePw}>Enregistrer</button></div>
+          </div>
+        </div>
+      )}
       {secret && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div className="card w-full max-w-md p-6">
