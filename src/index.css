@@ -113,3 +113,22 @@ body { background: radial-gradient(ellipse at 0% 10%,#7da6c5 0,transparent 46%),
 .app-shell main .card { min-width:0; max-width:100%; }
 .app-shell main .card table { min-width:0; }
 @media(max-width:767px) { .app-shell main .card { overflow-x:auto; } .app-shell main h2 { overflow-wrap:anywhere; } }
+
+/* Mobile feature cards form one swipeable row rather than a long column. */
+@media(max-width:767px) {
+  #fonctionnalites>div>.grid {
+    display:grid;
+    grid-template-columns:none;
+    grid-auto-flow:column;
+    grid-auto-columns:86%;
+    gap:14px;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;
+    scroll-padding-inline:2px;
+    padding:2px 2px 16px;
+    scrollbar-width:thin;
+    scrollbar-color:#526e8980 transparent;
+  }
+  #fonctionnalites>div>.grid>.card { scroll-snap-align:start; min-width:0; }
+}
