@@ -258,7 +258,7 @@ export const TEMPLATES_SEED = [
   { name: 'Bonne fête', channel: 'texto', category: 'Plan d’action', subject: '', body: 'Bonne fête {prenom}! 🎉 Je te souhaite une superbe journée entourée de ceux que tu aimes. — {courtier}' },
   { name: 'Joyeux Noël', channel: 'texto', category: 'Plan d’action', subject: '', body: 'Joyeuses Fêtes {prenom}! 🎄 Merci pour ta confiance cette année. Au plaisir de se revoir en {annee}! — {courtier}' },
   { name: 'Anniversaire d’achat', channel: 'texto', category: 'Plan d’action', subject: '', body: 'Allô {prenom}! Ça fait déjà un an que tu es dans ta propriété 🏡 J’espère que tu t’y plais toujours autant! Si jamais tu te demandes ce qu’elle vaut aujourd’hui, fais-moi signe. — {courtier}' },
-  { name: 'Nouveauté à vendre (RS)', channel: 'reseaux', category: 'Marketing', subject: '', body: '🏡 NOUVEAUTÉ À VENDRE — {ville}\n\n{adresse}\n{chambres} CAC · {sdb} SDB · {prix}\n\n✨ Coup de cœur : \n\n📩 Écrivez-moi pour une visite privée!\n#immobilier #{ville} #aVendre #TheAgency' },
+  { name: 'Nouveauté à vendre (RS)', channel: 'reseaux', category: 'Marketing', subject: '', body: '🏡 NOUVEAUTÉ À VENDRE — {ville}\n\n{adresse}\n{chambres} CAC · {sdb} SDB · {prix}\n\n✨ Coup de cœur : \n\n📩 Écrivez-moi pour une visite privée!\n#immobilier #{ville} #aVendre' },
   { name: 'VENDU (RS)', channel: 'reseaux', category: 'Marketing', subject: '', body: '🎉 VENDU — {ville}!\n\nFélicitations à nos vendeurs pour cette belle transaction! Merci pour votre confiance 🙏\n\nVous pensez vendre? Plusieurs acheteurs sont toujours à la recherche dans le secteur. Écrivez-moi!\n#vendu #immobilier #{ville}' },
 ]
 

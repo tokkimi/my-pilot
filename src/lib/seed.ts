@@ -122,7 +122,7 @@ export function seed(): DB {
 
   return {
     version: 1,
-    agency: { name: 'Équipe Cauvier — The Agency', office: 'Laval – Montréal, QC', phone: '514 774-9818', email: 'info@equipecauvier.com', website: 'https://emiliecauvier.com', linktree: 'https://linktr.ee/theagencymontrealcourtiers' },
+    agency: { name: 'Équipe Cauvier', office: 'Laval – Montréal, QC', phone: '514 774-9818', email: 'info@equipecauvier.com', website: 'https://emiliecauvier.com', linktree: '' },
     currentUserId: 'm1',
     members,
     contacts,
