@@ -33,7 +33,10 @@ export async function readJson<T>(p: string): Promise<{ data: T | null; etag: st
     try {
       const r = await get(p, { access: 'private', useCache: false })
       if (!r || r.statusCode !== 200) return { data: null, etag: null }
-      return { data: JSON.parse((await streamToBuffer(r.stream)).toString('utf8')) as T, etag: r.blob.etag }
+      // HTTP compression may add a weak validator prefix and quotes. The Blob
+      // write API expects the underlying object ETag, not the HTTP wrapper.
+      const etag = r.blob.etag.replace(/^W\//, '').replace(/^"|"$/g, '')
+      return { data: JSON.parse((await streamToBuffer(r.stream)).toString('utf8')) as T, etag }
     } catch (e) {
       if (e instanceof BlobNotFoundError) return { data: null, etag: null }
       throw e
