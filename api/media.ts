@@ -1,9 +1,11 @@
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
+import { handleUpload, handleUploadPresigned, type HandleUploadBody, type HandleUploadPresignedBody } from '@vercel/blob/client'
+import { issueSignedToken } from '@vercel/blob'
 import { currentUser, json, sameOrigin, uid } from '../server/platform.js'
 import { getFile, putFile, removeFile, storageMode, StorageUnavailable } from '../server/storage.js'
 
 const ALLOWED = /^(image\/(jpeg|png|webp|heic|heif|gif)|video\/(mp4|webm|quicktime)|audio\/(webm|ogg|mp4|mpeg|wav|x-m4a|aac)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet)|vnd\.ms-excel|zip)|text\/(plain|csv))(;.*)?$/
 const MAX = 300 * 1024 * 1024
+const TYPES = ['image/*', 'video/*', 'audio/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'text/plain', 'text/csv']
 
 const allowedPath = (p: string, agencyId: string, superadmin: boolean) =>
   /^agencies\/[\w-]+\/media\/[\w.-]+$/.test(p) && (superadmin || p.startsWith(`agencies/${agencyId}/media/`))
@@ -25,15 +27,28 @@ export async function POST(req: Request) {
     const type = req.headers.get('content-type') || ''
     // 1) Téléversement direct côté client vers Vercel Blob (gros fichiers vidéo)
     if (type.includes('application/json')) {
-      const body = (await req.json()) as HandleUploadBody
-      const result = await handleUpload({
-        body, request: req,
-        onBeforeGenerateToken: async pathname => {
-          if (!u) throw new Error('Non connecté')
-          if (!allowedPath(pathname, u.agencyId, u.role === 'superadmin')) throw new Error('Chemin refusé')
-          return { allowedContentTypes: ['image/*', 'video/*', 'audio/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'text/plain', 'text/csv'], maximumSizeInBytes: MAX, addRandomSuffix: false }
-        },
-      })
+      const body = (await req.json()) as HandleUploadBody | HandleUploadPresignedBody
+      const check = (pathname: string) => {
+        if (!u) throw new Error('Non connecté')
+        if (!allowedPath(pathname, u.agencyId, u.role === 'superadmin')) throw new Error('Chemin refusé')
+      }
+      // Blob Store relié par OIDC (sans BLOB_READ_WRITE_TOKEN) : URL présignée limitée au chemin demandé
+      const result = body.type === 'blob.generate-presigned-url' || (body.type === 'blob.upload-completed' && !process.env.BLOB_READ_WRITE_TOKEN)
+        ? await handleUploadPresigned({
+          body: body as HandleUploadPresignedBody, request: req,
+          getSignedToken: async pathname => {
+            check(pathname)
+            const token = await issueSignedToken({ pathname, operations: ['put'], allowedContentTypes: TYPES, maximumSizeInBytes: MAX, validUntil: Date.now() + 60 * 60 * 1000 })
+            return { token, urlOptions: { addRandomSuffix: false } }
+          },
+        })
+        : await handleUpload({
+          body: body as HandleUploadBody, request: req,
+          onBeforeGenerateToken: async pathname => {
+            check(pathname)
+            return { allowedContentTypes: TYPES, maximumSizeInBytes: MAX, addRandomSuffix: false }
+          },
+        })
       return json(result)
     }
     // 2) Téléversement direct au serveur (petits fichiers / développement)

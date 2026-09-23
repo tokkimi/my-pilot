@@ -1,5 +1,5 @@
 import { bootstrap, checkPassword, clearCookie, currentUser, hashPassword, json, loadAgencies, loadUsers, publicUser, renewCookie, sameOrigin, sessionCookie, trackActivity, USERS, type User } from '../server/platform.js'
-import { mutate, storageMode, storageReady, StorageUnavailable } from '../server/storage.js'
+import { mutate, storageMode, storageReady, StorageUnavailable, uploadMode } from '../server/storage.js'
 
 export async function GET(req: Request) {
   if (!storageReady()) return json({ user: null, storage: storageMode() })
@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     const u = await currentUser(req)
     if (!u) return json({ user: null, storage: storageMode() })
     const agency = (await loadAgencies()).find(a => a.id === u.agencyId) ?? null
-    return json({ user: publicUser(u), agency, storage: storageMode() }, 200, { 'set-cookie': renewCookie(u) })
+    return json({ user: publicUser(u), agency, storage: storageMode(), upload: uploadMode() }, 200, { 'set-cookie': renewCookie(u) })
   } catch (e) { return fail(e) }
 }
 

@@ -32,8 +32,8 @@ const extOf = (mime: string, name: string) => {
   return ({ 'video/webm': 'webm', 'video/mp4': 'mp4', 'audio/webm': 'webm', 'audio/mp4': 'm4a', 'audio/ogg': 'ogg', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'application/pdf': 'pdf' } as Record<string, string>)[mime.split(';')[0]] ?? 'bin'
 }
 
-let storageInfo: { mode: string; agencyId: string } | null = null
-export const setMediaContext = (mode: string, agencyId: string) => { storageInfo = { mode, agencyId } }
+let storageInfo: { mode: string; agencyId: string; upload?: string } | null = null
+export const setMediaContext = (mode: string, agencyId: string, upload?: string) => { storageInfo = { mode, agencyId, upload } }
 
 /** Enregistre un fichier et renvoie sa référence. onProgress : 0..1 */
 export async function saveMedia(blob: Blob, kind: MediaRef['kind'], name: string, remote: boolean, onProgress?: (p: number) => void): Promise<MediaRef> {
@@ -49,9 +49,10 @@ export async function saveMedia(blob: Blob, kind: MediaRef['kind'], name: string
   const file = new File([blob], `${ref.id}.${extOf(mime, name)}`, { type: mime })
   if (storageInfo?.mode === 'blob' && file.size > 3.5 * 1024 * 1024) {
     // gros fichiers : envoi direct du navigateur vers Vercel Blob (jeton signé par /api/media)
-    const { upload } = await import('@vercel/blob/client')
+    const { upload, uploadPresigned } = await import('@vercel/blob/client')
     const pathname = `agencies/${storageInfo.agencyId}/media/${file.name}`
-    await upload(pathname, file, { access: 'private', handleUploadUrl: '/api/media', contentType: mime, multipart: file.size > 50 * 1024 * 1024, onUploadProgress: e => onProgress?.(e.percentage / 100) })
+    const send = storageInfo.upload === 'presigned' ? uploadPresigned : upload
+    await send(pathname, file, { access: 'private', handleUploadUrl: '/api/media', contentType: mime, multipart: file.size > 50 * 1024 * 1024, onUploadProgress: e => onProgress?.(e.percentage / 100) })
     ref.path = pathname
     return ref
   }

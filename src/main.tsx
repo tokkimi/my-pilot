@@ -23,7 +23,7 @@ function RemoteApp() {
       const r = await fetch('/api/data' + (agency ? `?agency=${encodeURIComponent(agency)}` : ''))
       const b = await r.json().catch(() => ({}))
       if (!r.ok) { setState({ error: b.error || 'Impossible de charger l’espace.' }); return }
-      setMediaContext(me.storage, b.agency.id)
+      setMediaContext(me.storage, b.agency.id, me.upload)
       setState({ db: b.db, session: { user: b.me, agency: b.agency }, agency })
     })()
   }, [])

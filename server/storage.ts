@@ -4,7 +4,9 @@ import { promises as fs } from 'node:fs'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 
-const useBlob = () => !!process.env.BLOB_READ_WRITE_TOKEN
+// Deux modes d'accès au Blob Store : jeton lecture-écriture (BLOB_READ_WRITE_TOKEN) ou OIDC Vercel (BLOB_STORE_ID).
+const useBlob = () => !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)
+export const uploadMode = () => (process.env.BLOB_READ_WRITE_TOKEN ? 'token' : 'presigned')
 const DIR = path.join(process.cwd(), '.data')
 
 export const storageMode = () => (useBlob() ? 'blob' : process.env.VERCEL ? 'none' : 'fs')
