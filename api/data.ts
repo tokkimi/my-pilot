@@ -4,7 +4,7 @@ import { allowed, revokeGoogle } from '../server/google.js'
 import type { DB, Member } from '../src/lib/types.js'
 
 type AgencyDoc = Omit<DB, 'members' | 'currentUserId'>
-const COLLS = ['contacts', 'activities', 'listings', 'deals', 'tasks', 'events', 'showings', 'partners', 'platforms', 'templates', 'posts', 'objections', 'expenses', 'visits', 'ledger', 'trips', 'acctYears', 'invoices'] as const
+const COLLS = ['contacts', 'activities', 'listings', 'deals', 'tasks', 'events', 'showings', 'partners', 'platforms', 'templates', 'posts', 'objections', 'expenses', 'visits', 'ledger', 'trips', 'acctYears', 'invoices', 'marketingItems'] as const
 /** Collections comptables privées : chacun voit la sienne; « agence » réservée aux administrateurs. */
 const PRIVATE = ['ledger', 'trips', 'acctYears', 'invoices']
 const canSee = (ownerId: unknown, u: User) => u.role === 'superadmin' || ownerId === u.id || (ownerId === 'agence' && u.role === 'admin')
@@ -16,7 +16,9 @@ async function context(req: Request) {
   const u = await currentUser(req)
   if (!u) return null
   const url = new URL(req.url)
-  const agencyId = u.role === 'superadmin' ? url.searchParams.get('agency') || '' : u.agencyId
+  const agencyId = u.role === 'superadmin' ? url.searchParams.get('agency') || u.ownAgencyId || '' : u.agencyId
+  const agency = (await loadAgencies()).find(a => a.id === agencyId)
+  if (!agency || (agency.status === 'suspendu' && u.role !== 'superadmin')) return null
   return agencyId ? { u, agencyId } : null
 }
 
@@ -30,9 +32,10 @@ export async function GET(req: Request) {
     let { data } = await readJson<AgencyDoc>(agencyDb(agencyId))
     if (!data) data = await mutate<AgencyDoc>(agencyDb(agencyId), () => seedAgencyDb(agency.name, {}, false), d => d)
     const members = (await loadUsers()).filter(x => x.agencyId === agencyId).map(toMember)
+    if (u.role === 'superadmin' && !members.some(m => m.id === u.id)) members.unshift(toMember(u))
     for (const c of PRIVATE) (data as Record<string, unknown>)[c] = (((data as Record<string, unknown>)[c] as { ownerId: string }[] | undefined) ?? []).filter(x => canSee(x.ownerId, u))
     if (u.role !== 'superadmin') await trackActivity(u, false)
-    return json({ db: { ...data, visits: data.visits ?? [], members, currentUserId: u.role === 'superadmin' ? members[0]?.id ?? u.id : u.id }, me: publicUser(u), agency }, 200, { 'set-cookie': renewCookie(u) })
+    return json({ db: { ...data, marketingItems: data.marketingItems ?? [], visits: data.visits ?? [], members, currentUserId: u.id }, me: publicUser(u), agency }, 200, { 'set-cookie': renewCookie(u) })
   } catch (e) { return fail(e) }
 }
 
@@ -97,6 +100,18 @@ export async function POST(req: Request) {
           }
           if (!(COLLS as readonly string[]).includes(o.c)) continue
           const list = ((d[o.c] as { id: string; ownerId?: string }[] | undefined) ?? [])
+          if (o.c === 'posts' && o.t === 'upsert') {
+            const old = list.find(x => x.id === o.item?.id) as DB['posts'][number] | undefined
+            const p = o.item as unknown as DB['posts'][number]
+            const contentChanged = old && ['caption', 'date', 'time', 'platforms', 'assetIds', 'listingId', 'campaignId'].some(k => JSON.stringify((old as unknown as Record<string, unknown>)[k]) !== JSON.stringify(o.item[k]))
+            const canApprove = isAdmin || u.role === 'marketing'
+            if (p.approval === 'approuve' && (old?.approval !== 'approuve' || contentChanged)) {
+              if (!canApprove) { errors.push('La validation est réservée à la direction et au marketing.'); continue }
+              p.approvedBy = u.id; p.approvedAt = new Date().toISOString()
+            } else if (p.approval !== 'approuve') { p.approvedBy = ''; p.approvedAt = '' }
+            else { p.approvedBy = old?.approvedBy; p.approvedAt = old?.approvedAt }
+            if (p.status === 'planifie' && p.approval !== 'approuve') { errors.push('Validez le contenu avant de le planifier.'); continue }
+          }
           if (PRIVATE.includes(o.c)) {
             const existing = list.find(x => x.id === (o.t === 'upsert' ? o.item?.id : o.id))
             if ((existing && !canSee(existing.ownerId, u)) || (o.t === 'upsert' && !canSee(o.item?.ownerId, u))) { errors.push('Accès refusé à cette comptabilité.'); continue }

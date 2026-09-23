@@ -62,6 +62,7 @@ export default function Admin() {
             ))}
           </nav>
           <div className="ml-auto flex gap-2 text-sm">
+            <button className="flex items-center gap-1 rounded bg-brand-600 px-3 py-1" onClick={() => run({ action: 'openOwnAgency' }, b => { location.href = `/app?agency=${encodeURIComponent(b.agency.id)}` })}><Building2 size={15} /> Mon agence</button>
             <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => void load()}><RefreshCw size={14} /> Actualiser</button>
             <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => setPw({ current: '', next: '', msg: '' })}><KeyRound size={14} /> Mot de passe</button>
             <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={async () => { await fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); location.href = '/connexion' }}><LogOut size={14} /> Quitter</button>

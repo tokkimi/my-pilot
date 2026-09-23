@@ -16,6 +16,7 @@ export interface User {
   googleEmail?: string; googleScopes?: string; googleConnectedAt?: string
   /** incrémenté pour invalider toutes les sessions (réinitialisation du mot de passe) */
   sessionVersion?: number; tpsNo?: string; tvqNo?: string
+  ownAgencyId?: string
 }
 export type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
 export interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string; monthlyFee?: number }
@@ -79,6 +80,19 @@ export const renewCookie = (u: User) => sessionCookie(u.id, u.sessionVersion ?? 
 
 export async function loadUsers() { return (await readJson<User[]>(USERS)).data ?? [] }
 export async function loadAgencies() { return (await readJson<Agency[]>(AGENCIES)).data ?? [] }
+
+/** Idempotent: the platform role is retained and brokerage data stays in its own tenant. */
+export async function ensureOwnAgency(u: User) {
+  if (u.role !== 'superadmin') throw new Error('Accès refusé')
+  const id = u.ownAgencyId || `ag_owner_${u.id}`
+  const agencies = await mutate<Agency[]>(AGENCIES, () => [], list => list.some(a => a.id === id) ? list : [...list, {
+    id, name: 'Agence des fondateurs ImmoPilot', plan: 'illimite', seats: 0, status: 'actif', createdAt: now(), contactEmail: u.email, notes: 'Agence interne, distincte de la gestion de la plateforme.', trialEnds: '',
+  }])
+  const agency = agencies.find(a => a.id === id)!
+  await mutate(agencyDb(id), () => seedAgencyDb(agency.name, {}, false), d => d)
+  await mutate<User[]>(USERS, () => [], list => list.map(x => x.id === u.id ? { ...x, ownAgencyId: id } : x))
+  return agency
+}
 
 export async function currentUser(req: Request): Promise<User | null> {
   const sess = readSession(req)

@@ -4,6 +4,7 @@ import { ACTIVITY, AGENCIES, FINANCE, type PlatformEntry, agencyDb, currentUser,
 import { mutate, readJson, storageMode, StorageUnavailable, writeJson } from '../server/storage.js'
 import type { DB } from '../src/lib/types.js'
 import { googleConfigured } from '../server/google.js'
+import { ensureOwnAgency } from '../server/platform.js'
 
 const tempPassword = () => 'IP-' + randomBytes(9).toString('base64url')
 
@@ -41,6 +42,10 @@ export async function POST(req: Request) {
     if (!me) return json({ error: 'Accès refusé.' }, 403)
     const b = await req.json().catch(() => ({})) as Record<string, any>
     switch (b.action) {
+      case 'openOwnAgency': {
+        const agency = await ensureOwnAgency(me)
+        return json({ agency })
+      }
       case 'createAgency': {
         const name = String(b.name || '').trim()
         if (!name) return json({ error: 'Nom requis.' }, 400)

@@ -1,6 +1,6 @@
 import { handleUpload, handleUploadPresigned, type HandleUploadBody, type HandleUploadPresignedBody } from '@vercel/blob/client'
 import { issueSignedToken } from '@vercel/blob'
-import { currentUser, json, sameOrigin, uid } from '../server/platform.js'
+import { currentUser, json, sameOrigin, uid, loadAgencies } from '../server/platform.js'
 import { getFile, putFile, removeFile, storageMode, StorageUnavailable } from '../server/storage.js'
 
 const ALLOWED = /^(image\/(jpeg|png|webp|heic|heif|gif)|video\/(mp4|webm|quicktime)|audio\/(webm|ogg|mp4|mpeg|wav|x-m4a|aac)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet)|vnd\.ms-excel|zip)|text\/(plain|csv))(;.*)?$/
@@ -60,7 +60,9 @@ export async function POST(req: Request) {
     if (!ALLOWED.test(file.type)) return json({ error: `Type de fichier non accepté (${file.type}).` }, 400)
     if (file.size > (storageMode() === 'blob' ? 4 * 1024 * 1024 : MAX)) return json({ error: 'Fichier trop volumineux pour ce mode d’envoi.' }, 413)
     const ext = (file.name.split('.').pop() || 'bin').replace(/[^\w]/g, '').slice(0, 5)
-    const path = `agencies/${u.agencyId}/media/${uid()}.${ext}`
+    const agencyId = u.role === 'superadmin' ? String(form.get('agency') || u.ownAgencyId || u.agencyId) : u.agencyId
+    if (!(await loadAgencies()).some(a => a.id === agencyId)) return json({ error: 'Agence introuvable.' }, 404)
+    const path = `agencies/${agencyId}/media/${uid()}.${ext}`
     await putFile(path, Buffer.from(await file.arrayBuffer()), file.type)
     return json({ path })
   } catch (e) { return fail(e) }

@@ -109,7 +109,7 @@ export function StoreProvider({ children, mode, initial, session, agencyParam }:
 
   const upsert = useCallback(<C extends Coll>(coll: C, item: Item<C>) => {
     setDb(d => {
-      const list = d[coll] as Item<C>[]
+      const list = (d[coll] ?? []) as Item<C>[]
       const exists = list.some(x => x.id === item.id)
       return { ...d, [coll]: exists ? list.map(x => (x.id === item.id ? item : x)) : [item, ...list] }
     })

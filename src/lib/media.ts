@@ -58,6 +58,7 @@ export async function saveMedia(blob: Blob, kind: MediaRef['kind'], name: string
   }
   const form = new FormData()
   form.set('file', file)
+  if (storageInfo?.agencyId) form.set('agency', storageInfo.agencyId)
   const r = await fetch('/api/media', { method: 'POST', body: form })
   const body = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(body.error || 'Échec de l’envoi du fichier')

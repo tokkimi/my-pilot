@@ -13,7 +13,7 @@ import Deals from './modules/Deals'
 import Tasks from './modules/Tasks'
 import CalendarPage from './modules/Calendar'
 import Showings from './modules/Showings'
-import Marketing from './modules/Marketing'
+import Marketing from './modules/MarketingStudio'
 import Templates from './modules/Templates'
 import Sop from './modules/Sop'
 import Tools from './modules/Tools'
@@ -43,7 +43,7 @@ const PAGES = {
   deals: { label: 'Dossiers & transactions', icon: FileCheck2, C: Deals, group: 'Immobilier' },
   compliance: { label: 'Conformité des dossiers', icon: ShieldCheck, C: Compliance, group: 'Immobilier' },
   showings: { label: 'Visites & rétroactions', icon: Eye, C: Showings, group: 'Immobilier' },
-  marketing: { label: 'Marketing & réseaux', icon: Megaphone, C: Marketing, group: 'Marketing' },
+  marketing: { label: 'Studio marketing', icon: Megaphone, C: Marketing, group: 'Marketing' },
   templates: { label: 'Courriels & textos', icon: Mail, C: Templates, group: 'Marketing' },
   sop: { label: 'SOP & scripts', icon: BookOpen, C: Sop, group: 'Savoir' },
   guides: { label: 'Guides clients', icon: FileText, C: Guides, group: 'Savoir' },

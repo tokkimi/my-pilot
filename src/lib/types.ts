@@ -54,7 +54,15 @@ export interface Partner { id: ID; category: PartnerCat; name: string; company: 
 
 export interface Platform { id: ID; name: string; url: string; category: string; account: string; notes: string; usage: string; key?: string }
 export interface Template { id: ID; name: string; channel: 'courriel' | 'texto' | 'reseaux'; category: string; subject: string; body: string }
-export interface Post { id: ID; date: string; platforms: string[]; format: 'publication' | 'reel' | 'story' | 'video' | 'infolettre'; caption: string; listingId: ID; status: 'idee' | 'planifie' | 'publie'; kind: string }
+export interface Post { id: ID; date: string; platforms: string[]; format: 'publication' | 'reel' | 'story' | 'video' | 'infolettre'; caption: string; listingId: ID; status: 'idee' | 'planifie' | 'publie'; kind: string
+  ownerId?: ID; campaignId?: ID; assetIds?: ID[]; time?: string; approval?: 'brouillon' | 'a_valider' | 'approuve'; approvedBy?: ID; approvedAt?: string; notes?: string; publishedUrl?: string }
+export interface MarketingItem {
+  id: ID; kind: 'campaign' | 'asset' | 'brand' | 'account' | 'event'; title: string; ownerId: ID; notes: string
+  status: 'brouillon' | 'en_cours' | 'termine'; start: string; end: string; channels: string[]
+  budget: number; spent: number; objective: string; audience: string; url: string; location: string
+  impressions: number; clicks: number; leads: number; attendees: number; checklist: string
+  colors: string; typography: string; voice: string; rights: string; expires: string; media?: MediaRef
+}
 export interface Objection { id: ID; objection: string; response: string; category: string }
 export interface Expense { id: ID; date: string; category: string; vendor: string; amount: number; memberId: ID; listingId: ID; notes: string }
 
@@ -118,5 +126,6 @@ export interface DB {
   events: CalEvent[]; showings: Showing[]; partners: Partner[]; platforms: Platform[]; templates: Template[]; posts: Post[]
   objections: Objection[]; expenses: Expense[]; visits: Visit[]
   ledger: LedgerEntry[]; trips: Trip[]; acctYears: AcctYear[]; invoices: Invoice[]
+  marketingItems: MarketingItem[]
 }
 export type Coll = Exclude<keyof DB, 'version' | 'agency' | 'currentUserId'>
