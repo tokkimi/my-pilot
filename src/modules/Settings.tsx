@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useRef } from 'react'
 import { Download, RotateCcw, Upload, Eraser } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -26,7 +27,7 @@ export default function Settings(_: PageProps) {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader title="Paramètres & données" />
+      <PageHeader title={tr("Paramètres & données")} />
       <section className="card mb-4 p-4">
         <h2 className="mb-2 font-semibold">Vos données</h2>
         <div className="mb-3 grid grid-cols-3 gap-2 text-sm sm:grid-cols-5">

@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useRef, useState } from 'react'
 import { Copy, Download, ImagePlus, LayoutGrid, Plus, RotateCw, Trash2, ZoomIn, ZoomOut } from 'lucide-react'
 import type { FloorPlan, MediaRef, PlanShape, VisitRoom } from '../lib/types'
@@ -144,7 +145,7 @@ export default function PlanEditor({ plan, rooms, unit, onChange, onImage }: {
         {selected ? (
           <div className="rounded-lg border border-slate-200 p-3 text-sm">
             <div className="mb-2 font-semibold">Élément sélectionné</div>
-            <label className="label">Nom</label>
+            <label className="label">{tr("Nom")}</label>
             <input className="input" value={selected.label} onChange={e => upd(selected.id, { label: e.target.value })} />
             <div className="mt-2 grid grid-cols-2 gap-2">
               <div><label className="label">Largeur ({unit})</label><input className="input" type="number" step="0.5" value={selected.w} onChange={e => upd(selected.id, { w: Math.max(0.5, +e.target.value) })} /></div>
@@ -159,7 +160,7 @@ export default function PlanEditor({ plan, rooms, unit, onChange, onImage }: {
             <div className="mt-2 flex flex-wrap gap-1">
               <button className="btn-outline py-1 text-xs" onClick={() => upd(selected.id, { w: selected.h, h: selected.w })}><RotateCw size={13} /> Pivoter</button>
               <button className="btn-outline py-1 text-xs" onClick={() => { const c = { ...selected, id: uid(), x: selected.x + 1, y: selected.y + 1 }; set([...shapes, c]); setSel(c.id) }}><Copy size={13} /> Dupliquer</button>
-              <button className="btn-ghost py-1 text-xs text-rose-600" onClick={() => { set(shapes.filter(s => s.id !== selected.id)); setSel(null) }}><Trash2 size={13} /> Supprimer</button>
+              <button className="btn-ghost py-1 text-xs text-rose-600" onClick={() => { set(shapes.filter(s => s.id !== selected.id)); setSel(null) }}><Trash2 size={13} />{" "}{tr("Supprimer")}</button>
             </div>
           </div>
         ) : <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-500">Touchez un élément du plan pour le modifier.</p>}

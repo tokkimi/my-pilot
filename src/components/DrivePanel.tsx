@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useCallback, useEffect, useState } from 'react'
 import { ExternalLink, FolderPlus, HardDrive, Link2, Loader2, Paperclip, RefreshCw, Upload } from 'lucide-react'
 import { useStore } from '../lib/store'
@@ -37,7 +38,7 @@ export default function DrivePanel({ category, name, folderId, url, subfolders =
   return (
     <div className={`rounded-lg border border-slate-200 ${compact ? 'p-2' : 'p-3'} text-sm`}>
       <div className="mb-2 flex items-center gap-2 font-semibold"><HardDrive size={15} className="text-emerald-600" /> Dossier Drive
-        {folderId && canDrive && <button className="ml-auto text-slate-400 hover:text-slate-700" onClick={() => void load()} title="Actualiser"><RefreshCw size={13} /></button>}
+        {folderId && canDrive && <button className="ml-auto text-slate-400 hover:text-slate-700" onClick={() => void load()} title={tr("Actualiser")}><RefreshCw size={13} /></button>}
       </div>
       {url && <a href={url} target="_blank" rel="noreferrer" className="btn-outline mb-2 w-full justify-center py-1.5 text-xs"><ExternalLink size={13} /> Ouvrir le dossier</a>}
       {canDrive && !folderId && <button className="btn-primary w-full justify-center py-1.5 text-xs" onClick={create} disabled={!!busy}><FolderPlus size={14} /> Créer le dossier dans mon Drive</button>}

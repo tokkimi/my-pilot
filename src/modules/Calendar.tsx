@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Download, Plus, Trash2 } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -27,11 +28,11 @@ export default function CalendarPage(_: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Calendrier" subtitle="RDV vendeurs/acheteurs, visites, photos, inspections, notaire"
+      <PageHeader title={tr("Calendrier")} subtitle="RDV vendeurs/acheteurs, visites, photos, inspections, notaire"
         actions={<>
           <ScopeFilter />
           <button className="btn-outline" onClick={exportIcs}><Download size={16} /> Exporter .ics (Google / iCloud)</button>
-          <button className="btn-primary" onClick={() => setEditing(newEvent(me.id))}><Plus size={16} /> Événement</button>
+          <button className="btn-primary" onClick={() => setEditing(newEvent(me.id))}><Plus size={16} />{" "}{tr("Événement")}</button>
         </>} />
       <div className="card p-3">
         <div className="mb-3 flex items-center gap-2">
@@ -79,21 +80,21 @@ function EventForm({ ev, onClose }: { ev: CalEvent; onClose: () => void }) {
   return (
     <Modal title={exists ? 'Modifier l’événement' : 'Nouvel événement'} onClose={onClose}
       footer={<>
-        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('events', e.id); onClose() }}><Trash2 size={15} /> Supprimer</button>}
+        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('events', e.id); onClose() }}><Trash2 size={15} />{" "}{tr("Supprimer")}</button>}
         <a className="btn-ghost" href={gcal} target="_blank" rel="noreferrer">+ Google Agenda</a>
-        <button className="btn-ghost" onClick={onClose}>Annuler</button>
-        <button className="btn-primary" onClick={() => { if (e.title.trim()) { upsert('events', e); onClose() } }}>Enregistrer</button>
+        <button className="btn-ghost" onClick={onClose}>{tr("Annuler")}</button>
+        <button className="btn-primary" onClick={() => { if (e.title.trim()) { upsert('events', e); onClose() } }}>{tr("Enregistrer")}</button>
       </>}>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Titre" className="sm:col-span-2"><input className="input" autoFocus value={e.title} onChange={x => set('title', x.target.value)} /></Field>
-        <Field label="Type"><select className="input" value={e.type} onChange={x => set('type', x.target.value as EventType)}>{Object.entries(EVENT_TYPES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></Field>
-        <Field label="Courtier"><MemberSelect value={e.agentId} onChange={v => set('agentId', v)} /></Field>
-        <Field label="Début"><input className="input" type="datetime-local" value={e.start} onChange={x => set('start', x.target.value)} /></Field>
-        <Field label="Fin"><input className="input" type="datetime-local" value={e.end} onChange={x => set('end', x.target.value)} /></Field>
+        <Field label={tr("Type")}><select className="input" value={e.type} onChange={x => set('type', x.target.value as EventType)}>{Object.entries(EVENT_TYPES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></Field>
+        <Field label={tr("Courtier")}><MemberSelect value={e.agentId} onChange={v => set('agentId', v)} /></Field>
+        <Field label={tr("Début")}><input className="input" type="datetime-local" value={e.start} onChange={x => set('start', x.target.value)} /></Field>
+        <Field label={tr("Fin")}><input className="input" type="datetime-local" value={e.end} onChange={x => set('end', x.target.value)} /></Field>
         <Field label="Lieu" className="sm:col-span-2"><input className="input" value={e.location} onChange={x => set('location', x.target.value)} /></Field>
         <Field label="Contact"><ContactSelect value={e.contactId} onChange={v => set('contactId', v)} /></Field>
         <Field label="Inscription"><ListingSelect value={e.listingId} onChange={v => set('listingId', v)} /></Field>
-        <Field label="Notes" className="sm:col-span-2"><textarea className="input min-h-20" value={e.notes} onChange={x => set('notes', x.target.value)} /></Field>
+        <Field label={tr("Notes")} className="sm:col-span-2"><textarea className="input min-h-20" value={e.notes} onChange={x => set('notes', x.target.value)} /></Field>
       </div>
       {e.type === 'rdv_vendeur' && <p className="mt-3 rounded-lg bg-brand-50 p-3 text-xs text-brand-700">💡 RDV vendeur : suivez le SOP (préparation, caméléon, 3 stratégies de prix, technique FBI, close des 3 oui). Menu « SOP & scripts » → mode présentation.</p>}
     </Modal>

@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { Camera, FileText, Pencil, Trash2, Upload } from 'lucide-react'
 import { useStore } from '../lib/store'
@@ -68,7 +69,7 @@ export default function DocumentsPanel({ docs, onChange, title = 'Documents', de
                 <div className="truncate text-xs text-slate-500">{d.category}{d.provider ? ` · ${d.provider}` : ''} · reçu le {fmtDate(d.date)}{d.notes ? ` · ${d.notes}` : ''}</div>
               </button>
               <button className="btn-ghost p-1" onClick={() => setEdit(d)} aria-label="Modifier"><Pencil size={14} /></button>
-              <button className="btn-ghost p-1 text-rose-600" aria-label="Supprimer" onClick={() => { if (confirm(`Supprimer « ${d.media.name} »?`)) { void deleteMedia(d.media); onChange(docs.filter(x => x.id !== d.id)) } }}><Trash2 size={14} /></button>
+              <button className="btn-ghost p-1 text-rose-600" aria-label={tr("Supprimer")} onClick={() => { if (confirm(`Supprimer « ${d.media.name} »?`)) { void deleteMedia(d.media); onChange(docs.filter(x => x.id !== d.id)) } }}><Trash2 size={14} /></button>
             </li>
           ))}
         </ul>
@@ -77,7 +78,7 @@ export default function DocumentsPanel({ docs, onChange, title = 'Documents', de
         <div className="fixed inset-0 z-[55] flex items-end justify-center bg-slate-900/40 sm:items-center" onClick={() => setEdit(null)}>
           <div className="card w-full max-w-md space-y-3 p-5 max-sm:rounded-b-none" onClick={e => e.stopPropagation()}>
             <div className="font-semibold">{edit.media.name}</div>
-            <label className="block text-sm"><span className="label">Catégorie</span><select className="input" value={edit.category} onChange={e => setEdit({ ...edit, category: e.target.value })}>{DOC_CATEGORIES.map(c => <option key={c}>{c}</option>)}</select></label>
+            <label className="block text-sm"><span className="label">{tr("Catégorie")}</span><select className="input" value={edit.category} onChange={e => setEdit({ ...edit, category: e.target.value })}>{DOC_CATEGORIES.map(c => <option key={c}>{c}</option>)}</select></label>
             <label className="block text-sm"><span className="label">Reçu de (prestataire)</span>
               <select className="input" value={edit.providerId} onChange={e => { const p = db.partners.find(x => x.id === e.target.value); setEdit({ ...edit, providerId: e.target.value, provider: p ? `${p.name} (${PARTNER_CATS[p.category]})` : edit.provider }) }}>
                 <option value="">— Autre / saisir —</option>{db.partners.map(p => <option key={p.id} value={p.id}>{p.name} — {PARTNER_CATS[p.category]}</option>)}
@@ -85,8 +86,8 @@ export default function DocumentsPanel({ docs, onChange, title = 'Documents', de
               {!edit.providerId && <input className="input mt-1" placeholder="Client, notaire, arpenteur, banque…" value={edit.provider} onChange={e => setEdit({ ...edit, provider: e.target.value })} />}
             </label>
             <label className="block text-sm"><span className="label">Date de réception</span><input className="input" type="date" value={edit.date} onChange={e => setEdit({ ...edit, date: e.target.value })} /></label>
-            <label className="block text-sm"><span className="label">Notes</span><input className="input" value={edit.notes} onChange={e => setEdit({ ...edit, notes: e.target.value })} /></label>
-            <div className="flex justify-end gap-2"><button className="btn-ghost" onClick={() => setEdit(null)}>Annuler</button><button className="btn-primary" onClick={() => { onChange(docs.map(x => (x.id === edit.id ? edit : x))); setEdit(null) }}>Enregistrer</button></div>
+            <label className="block text-sm"><span className="label">{tr("Notes")}</span><input className="input" value={edit.notes} onChange={e => setEdit({ ...edit, notes: e.target.value })} /></label>
+            <div className="flex justify-end gap-2"><button className="btn-ghost" onClick={() => setEdit(null)}>{tr("Annuler")}</button><button className="btn-primary" onClick={() => { onChange(docs.map(x => (x.id === edit.id ? edit : x))); setEdit(null) }}>{tr("Enregistrer")}</button></div>
           </div>
         </div>
       )}

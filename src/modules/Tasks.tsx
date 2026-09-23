@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -29,7 +30,7 @@ export default function Tasks({ go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Tâches" subtitle="Suivis, relances et to-do de l’équipe"
+      <PageHeader title={tr("Tâches")} subtitle="Suivis, relances et to-do de l’équipe"
         actions={<>
           <ScopeFilter />
           <select className="input w-auto" value={cat} onChange={e => setCat(e.target.value)}><option value="">Toutes catégories</option>{CATS.map(c => <option key={c}>{c}</option>)}</select>
@@ -78,19 +79,19 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {
   return (
     <Modal title={exists ? 'Modifier la tâche' : 'Nouvelle tâche'} onClose={onClose}
       footer={<>
-        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('tasks', t.id); onClose() }}><Trash2 size={15} /> Supprimer</button>}
-        <button className="btn-ghost" onClick={onClose}>Annuler</button>
-        <button className="btn-primary" onClick={() => { if (t.title.trim()) { upsert('tasks', t); onClose() } }}>Enregistrer</button>
+        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('tasks', t.id); onClose() }}><Trash2 size={15} />{" "}{tr("Supprimer")}</button>}
+        <button className="btn-ghost" onClick={onClose}>{tr("Annuler")}</button>
+        <button className="btn-primary" onClick={() => { if (t.title.trim()) { upsert('tasks', t); onClose() } }}>{tr("Enregistrer")}</button>
       </>}>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Titre" className="sm:col-span-2"><input className="input" autoFocus value={t.title} onChange={e => set('title', e.target.value)} /></Field>
-        <Field label="Échéance"><input className="input" type="date" value={t.due} onChange={e => set('due', e.target.value)} /></Field>
-        <Field label="Priorité"><select className="input" value={t.priority} onChange={e => set('priority', e.target.value as Priority)}><option value="basse">Basse</option><option value="normale">Normale</option><option value="haute">Haute</option></select></Field>
+        <Field label={tr("Échéance")}><input className="input" type="date" value={t.due} onChange={e => set('due', e.target.value)} /></Field>
+        <Field label={tr("Priorité")}><select className="input" value={t.priority} onChange={e => set('priority', e.target.value as Priority)}><option value="basse">Basse</option><option value="normale">Normale</option><option value="haute">Haute</option></select></Field>
         <Field label="Assignée à"><MemberSelect value={t.assigneeId} onChange={v => set('assigneeId', v)} /></Field>
-        <Field label="Catégorie"><select className="input" value={t.category} onChange={e => set('category', e.target.value)}>{CATS.map(c => <option key={c}>{c}</option>)}</select></Field>
+        <Field label={tr("Catégorie")}><select className="input" value={t.category} onChange={e => set('category', e.target.value)}>{CATS.map(c => <option key={c}>{c}</option>)}</select></Field>
         <Field label="Contact"><ContactSelect value={t.contactId} onChange={v => set('contactId', v)} /></Field>
         <Field label="Inscription"><ListingSelect value={t.listingId} onChange={v => set('listingId', v)} /></Field>
-        <Field label="Notes" className="sm:col-span-2"><textarea className="input min-h-20" value={t.notes} onChange={e => set('notes', e.target.value)} /></Field>
+        <Field label={tr("Notes")} className="sm:col-span-2"><textarea className="input min-h-20" value={t.notes} onChange={e => set('notes', e.target.value)} /></Field>
       </div>
     </Modal>
   )

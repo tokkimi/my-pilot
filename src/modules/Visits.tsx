@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useEffect, useMemo, useState } from 'react'
 import {
   AudioLines, Camera, CheckCircle2, ChevronLeft, Clapperboard, FileText, Image as ImageIcon, Mail, MapPin, Mic, Play, Plus, Printer,
@@ -69,11 +70,11 @@ export default function Visits({ openId, go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Visites terrain" subtitle="Démarrez une visite : notes, dictée vocale transcrite, vidéo et mesures de chaque pièce, plan de la propriété"
+      <PageHeader title={tr("Visites terrain")} subtitle="Démarrez une visite : notes, dictée vocale transcrite, vidéo et mesures de chaque pièce, plan de la propriété"
         actions={<>
           <ScopeFilter />
-          <select className="input w-auto" value={status} onChange={e => setStatus(e.target.value as Visit['status'])}><option value="">Toutes</option><option value="planifiee">Planifiées</option><option value="en_cours">En cours</option><option value="terminee">Terminées</option></select>
-          <button className="btn-primary" onClick={() => setStarting(true)}><Play size={16} /> Démarrer une visite</button>
+          <select className="input w-auto" value={status} onChange={e => setStatus(e.target.value as Visit['status'])}><option value="">Toutes</option><option value="planifiee">Planifiées</option><option value="en_cours">{tr("En cours")}</option><option value="terminee">Terminées</option></select>
+          <button className="btn-primary" onClick={() => setStarting(true)}><Play size={16} />{" "}{tr("Démarrer une visite")}</button>
         </>} />
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Visites" value={all.length} sub={`${all.filter(v => v.status === 'en_cours').length} en cours`} icon={<ScanLine size={20} />} />
@@ -117,7 +118,7 @@ export function StartVisit({ onClose, onStart, agentId, preset = {} }: { onClose
     onStart({ ...v, title, address: v.address || (listing ? `${listing.address}, ${listing.city}` : ''), status: now ? 'en_cours' : 'planifiee', startedAt: now ? new Date().toISOString() : '' })
   }
   return (
-    <Modal title="Démarrer une visite" onClose={onClose} footer={<><button className="btn-ghost" onClick={() => go(false)}>Planifier</button><button className="btn-primary" onClick={() => go(true)}><Play size={15} /> Démarrer maintenant</button></>}>
+    <Modal title={tr("Démarrer une visite")} onClose={onClose} footer={<><button className="btn-ghost" onClick={() => go(false)}>Planifier</button><button className="btn-primary" onClick={() => go(true)}><Play size={15} /> Démarrer maintenant</button></>}>
       <div className="grid gap-2 sm:grid-cols-2">
         {(Object.keys(VISIT_TYPES) as VisitType[]).map(t => (
           <button key={t} onClick={() => setV({ ...v, type: t })} className={`rounded-xl border p-3 text-left ${v.type === t ? 'border-brand-600 bg-brand-50 ring-2 ring-brand-100' : 'border-slate-200 hover:border-brand-300'}`}>
@@ -128,10 +129,10 @@ export function StartVisit({ onClose, onStart, agentId, preset = {} }: { onClose
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Field label="Inscription (facultatif)"><ListingSelect value={v.listingId} onChange={id => setV({ ...v, listingId: id })} /></Field>
-        <Field label="Adresse"><input className="input" value={v.address} placeholder={listing ? `${listing.address}, ${listing.city}` : 'Adresse de la propriété'} onChange={e => setV({ ...v, address: e.target.value })} /></Field>
+        <Field label={tr("Adresse")}><input className="input" value={v.address} placeholder={listing ? `${listing.address}, ${listing.city}` : 'Adresse de la propriété'} onChange={e => setV({ ...v, address: e.target.value })} /></Field>
         <Field label="Client(s)" className="sm:col-span-2"><MultiContact value={v.contactIds} onChange={ids => setV({ ...v, contactIds: ids })} /></Field>
         <Field label="Date et heure"><input className="input" type="datetime-local" value={v.date} onChange={e => setV({ ...v, date: e.target.value })} /></Field>
-        <Field label="Courtier"><MemberSelect value={v.agentId} onChange={id => setV({ ...v, agentId: id })} /></Field>
+        <Field label={tr("Courtier")}><MemberSelect value={v.agentId} onChange={id => setV({ ...v, agentId: id })} /></Field>
       </div>
     </Modal>
   )
@@ -226,11 +227,11 @@ function VisitSession({ visit: v, onClose, go }: { visit: Visit; onClose: () => 
           <div className="card grid gap-3 p-4 sm:grid-cols-2">
             <Field label="Type de visite"><select className="input" value={v.type} onChange={e => save({ type: e.target.value as VisitType })}>{(Object.keys(VISIT_TYPES) as VisitType[]).map(t => <option key={t} value={t}>{VISIT_TYPES[t].label}</option>)}</select></Field>
             <Field label="Titre"><input className="input" value={v.title} onChange={e => save({ title: e.target.value })} /></Field>
-            <Field label="Inscription liée"><ListingSelect value={v.listingId} onChange={id => save({ listingId: id })} /></Field>
-            <Field label="Adresse"><input className="input" value={v.address} onChange={e => save({ address: e.target.value })} /></Field>
+            <Field label={tr("Inscription liée")}><ListingSelect value={v.listingId} onChange={id => save({ listingId: id })} /></Field>
+            <Field label={tr("Adresse")}><input className="input" value={v.address} onChange={e => save({ address: e.target.value })} /></Field>
             <Field label="Client(s)" className="sm:col-span-2"><MultiContact value={v.contactIds} onChange={ids => save({ contactIds: ids })} /></Field>
-            <Field label="Date"><input className="input" type="datetime-local" value={v.date} onChange={e => save({ date: e.target.value })} /></Field>
-            <Field label="Courtier"><MemberSelect value={v.agentId} onChange={id => save({ agentId: id })} /></Field>
+            <Field label={tr("Date")}><input className="input" type="datetime-local" value={v.date} onChange={e => save({ date: e.target.value })} /></Field>
+            <Field label={tr("Courtier")}><MemberSelect value={v.agentId} onChange={id => save({ agentId: id })} /></Field>
             <Field label="Unité de mesure"><select className="input" value={unit} onChange={e => { const u = e.target.value as 'pi' | 'm'; setUnit(u); save({ rooms: v.rooms.map(r => ({ ...r, unit: u })) }) }}><option value="pi">Pieds (pi)</option><option value="m">Mètres (m)</option></select></Field>
             {v.address && <a className="btn-outline self-end" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/${encodeURIComponent(v.address)}`}><MapPin size={15} /> Itinéraire / Street View</a>}
             <div className="sm:col-span-2"><DrivePanel category="Visites" name={`${v.date.slice(0, 10)} — ${v.title}`} folderId={v.driveFolderId} url={v.driveUrl} subfolders={['Vidéos', 'Photos', 'Notes vocales', 'Plans']} onLink={(id, u) => save({ driveFolderId: id, driveUrl: u })} compact /></div>
@@ -354,7 +355,7 @@ function RoomCard({ room: r, open, onToggle, hasAr, voiceNotes, onChange, onDele
       {open && (
         <div className="space-y-3 border-t border-slate-100 p-3">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Field label="Nom"><input className="input" value={r.name} onChange={e => onChange({ name: e.target.value })} /></Field>
+            <Field label={tr("Nom")}><input className="input" value={r.name} onChange={e => onChange({ name: e.target.value })} /></Field>
             <Field label="Niveau"><select className="input" value={r.level} onChange={e => onChange({ level: e.target.value })}>{LEVELS.map(l => <option key={l}>{l}</option>)}</select></Field>
             <Field label="Revêtement de plancher"><select className="input" value={r.floor} onChange={e => onChange({ floor: e.target.value })}><option value="">—</option>{FLOORS.map(l => <option key={l}>{l}</option>)}</select></Field>
             <Field label="État"><select className="input" value={r.condition} onChange={e => onChange({ condition: e.target.value as VisitRoom['condition'] })}><option value="">—</option>{Object.entries(CONDITION).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
@@ -410,7 +411,7 @@ function Thumb({ media, onClick, onRemove, onMeasure }: { media: MediaRef; onCli
       </button>
       <div className="absolute right-1 top-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
         {onMeasure && media.kind !== 'audio' && <button className="rounded bg-white/90 p-1" title="Mesurer" onClick={onMeasure}><Ruler size={12} /></button>}
-        {onRemove && <button className="rounded bg-white/90 p-1 text-rose-600" title="Supprimer" onClick={() => confirm('Supprimer ce média?') && onRemove()}><X size={12} /></button>}
+        {onRemove && <button className="rounded bg-white/90 p-1 text-rose-600" title={tr("Supprimer")} onClick={() => confirm('Supprimer ce média?') && onRemove()}><X size={12} /></button>}
       </div>
     </div>
   )
@@ -427,7 +428,7 @@ function MediaViewer({ media, onClose }: { media: MediaRef; onClose: () => void 
     <div className="fixed inset-0 z-[60] flex flex-col bg-black/90" onClick={onClose}>
       <div className="flex justify-end p-3 text-white"><button><X /></button></div>
       <div className="flex min-h-0 flex-1 items-center justify-center p-3" onClick={e => e.stopPropagation()}>
-        {!url ? <span className="text-white">Chargement…</span>
+        {!url ? <span className="text-white">{tr("Chargement…")}</span>
           : media.kind === 'video' ? <video src={url} controls autoPlay playsInline className="max-h-full max-w-full" />
           : media.kind === 'audio' ? <audio src={url} controls autoPlay />
           : media.mime === 'application/pdf' ? <iframe src={url} className="h-full w-full bg-white" title="Document" />
@@ -493,17 +494,17 @@ function VisitorsTab({ visit: v, save }: { visit: Visit; save: (p: Partial<Visit
   return (
     <div className="space-y-4">
       <div className="card grid gap-2 p-4 sm:grid-cols-3">
-        <Field label="Nom"><input className="input" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} /></Field>
-        <Field label="Téléphone"><input className="input" type="tel" value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} /></Field>
-        <Field label="Courriel"><input className="input" type="email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} /></Field>
+        <Field label={tr("Nom")}><input className="input" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} /></Field>
+        <Field label={tr("Téléphone")}><input className="input" type="tel" value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} /></Field>
+        <Field label={tr("Courriel")}><input className="input" type="email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} /></Field>
         <Field label="Accompagné d’un courtier?"><input className="input" value={f.broker} onChange={e => setF({ ...f, broker: e.target.value })} /></Field>
         <Field label="Intérêt"><select className="input" value={f.interest} onChange={e => setF({ ...f, interest: e.target.value as Visitor['interest'] })}><option value="faible">Faible</option><option value="moyen">Moyen</option><option value="fort">Fort</option></select></Field>
-        <Field label="Notes"><input className="input" value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></Field>
+        <Field label={tr("Notes")}><input className="input" value={f.notes} onChange={e => setF({ ...f, notes: e.target.value })} /></Field>
         <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" className="accent-brand-600" checked={f.consent} onChange={e => setF({ ...f, consent: e.target.checked })} /> Consent à être recontacté (Loi 25)</label>
         <button className="btn-primary justify-center" onClick={add}><UserPlus size={15} /> Ajouter le visiteur</button>
       </div>
       <div className="card overflow-x-auto">
-        <table className="w-full"><thead><tr><th className="th">Visiteur</th><th className="th">Coordonnées</th><th className="th">Courtier</th><th className="th">Intérêt</th><th /></tr></thead>
+        <table className="w-full"><thead><tr><th className="th">Visiteur</th><th className="th">Coordonnées</th><th className="th">{tr("Courtier")}</th><th className="th">Intérêt</th><th /></tr></thead>
           <tbody>{v.visitors.map(x => <tr key={x.id}><td className="td">{x.name}{!x.consent && <span className="badge ml-1 bg-slate-100">sans consentement</span>}</td><td className="td text-xs">{x.phone}<div>{x.email}</div></td><td className="td text-xs">{x.broker}</td><td className="td">{x.interest}</td><td className="td"><button className="text-rose-600" onClick={() => save({ visitors: v.visitors.filter(y => y.id !== x.id) })}><Trash2 size={14} /></button></td></tr>)}</tbody></table>
         {v.visitors.length === 0 && <p className="p-4 text-sm text-slate-500">Aucun visiteur inscrit.</p>}
       </div>
@@ -602,7 +603,7 @@ function Report({ visit: v, go, onDelete, listingName, me }: { visit: Visit; go:
           <tbody>{v.rooms.map(r => <tr key={r.id}><td className="td">{r.level}</td><td className="td">{r.name}</td><td className="td">{r.length && r.width ? `${r.length} × ${r.width}${r.height ? ` × ${r.height}` : ''} ${r.unit}` : '—'}</td><td className="td">{area(r) || '—'} {area(r) ? `${r.unit}²` : ''}</td><td className="td">{r.floor}</td><td className="td">{[CONDITION[r.condition], r.notes, r.likes && '+ ' + r.likes, r.dislikes && '− ' + r.dislikes].filter(Boolean).join(' · ')}</td></tr>)}</tbody></table>
         {Object.entries(v.answers).filter(([, a]) => a).length > 0 && <><h2 className="font-semibold">Réponses</h2>{Object.entries(v.answers).filter(([, a]) => a).map(([q, a]) => <p key={q} className="text-sm"><b>{q}</b><br />{a}</p>)}</>}
         {v.voiceNotes.length > 0 && <><h2 className="font-semibold">Notes vocales (transcriptions)</h2>{v.voiceNotes.map(n => <p key={n.id} className="text-sm">• {n.roomId ? <b>{v.rooms.find(r => r.id === n.roomId)?.name} : </b> : null}{n.transcript}</p>)}</>}
-        {v.notes && <><h2 className="font-semibold">Notes</h2><p className="whitespace-pre-wrap text-sm">{v.notes}</p></>}
+        {v.notes && <><h2 className="font-semibold">{tr("Notes")}</h2><p className="whitespace-pre-wrap text-sm">{v.notes}</p></>}
         {v.plans.filter(p => p.shapes.length).map(p => <div key={p.id}><h2 className="font-semibold">Plan — {p.level}</h2><PlanPreview plan={p} unit={unit} /></div>)}
         {[...v.photos, ...v.rooms.flatMap(r => r.media)].some(m => m.thumb) && <><h2 className="font-semibold">Photos et vidéos</h2><div className="grid grid-cols-4 gap-2">{[...v.photos, ...v.rooms.flatMap(r => r.media)].filter(m => m.thumb).map(m => <img key={m.id} src={m.thumb} alt="" className="aspect-square w-full rounded object-cover" />)}</div></>}
         {v.visitors.length > 0 && <><h2 className="font-semibold">Visiteurs ({v.visitors.length})</h2><p className="text-sm">{v.visitors.map(x => `${x.name} (${x.interest})`).join(', ')}</p></>}

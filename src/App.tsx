@@ -1,3 +1,4 @@
+import { tr } from './lib/i18n'
 import { useEffect, useState, type ComponentType } from 'react'
 import {
   LayoutDashboard, Users, KanbanSquare, Home, FileCheck2, CheckSquare, CalendarDays, Eye, Megaphone, Mail, BookOpen, Calculator,
@@ -86,7 +87,7 @@ export default function App() {
       <aside className={`no-print fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-ink text-slate-300 transition-transform lg:translate-x-0 ${nav ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between px-4 py-4">
           <div className="flex min-w-0 items-center gap-2">
-            {db.agency.logo ? <img src={db.agency.logo} alt="" className="h-9 w-9 shrink-0 rounded-lg bg-white object-contain p-0.5" /> : <img src="/icon.svg" alt="" className="h-9 w-9 shrink-0" />}
+            {db.agency.logo ? <img src={db.agency.logo} alt="" className="h-9 w-9 shrink-0 rounded-lg bg-white object-contain p-0.5" /> : <img src="/immopilot-logo.png" alt="ImmoPilot" className="sidebar-logo" />}
             <div className="min-w-0">
               <div className="truncate text-base font-bold text-white">{db.agency.logo ? db.agency.name : 'ImmoPilot'}</div>
               <div className="truncate text-xs text-slate-400">{db.agency.logo ? 'propulsé par ImmoPilot' : db.agency.name}</div>
@@ -95,16 +96,16 @@ export default function App() {
           <button className="lg:hidden" onClick={() => setNav(false)}><X size={20} /></button>
         </div>
         <button onClick={() => setSearch(true)} className="mx-3 mb-2 flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 text-sm text-slate-400 hover:bg-white/10">
-          <Search size={15} /> Rechercher… <kbd className="ml-auto text-[10px]">Ctrl K</kbd>
+          <Search size={15} />{" "}{tr("Rechercher…")}{" "}<kbd className="ml-auto text-[10px]">Ctrl K</kbd>
         </button>
         <nav className="flex-1 overflow-y-auto px-2 pb-4">
           {groups.map(g => (
             <div key={g} className="mt-3">
-              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{g}</div>
+              
               {(Object.entries(PAGES) as [Page, (typeof PAGES)[Page]][]).filter(([, p]) => p.group === g).map(([k, p]) => (
                 <button key={k} onClick={() => go(k)}
                   className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm ${route.page === k ? 'bg-brand-600 text-white' : 'hover:bg-white/5 hover:text-white'}`}>
-                  <p.icon size={16} /> {p.label}
+                  <p.icon size={16} /> {tr(p.label)}
                 </button>
               ))}
             </div>
@@ -132,9 +133,9 @@ export default function App() {
                 <span title={syncError || (sync === 'ok' ? 'Enregistré' : 'Enregistrement…')}>{sync === 'ok' ? <Cloud size={16} className="text-emerald-400" /> : sync === 'saving' ? <Loader2 size={16} className="animate-spin" /> : <CloudOff size={16} className="text-rose-400" />}</span>
               </div>
               <div className="mt-2 flex gap-1 text-xs">
-                {session?.user.role === 'superadmin' && <a href="/admin" className="flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><Shield size={12} /> Console</a>}
-                <button onClick={() => setAccount(true)} className="flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><KeyRound size={12} /> Compte</button>
-                <button onClick={async () => { await fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); location.href = '/connexion' }} className="ml-auto flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><LogOut size={12} /> Quitter</button>
+                {session?.user.role === 'superadmin' && <a href="/admin" className="flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><Shield size={12} />{" "}{tr("Console")}</a>}
+                <button onClick={() => setAccount(true)} className="flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><KeyRound size={12} />{" "}{tr("Compte")}</button>
+                <button onClick={async () => { await fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); location.href = '/connexion' }} className="ml-auto flex items-center gap-1 rounded bg-white/5 px-2 py-1 hover:bg-white/10"><LogOut size={12} />{" "}{tr("Quitter")}</button>
               </div>
             </>
           )}
@@ -143,13 +144,13 @@ export default function App() {
       {nav && <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setNav(false)} />}
 
       <header className="no-print safe-top sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-2.5 backdrop-blur lg:hidden">
-        {db.agency.logo ? <img src={db.agency.logo} alt="" className="h-7 w-7 rounded-lg object-contain" /> : <img src="/icon.svg" alt="" className="h-7 w-7" />}
-        <span className="truncate font-semibold">{PAGES[route.page].label}</span>
+        {db.agency.logo ? <img src={db.agency.logo} alt="" className="h-7 w-7 rounded-lg object-contain" /> : <img src="/immopilot-logo.png" alt="" className="h-7 w-7" />}
+        <span className="truncate font-semibold">{tr(PAGES[route.page].label)}</span>
         {mode === 'remote' && <span className="ml-auto">{sync === 'ok' ? <Cloud size={17} className="text-emerald-500" /> : sync === 'saving' ? <Loader2 size={17} className="animate-spin text-slate-400" /> : <CloudOff size={17} className="text-rose-500" />}</span>}
         <button className={mode === 'remote' ? '' : 'ml-auto'} onClick={() => setSearch(true)}><Search size={20} /></button>
       </header>
 
-      {mode === 'local' && <div className="no-print bg-amber-100 px-4 py-1.5 text-center text-xs text-amber-900">Mode démonstration — données enregistrées dans ce navigateur seulement. <a href="/connexion" className="font-semibold underline">Se connecter</a> pour l’espace sécurisé partagé de votre agence.</div>}
+      {mode === 'local' && <div className="no-print bg-amber-100 px-4 py-1.5 text-center text-xs text-amber-900">{tr("Mode démonstration — données enregistrées dans ce navigateur seulement.")}{" "}<a href="/connexion" className="font-semibold underline">{tr("Se connecter")}</a>{" "}{tr("pour l’espace sécurisé partagé de votre agence.")}</div>}
       <main className={`mx-auto max-w-7xl p-4 sm:p-6 ${inVisit ? '' : 'max-lg:pb-32'}`}>
         <Cur key={route.page} go={go} openId={route.id} />
       </main>
@@ -170,14 +171,14 @@ function BubbleNav({ current, go, openMenu }: { current: Page; go: (p: Page) => 
           const on = current === page
           const center = page === 'visits'
           return (
-            <button key={page} onClick={() => go(page)} aria-label={label}
+            <button key={page} onClick={() => go(page)} aria-label={tr(label)}
               className={`flex items-center justify-center gap-1.5 rounded-full transition-all duration-300 ${center && !on ? 'h-12 w-12 bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg' : on ? 'h-12 bg-white px-4 text-brand-700' : 'h-12 w-12 text-slate-300'}`}>
-              <Icon size={20} />{on && <span className="text-sm font-semibold">{label}</span>}
+              <Icon size={20} />{on && <span className="text-sm font-semibold">{tr(label)}</span>}
             </button>
           )
         })}
-        <button onClick={openMenu} aria-label="Plus" className={`flex h-12 items-center justify-center gap-1.5 rounded-full px-3 transition-all ${!BUBBLES.some(b => b[0] === current) ? 'bg-white text-brand-700' : 'text-slate-300'}`}>
-          <Menu size={20} />{!BUBBLES.some(b => b[0] === current) && <span className="max-w-24 truncate text-sm font-semibold">Plus</span>}
+        <button onClick={openMenu} aria-label={tr("Plus")} className={`flex h-12 items-center justify-center gap-1.5 rounded-full px-3 transition-all ${!BUBBLES.some(b => b[0] === current) ? 'bg-white text-brand-700' : 'text-slate-300'}`}>
+          <Menu size={20} />{!BUBBLES.some(b => b[0] === current) && <span className="max-w-24 truncate text-sm font-semibold">{tr("Plus")}</span>}
         </button>
       </div>
     </nav>

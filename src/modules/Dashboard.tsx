@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { AlarmClock, Cake, CalendarDays, CheckSquare, DollarSign, FileCheck2, Home, PartyPopper, RefreshCcw, Users } from 'lucide-react'
 import type { PageProps } from '../App'
 import { useStore } from '../lib/store'
@@ -47,19 +48,19 @@ export default function Dashboard({ go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title={`${hello}, ${me.name.split(' ')[0]} 👋`} subtitle={now.toLocaleDateString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={<><ScopeFilter /><button className="btn-primary" onClick={() => setStartVisit(true)}><Play size={16} /> Démarrer une visite</button></>} />
+      <PageHeader title={`${hello}, ${me.name.split(' ')[0]} 👋`} subtitle={now.toLocaleDateString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={<><ScopeFilter /><button className="btn-primary" onClick={() => setStartVisit(true)}><Play size={16} />{" "}{tr("Démarrer une visite")}</button></>} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Inscriptions en vigueur" value={active.length} sub={`${listings.filter(l => l.status === 'preparation').length} en préparation`} icon={<Home size={20} />} />
-        <Stat label="Dossiers ouverts" value={openDeals.length} sub={money(openDeals.reduce((s, d) => s + d.price, 0)) + ' en volume'} icon={<FileCheck2 size={20} />} tone="sky" />
-        <Stat label="Commissions brutes en cours" value={money(pipelineGross)} sub={`${money(gciYear)} conclues en ${year}`} icon={<DollarSign size={20} />} tone="green" />
-        <Stat label="Tâches à faire" value={tasks.length} sub={`${dueTasks.length} dues ou en retard · ${newLeads} leads (30 j)`} icon={<CheckSquare size={20} />} tone={dueTasks.length ? 'rose' : 'amber'} />
+        <Stat label={tr("Inscriptions en vigueur")} value={active.length} sub={`${listings.filter(l => l.status === 'preparation').length} en préparation`} icon={<Home size={20} />} />
+        <Stat label={tr("Dossiers ouverts")} value={openDeals.length} sub={money(openDeals.reduce((s, d) => s + d.price, 0)) + ' en volume'} icon={<FileCheck2 size={20} />} tone="sky" />
+        <Stat label={tr("Commissions brutes en cours")} value={money(pipelineGross)} sub={`${money(gciYear)} conclues en ${year}`} icon={<DollarSign size={20} />} tone="green" />
+        <Stat label={tr("Tâches à faire")} value={tasks.length} sub={`${dueTasks.length} dues ou en retard · ${newLeads} leads (30 j)`} icon={<CheckSquare size={20} />} tone={dueTasks.length ? 'rose' : 'amber'} />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <section className="card p-4 lg:col-span-2">
-          <h2 className="mb-3 flex items-center gap-2 font-semibold"><AlarmClock size={18} className="text-rose-500" /> Tableau blanc — délais des transactions</h2>
-          {deadlines.length === 0 ? <Empty>Aucun délai dans les 3 prochaines semaines.</Empty> : (
+          <h2 className="mb-3 flex items-center gap-2 font-semibold"><AlarmClock size={18} className="text-rose-500" />{" "}{tr("Tableau blanc — délais des transactions")}</h2>
+          {deadlines.length === 0 ? <Empty>{tr("Aucun délai dans les 3 prochaines semaines.")}</Empty> : (
             <ul className="divide-y divide-slate-100">
               {deadlines.map((x, i) => (
                 <li key={i} className="flex cursor-pointer items-center gap-3 py-2 hover:bg-slate-50" onClick={() => go('deals', x.deal.id)}>
@@ -77,7 +78,7 @@ export default function Dashboard({ go }: PageProps) {
         </section>
 
         <section className="card p-4">
-          <h2 className="mb-3 flex items-center gap-2 font-semibold"><CheckSquare size={18} className="text-brand-600" /> Tâches prioritaires</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-semibold"><CheckSquare size={18} className="text-brand-600" />{" "}{tr("Tâches prioritaires")}</h2>
           {tasks.length === 0 ? <Empty>Rien à faire 🎉</Empty> : (
             <ul className="space-y-1">
               {[...tasks].sort((a, b) => a.due.localeCompare(b.due)).slice(0, 8).map(t => (
@@ -89,12 +90,12 @@ export default function Dashboard({ go }: PageProps) {
               ))}
             </ul>
           )}
-          <button className="btn-ghost mt-2 w-full justify-center" onClick={() => go('tasks')}>Toutes les tâches →</button>
+          <button className="btn-ghost mt-2 w-full justify-center" onClick={() => go('tasks')}>{tr("Toutes les tâches →")}</button>
         </section>
 
         {myMissing.length > 0 && (
           <section className="card border-amber-200 p-4 lg:col-span-3">
-            <h2 className="mb-2 flex items-center gap-2 font-semibold"><FileWarning size={18} className="text-amber-600" /> Mes documents manquants</h2>
+            <h2 className="mb-2 flex items-center gap-2 font-semibold"><FileWarning size={18} className="text-amber-600" />{" "}{tr("Mes documents manquants")}</h2>
             <div className="flex gap-2 overflow-x-auto">
               {myMissing.map(({ d, p }) => (
                 <button key={d.id} onClick={() => go('deals', d.id)} className="min-w-60 rounded-lg border border-slate-200 p-3 text-left text-sm hover:border-amber-400">
@@ -123,7 +124,7 @@ export default function Dashboard({ go }: PageProps) {
         )}
 
         <section className="card p-4">
-          <h2 className="mb-3 flex items-center gap-2 font-semibold"><CalendarDays size={18} className="text-sky-600" /> 7 prochains jours</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-semibold"><CalendarDays size={18} className="text-sky-600" />{" "}{tr("7 prochains jours")}</h2>
           {week.length === 0 ? <Empty>Agenda libre.</Empty> : (
             <ul className="space-y-2">
               {week.map(({ e, d }) => (
@@ -143,7 +144,7 @@ export default function Dashboard({ go }: PageProps) {
         </section>
 
         <section className="card p-4">
-          <h2 className="mb-3 flex items-center gap-2 font-semibold"><Cake size={18} className="text-pink-500" /> Plan d’action — fêtes & anniversaires</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-semibold"><Cake size={18} className="text-pink-500" />{" "}{tr("Plan d’action — fêtes & anniversaires")}</h2>
           {now.getMonth() === 11 && <div className="mb-2 rounded-lg bg-emerald-50 p-2 text-xs text-emerald-800">🎄 Décembre : envoyer les vœux de Noël à la base de données (modèle « Joyeux Noël »).</div>}
           {birthdays.length + anniversaries.length === 0 ? <Empty>Aucune occasion dans les 2 prochaines semaines.</Empty> : (
             <ul className="space-y-1.5 text-sm">
@@ -158,8 +159,8 @@ export default function Dashboard({ go }: PageProps) {
         </section>
 
         <section className="card p-4">
-          <h2 className="mb-3 flex items-center gap-2 font-semibold"><RefreshCcw size={18} className="text-emerald-600" /> Réactivation « All In »</h2>
-          <p className="mb-2 text-xs text-slate-500">Contacts sans nouvelles depuis 90 jours et plus.</p>
+          <h2 className="mb-3 flex items-center gap-2 font-semibold"><RefreshCcw size={18} className="text-emerald-600" />{" "}{tr("Réactivation « All In »")}</h2>
+          <p className="mb-2 text-xs text-slate-500">{tr("Contacts sans nouvelles depuis 90 jours et plus.")}</p>
           {dormant.length === 0 ? <Empty>Base de données à jour 👌</Empty> : (
             <ul className="space-y-1.5 text-sm">
               {dormant.map(c => (
@@ -170,11 +171,11 @@ export default function Dashboard({ go }: PageProps) {
               ))}
             </ul>
           )}
-          <button className="btn-ghost mt-2 w-full justify-center" onClick={() => go('sop')}>Scripts de réactivation →</button>
+          <button className="btn-ghost mt-2 w-full justify-center" onClick={() => go('sop')}>{tr("Scripts de réactivation →")}</button>
         </section>
 
         <section className="card p-4 lg:col-span-3">
-          <h2 className="mb-3 flex items-center gap-2 font-semibold"><Users size={18} className="text-indigo-600" /> Pipeline de contacts</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-semibold"><Users size={18} className="text-indigo-600" />{" "}{tr("Pipeline de contacts")}</h2>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
             {byStage.map(({ s, n }) => (
               <button key={s} onClick={() => go('pipeline')} className="flex flex-col items-center gap-1 rounded-lg p-2 hover:bg-slate-50">

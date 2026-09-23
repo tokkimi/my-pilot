@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -25,7 +26,7 @@ export default function Pipeline({ go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Pipeline" subtitle="Glissez-déposez les cartes pour faire avancer vos prospects"
+      <PageHeader title={tr("Pipeline")} subtitle="Glissez-déposez les cartes pour faire avancer vos prospects"
         actions={<>
           <ScopeFilter />
           <select className="input w-auto" value={type} onChange={e => setType(e.target.value as ContactType)}>

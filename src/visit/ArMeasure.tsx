@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useEffect, useRef, useState } from 'react'
 import { Check, Plus, RotateCcw, X } from 'lucide-react'
 import type { MeasureOut } from './Measure'
@@ -102,7 +103,7 @@ export default function ArMeasure({ unit, onApply, onClose }: { unit: 'pi' | 'm'
     <div ref={overlay} className="fixed inset-0 z-[70] text-white" style={{ background: error ? '#0f172a' : 'transparent' }}>
       {error ? (
         <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
-          <p>{error}</p><button className="btn-primary" onClick={onClose}>Fermer</button>
+          <p>{error}</p><button className="btn-primary" onClick={onClose}>{tr("Fermer")}</button>
         </div>
       ) : (
         <>

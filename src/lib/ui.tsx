@@ -1,3 +1,4 @@
+import { tr } from './i18n'
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { useStore } from './store'
@@ -43,8 +44,8 @@ export function Modal({ title, onClose, children, wide, footer }: { title: strin
       <div className={`card w-full ${wide ? 'max-w-5xl' : 'max-w-2xl'} max-sm:min-h-[92vh] max-sm:rounded-b-none max-sm:rounded-t-3xl sm:my-auto`} onMouseDown={e => e.stopPropagation()}>
         <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" />
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-          <h2 className="font-semibold text-slate-900">{title}</h2>
-          <button className="btn-ghost p-1" onClick={onClose} aria-label="Fermer"><X size={18} /></button>
+          <h2 className="font-semibold text-slate-900">{tr(title)}</h2>
+          <button className="btn-ghost p-1" onClick={onClose} aria-label={tr("Fermer")}><X size={18} /></button>
         </div>
         <div className="overflow-y-auto p-4 sm:max-h-[75vh] sm:p-5">{children}</div>
         {footer && <div className="safe-bottom sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-slate-200 bg-white px-5 py-3">{footer}</div>}
@@ -57,8 +58,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-        {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-slate-900">{tr(title)}</h1>
+        {subtitle && <p className="text-sm text-slate-500">{tr(subtitle)}</p>}
       </div>
       <div className="flex flex-wrap gap-2 no-print">{actions}</div>
     </div>
@@ -71,7 +72,7 @@ export function Stat({ label, value, sub, icon, tone = 'brand' }: { label: strin
     <div className="card flex items-center gap-3 p-4">
       {icon && <div className={`rounded-lg p-2.5 ${tones[tone]}`}>{icon}</div>}
       <div className="min-w-0">
-        <div className="text-xs font-medium text-slate-500">{label}</div>
+        <div className="text-xs font-medium text-slate-500">{tr(label)}</div>
         <div className="truncate text-xl font-bold text-slate-900">{value}</div>
         {sub && <div className="text-xs text-slate-500">{sub}</div>}
       </div>
@@ -80,7 +81,7 @@ export function Stat({ label, value, sub, icon, tone = 'brand' }: { label: strin
 }
 
 export function Field({ label, children, className = '' }: { label: string; children: ReactNode; className?: string }) {
-  return <label className={`block ${className}`}><span className="label">{label}</span>{children}</label>
+  return <label className={`block ${className}`}><span className="label">{tr(label)}</span>{children}</label>
 }
 
 export function Empty({ children }: { children: ReactNode }) {
@@ -206,7 +207,7 @@ export function Letterhead({ title, subtitle, memberId }: { title?: string; subt
           {m && <div className="text-xs text-slate-600">{m.name}{m.title ? ` — ${m.title}` : ''}{m.licence ? ` · Permis ${m.licence}` : ''}{m.phone ? ` · ${m.phone}` : ''}</div>}
         </div>
       </div>
-      {title && <div className="text-right"><div className="text-xl font-extrabold uppercase tracking-wide" style={{ color }}>{title}</div>{subtitle && <div className="text-sm text-slate-600">{subtitle}</div>}</div>}
+      {title && <div className="text-right"><div className="text-xl font-extrabold uppercase tracking-wide" style={{ color }}>{tr(title)}</div>{subtitle && <div className="text-sm text-slate-600">{tr(subtitle)}</div>}</div>}
     </div>
   )
 }

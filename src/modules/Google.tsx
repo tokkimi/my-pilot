@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useEffect, useState } from 'react'
 import { CalendarDays, CheckCircle2, HardDrive, Link2, Loader2, LogOut, ShieldCheck, XCircle } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -36,7 +37,7 @@ export default function Google({ openId }: PageProps) {
   if (mode === 'local') {
     return (
       <div>
-        <PageHeader title="Google Drive & Agenda" />
+        <PageHeader title={tr("Google Drive & Agenda")} />
         <Empty>La connexion Google est disponible dans l’espace sécurisé de l’agence (<a href="/connexion" className="text-brand-700 underline">se connecter</a>). En démo, vous pouvez coller des liens de dossiers dans les inscriptions et dossiers.</Empty>
       </div>
     )
@@ -44,17 +45,17 @@ export default function Google({ openId }: PageProps) {
   const scopes = st?.connected?.scopes ?? ''
   return (
     <div className="space-y-5">
-      <PageHeader title="Google Drive & Agenda" subtitle="Chaque membre relie son propre compte Google, selon les accès accordés par l’administrateur de l’agence" />
+      <PageHeader title={tr("Google Drive & Agenda")} subtitle={tr("Chaque membre relie son propre compte Google, selon les accès accordés par l’administrateur de l’agence")} />
       {msg && <div className={`rounded-lg p-3 text-sm ${msg.startsWith('✓') ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700'}`}>{msg}</div>}
       {!st ? <Loader2 className="animate-spin text-slate-400" /> : !st.configured ? (
         <div className="card p-5 text-sm">
-          <h2 className="mb-2 font-semibold">Connexion Google pas encore activée</h2>
-          <p className="text-slate-600">Le propriétaire de la plateforme doit ajouter les clés Google (projet Google Cloud) dans la configuration. Dès que c’est fait, chaque membre autorisé pourra relier son compte ici.</p>
+          <h2 className="mb-2 font-semibold">{tr("Connexion Google pas encore activée")}</h2>
+          <p className="text-slate-600">{tr("Le propriétaire de la plateforme doit ajouter les clés Google (projet Google Cloud) dans la configuration. Dès que c’est fait, chaque membre autorisé pourra relier son compte ici.")}</p>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           <section className="card p-5">
-            <h2 className="mb-3 font-semibold">Mon compte Google</h2>
+            <h2 className="mb-3 font-semibold">{tr("Mon compte Google")}</h2>
             <div className="mb-3 space-y-1 text-sm">
               <Perm ok={st.allowed.drive} label="Google Drive" detail="dossiers des inscriptions, dossiers et visites" />
               <Perm ok={st.allowed.calendar} label="Google Agenda" detail="envoi de vos rendez-vous et visites" />
@@ -91,7 +92,7 @@ export default function Google({ openId }: PageProps) {
           <h2 className="flex items-center gap-2 px-4 pt-4 font-semibold"><ShieldCheck size={17} className="text-brand-600" /> Accès Google des membres</h2>
           <p className="px-4 pb-2 text-xs text-slate-500">Vous décidez qui peut relier Google Drive et Google Agenda. Retirer un accès déconnecte immédiatement le compte Google du membre.</p>
           <table className="w-full">
-            <thead><tr><th className="th">Membre</th><th className="th">Rôle</th><th className="th">Google Drive</th><th className="th">Google Agenda</th><th className="th">Compte relié</th></tr></thead>
+            <thead><tr><th className="th">Membre</th><th className="th">{tr("Rôle")}</th><th className="th">Google Drive</th><th className="th">Google Agenda</th><th className="th">Compte relié</th></tr></thead>
             <tbody>
               {db.members.filter(m => m.active).map(m => (
                 <tr key={m.id}>

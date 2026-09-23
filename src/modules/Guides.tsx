@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -12,7 +13,7 @@ export default function Guides(_: PageProps) {
   const brokers = db.members.filter(m => m.active && (m.role === 'courtier' || m.role === 'admin'))
   return (
     <div>
-      <PageHeader title="Guides clients" subtitle="Guides acheteur et vendeur prêts à imprimer ou à envoyer en PDF"
+      <PageHeader title={tr("Guides clients")} subtitle="Guides acheteur et vendeur prêts à imprimer ou à envoyer en PDF"
         actions={<button className="btn-primary" onClick={() => window.print()}><Printer size={16} /> Imprimer / PDF</button>} />
       <Tabs value={tab} onChange={setTab} tabs={[['acheteur', 'Guide acheteur'], ['vendeur', 'Guide vendeur']]} />
       <article className="card mx-auto max-w-3xl p-8">

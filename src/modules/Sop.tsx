@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -13,7 +14,7 @@ export default function Sop({ go }: PageProps) {
   const [tab, setTab] = useState<Tab>('rdv')
   return (
     <div>
-      <PageHeader title="SOP & scripts" subtitle="Procédures de l’équipe : rendez-vous vendeur, processus, réactivation, objections" />
+      <PageHeader title={tr("SOP & scripts")} subtitle="Procédures de l’équipe : rendez-vous vendeur, processus, réactivation, objections" />
       <Tabs<Tab> value={tab} onChange={setTab} tabs={[['rdv', 'SOP rendez-vous vendeur'], ['present', '▶ Mode présentation'], ['process', 'Processus vendeur / acheteur'], ['reactivation', 'Réactivation « All In »'], ['objections', 'Objections'], ['maitrise', 'À maîtriser par cœur']]} />
       {tab === 'rdv' && <SopFull />}
       {tab === 'present' && <Presenter />}
@@ -103,7 +104,7 @@ function Reactivation({ go }: { go: PageProps['go'] }) {
     <div className="grid gap-5 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         <div className="card p-4">
-          <h2 className="mb-2 font-semibold">Objectif</h2>
+          <h2 className="mb-2 font-semibold">{tr("Objectif")}</h2>
           <p className="text-sm">Réactiver d’anciens contacts afin de générer naturellement des références de propriétaires susceptibles de vendre ou souhaitant connaître la valeur de leur propriété.</p>
           <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">{REACTIVATION.steps.map(s => <li key={s}>{s}</li>)}</ol>
         </div>
@@ -158,11 +159,11 @@ function Objections() {
       {editing && (
         <Modal title="Objection" onClose={() => setEditing(null)}
           footer={<>
-            <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('objections', editing.id); setEditing(null) }}><Trash2 size={15} /> Supprimer</button>
-            <button className="btn-primary" onClick={() => { upsert('objections', editing); setEditing(null) }}>Enregistrer</button>
+            <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('objections', editing.id); setEditing(null) }}><Trash2 size={15} />{" "}{tr("Supprimer")}</button>
+            <button className="btn-primary" onClick={() => { upsert('objections', editing); setEditing(null) }}>{tr("Enregistrer")}</button>
           </>}>
           <div className="grid gap-3">
-            <Field label="Catégorie"><input className="input" value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} /></Field>
+            <Field label={tr("Catégorie")}><input className="input" value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} /></Field>
             <Field label="Objection"><input className="input" value={editing.objection} onChange={e => setEditing({ ...editing, objection: e.target.value })} /></Field>
             <Field label="Meilleure réponse"><textarea className="input min-h-32" value={editing.response} onChange={e => setEditing({ ...editing, response: e.target.value })} /></Field>
           </div>

@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { ExternalLink, Plus, Printer, Trash2, MapPin } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -22,14 +23,14 @@ export default function Listings({ openId, go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Inscriptions" subtitle="Fiches propriétés, documents requis, plan de mise en marché et visites"
+      <PageHeader title={tr("Inscriptions")} subtitle="Fiches propriétés, documents requis, plan de mise en marché et visites"
         actions={<>
           <ScopeFilter />
           <select className="input w-auto" value={status} onChange={e => setStatus(e.target.value as ListingStatus)}>
             <option value="">Tous les statuts</option>
             {Object.entries(LISTING_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <button className="btn-primary" onClick={create}><Plus size={16} /> Nouvelle inscription</button>
+          <button className="btn-primary" onClick={create}><Plus size={16} />{" "}{tr("Nouvelle inscription")}</button>
         </>} />
       {list.length === 0 ? <Empty>Aucune inscription.</Empty> : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -98,13 +99,13 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
       {tab === 'infos' && (
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2">
-            <Field label="Adresse"><input className="input" value={l.address} onChange={e => set('address', e.target.value)} /></Field>
-            <Field label="Ville"><input className="input" value={l.city} onChange={e => set('city', e.target.value)} /></Field>
+            <Field label={tr("Adresse")}><input className="input" value={l.address} onChange={e => set('address', e.target.value)} /></Field>
+            <Field label={tr("Ville")}><input className="input" value={l.city} onChange={e => set('city', e.target.value)} /></Field>
             <Field label="No Centris"><input className="input" value={l.centris} onChange={e => set('centris', e.target.value)} /></Field>
             <Field label="Type de propriété"><input className="input" list="ptypes" value={l.propertyType} onChange={e => set('propertyType', e.target.value)} />
               <datalist id="ptypes">{['Maison', 'Maison à étages', 'Maison plain-pied', 'Condo', 'Duplex', 'Triplex', 'Quadruplex', 'Quintuplex', 'Multilogement', 'Terrain', 'Chalet', 'Commercial', 'Prestige'].map(x => <option key={x} value={x} />)}</datalist>
             </Field>
-            <Field label="Statut"><select className="input" value={l.status} onChange={e => set('status', e.target.value as ListingStatus)}>{Object.entries(LISTING_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+            <Field label={tr("Statut")}><select className="input" value={l.status} onChange={e => set('status', e.target.value as ListingStatus)}>{Object.entries(LISTING_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
             <Field label="Prix demandé"><input className="input" type="number" value={l.price || ''} onChange={e => set('price', +e.target.value)} /></Field>
             <Field label="Chambres"><input className="input" type="number" value={l.bedrooms || ''} onChange={e => set('bedrooms', +e.target.value)} /></Field>
             <Field label="Salles de bain + salles d’eau"><input className="input" type="number" value={l.bathrooms || ''} onChange={e => set('bathrooms', +e.target.value)} /></Field>
@@ -117,7 +118,7 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
             <Field label="Solde hypothécaire"><input className="input" type="number" value={l.mortgageBalance || ''} onChange={e => set('mortgageBalance', +e.target.value)} /></Field>
             <Field label="URL photo principale"><input className="input" value={l.photoUrl} onChange={e => set('photoUrl', e.target.value)} placeholder="https://…" /></Field>
             <Field label="Vendeur(s)" className="sm:col-span-2"><MultiContact value={l.sellerIds} onChange={v => set('sellerIds', v)} /></Field>
-            <Field label="Notes" className="sm:col-span-2"><textarea className="input min-h-20" value={l.notes} onChange={e => set('notes', e.target.value)} /></Field>
+            <Field label={tr("Notes")} className="sm:col-span-2"><textarea className="input min-h-20" value={l.notes} onChange={e => set('notes', e.target.value)} /></Field>
           </div>
           <div className="space-y-3">
             <div className="rounded-lg border border-slate-200 p-3">
@@ -125,8 +126,8 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
               <div className="grid gap-2">
                 <Field label="Courtier inscripteur"><MemberSelect value={l.agentId} onChange={v => set('agentId', v)} /></Field>
                 <div className="grid grid-cols-2 gap-2">
-                  <Field label="Début"><input className="input" type="date" value={l.mandateStart} onChange={e => set('mandateStart', e.target.value)} /></Field>
-                  <Field label="Fin"><input className="input" type="date" value={l.mandateEnd} onChange={e => set('mandateEnd', e.target.value)} /></Field>
+                  <Field label={tr("Début")}><input className="input" type="date" value={l.mandateStart} onChange={e => set('mandateStart', e.target.value)} /></Field>
+                  <Field label={tr("Fin")}><input className="input" type="date" value={l.mandateEnd} onChange={e => set('mandateEnd', e.target.value)} /></Field>
                   <Field label="Rétribution %"><input className="input" type="number" step="0.25" value={l.commissionPct} onChange={e => set('commissionPct', +e.target.value)} /></Field>
                   <Field label="Collaborateur %"><input className="input" type="number" step="0.25" value={l.collabPct} onChange={e => set('collabPct', +e.target.value)} /></Field>
                 </div>
@@ -147,7 +148,7 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
               <button className="btn-primary" onClick={() => { const v = createVisit(l.agentId, { type: l.status === 'preparation' ? 'evaluation' : 'photo', listingId: l.id, title: l.address, address: `${l.address}, ${l.city}`, contactIds: l.sellerIds, status: 'en_cours', startedAt: new Date().toISOString() }); upsert('visits', v); go('visits', v.id) }}>▶ Démarrer une visite (mesures, vidéo, plan)</button>
               {deal ? <button className="btn-outline" onClick={() => go('deals', deal.id)}>📁 Ouvrir le dossier de vente</button>
                 : <button className="btn-primary" onClick={() => { const d = newDeal(l.agentId, { kind: 'vente', title: `Vente — ${l.address}`, listingId: l.id, contactIds: l.sellerIds, price: l.price, commissionPct: l.commissionPct }); upsert('deals', d); go('deals', d.id) }}>Créer le dossier de vente</button>}
-              <button className="btn-ghost text-rose-600" onClick={() => { if (confirm('Supprimer cette inscription?')) { remove('listings', l.id); onClose() } }}><Trash2 size={15} /> Supprimer</button>
+              <button className="btn-ghost text-rose-600" onClick={() => { if (confirm('Supprimer cette inscription?')) { remove('listings', l.id); onClose() } }}><Trash2 size={15} />{" "}{tr("Supprimer")}</button>
             </div>
           </div>
         </div>

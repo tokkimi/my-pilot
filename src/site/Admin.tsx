@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useEffect, useMemo, useState } from 'react'
 import { Building2, ExternalLink, Globe, Inbox, KeyRound, LogOut, Plus, RefreshCw, Users, Activity, ScanLine } from 'lucide-react'
 import SiteActivity, { type PlatformEntry } from './AdminSite'
@@ -47,7 +48,7 @@ export default function Admin() {
   useEffect(() => { document.title = `${unread ? `(${unread}) ` : ''}Console ImmoPilot` }, [unread])
   const run = async (body: object, after?: (b: any) => void) => { try { const b = await api(body); after?.(b); await load() } catch (e) { alert((e as Error).message) } }
 
-  if (error) return <div className="flex min-h-screen items-center justify-center p-6"><div className="card max-w-md p-6 text-center"><p className="text-rose-600">{error}</p><a href="/connexion" className="btn-primary mt-4">Connexion</a></div></div>
+  if (error) return <div className="flex min-h-screen items-center justify-center p-6"><div className="card max-w-md p-6 text-center"><p className="text-rose-600">{error}</p><a href="/connexion" className="btn-primary mt-4">{tr("Connexion")}</a></div></div>
   if (!data) return <div className="flex min-h-screen items-center justify-center text-slate-500">Chargement de la console…</div>
   const newLeads = data.leads.filter(l => l.status === 'nouveau').length
 
@@ -55,17 +56,17 @@ export default function Admin() {
     <div className="min-h-screen bg-slate-50">
       <header className="bg-ink text-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
-          <a href="/" className="font-bold">🏡 ImmoPilot</a><span className="badge bg-brand-600 text-white">Console propriétaires</span>
+          <a href="/" className="font-bold"><img src="/immopilot-logo.png" alt="ImmoPilot" className="brand-logo" /></a><span className="badge bg-brand-600 text-white">{tr("Console propriétaires")}</span>
           <nav className="flex max-w-full gap-1 overflow-x-auto text-sm sm:ml-4">
             {([['overview', 'Vue d’ensemble', Activity], ['leads', 'Nouvelles demandes', Inbox], ['site', 'Activité du site', Globe], ['agencies', 'Agences', Building2], ['users', 'Utilisateurs', Users]] as const).map(([k, l, I]) => (
               <button key={k} onClick={() => setTab(k)} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 ${tab === k ? 'bg-white/15' : 'hover:bg-white/10'}`}><I size={15} />{l}{k === 'leads' && newLeads > 0 && <span className="rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">{newLeads}</span>}</button>
             ))}
           </nav>
           <div className="ml-auto flex gap-2 text-sm">
-            <button className="flex items-center gap-1 rounded bg-brand-600 px-3 py-1" onClick={() => run({ action: 'openOwnAgency' }, b => { location.href = `/app?agency=${encodeURIComponent(b.agency.id)}` })}><Building2 size={15} /> Mon agence</button>
-            <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => void load()}><RefreshCw size={14} /> Actualiser</button>
-            <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => setPw({ current: '', next: '', msg: '' })}><KeyRound size={14} /> Mot de passe</button>
-            <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={async () => { await fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); location.href = '/connexion' }}><LogOut size={14} /> Quitter</button>
+            <button className="flex items-center gap-1 rounded bg-brand-600 px-3 py-1" onClick={() => run({ action: 'openOwnAgency' }, b => { location.href = `/app?agency=${encodeURIComponent(b.agency.id)}` })}><Building2 size={15} />{" "}{tr("Mon agence")}</button>
+            <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => void load()}><RefreshCw size={14} />{" "}{tr("Actualiser")}</button>
+            <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => setPw({ current: '', next: '', msg: '' })}><KeyRound size={14} />{" "}{tr("Mot de passe")}</button>
+            <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={async () => { await fetch('/api/auth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); location.href = '/connexion' }}><LogOut size={14} />{" "}{tr("Quitter")}</button>
           </div>
         </div>
       </header>
@@ -83,7 +84,7 @@ export default function Admin() {
             <input className="input mb-2" type="password" placeholder="Mot de passe actuel" autoComplete="current-password" value={pw.current} onChange={e => setPw({ ...pw, current: e.target.value })} />
             <input className="input" type="password" placeholder="Nouveau (8 caractères min.)" autoComplete="new-password" value={pw.next} onChange={e => setPw({ ...pw, next: e.target.value })} />
             {pw.msg && <p className="mt-2 text-sm">{pw.msg}</p>}
-            <div className="mt-4 flex justify-end gap-2"><button className="btn-ghost" onClick={() => setPw(null)}>Fermer</button><button className="btn-primary" onClick={changePw}>Enregistrer</button></div>
+            <div className="mt-4 flex justify-end gap-2"><button className="btn-ghost" onClick={() => setPw(null)}>{tr("Fermer")}</button><button className="btn-primary" onClick={changePw}>{tr("Enregistrer")}</button></div>
           </div>
         </div>
       )}
@@ -95,7 +96,7 @@ export default function Admin() {
             <div className="mt-3 rounded-lg bg-slate-100 p-3 font-mono text-sm">Courriel : {secret.email}<br />Mot de passe : {secret.password}<br />Connexion : {location.origin}/connexion</div>
             <div className="mt-4 flex justify-end gap-2">
               <button className="btn-outline" onClick={() => navigator.clipboard?.writeText(`Courriel : ${secret.email}\nMot de passe temporaire : ${secret.password}\nConnexion : ${location.origin}/connexion`)}>Copier</button>
-              <button className="btn-primary" onClick={() => setSecret(null)}>Fermer</button>
+              <button className="btn-primary" onClick={() => setSecret(null)}>{tr("Fermer")}</button>
             </div>
           </div>
         </div>
@@ -126,13 +127,13 @@ function Overview({ data }: { data: Data }) {
       </div>}
       <GoogleSetup g={data.google} connected={data.users.filter(u => u.googleEmail).length} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile label="Agences" value={data.agencies.length} sub={`${data.agencies.filter(a => a.status === 'actif').length} actives · ${data.agencies.filter(a => a.plan === 'essai').length} en essai`} />
-        <Tile label="Utilisateurs" value={users.length} sub={`${users.filter(u => u.active).length} actifs`} />
+        <Tile label={tr("Agences")} value={data.agencies.length} sub={`${data.agencies.filter(a => a.status === 'actif').length} actives · ${data.agencies.filter(a => a.plan === 'essai').length} en essai`} />
+        <Tile label={tr("Utilisateurs")} value={users.length} sub={`${users.filter(u => u.active).length} actifs`} />
         <Tile label="Actifs 7 jours" value={users.filter(u => within(u.lastSeenAt, 7)).length} sub={`${users.filter(u => within(u.lastSeenAt, 30)).length} sur 30 jours`} />
         <Tile label="Connexions (total)" value={users.reduce((s, u) => s + u.loginCount, 0)} sub={`${days.reduce((s, d) => s + d.logins, 0)} sur 30 jours`} />
-        <Tile label="Visites terrain" value={sum('visits')} sub={`${sum('visitsDone')} terminées · ${sum('media')} médias`} />
+        <Tile label={tr("Visites terrain")} value={sum('visits')} sub={`${sum('visitsDone')} terminées · ${sum('media')} médias`} />
         <Tile label="Contacts gérés" value={sum('contacts')} />
-        <Tile label="Inscriptions" value={sum('listings')} sub={`${sum('deals')} dossiers`} />
+        <Tile label={tr("Inscriptions")} value={sum('listings')} sub={`${sum('deals')} dossiers`} />
         <Tile label="Demandes du site" value={data.leads.length} sub={`${data.leads.filter(l => l.status === 'nouveau').length} nouvelles`} />
       </div>
 
@@ -152,7 +153,7 @@ function Overview({ data }: { data: Data }) {
 
       <section className="card overflow-x-auto">
         <h2 className="px-4 pt-3 font-semibold">Utilisation par agence</h2>
-        <table className="w-full"><thead><tr><th className="th">Agence</th><th className="th">Forfait</th><th className="th">Membres</th><th className="th">Actifs 7 j</th><th className="th">Contacts</th><th className="th">Inscriptions</th><th className="th">Dossiers</th><th className="th"><ScanLine size={12} className="inline" /> Visites</th><th className="th">Médias</th></tr></thead>
+        <table className="w-full"><thead><tr><th className="th">{tr("Agence")}</th><th className="th">Forfait</th><th className="th">Membres</th><th className="th">Actifs 7 j</th><th className="th">{tr("Contacts")}</th><th className="th">{tr("Inscriptions")}</th><th className="th">{tr("Dossiers")}</th><th className="th"><ScanLine size={12} className="inline" /> Visites</th><th className="th">Médias</th></tr></thead>
           <tbody>{data.agencies.map(a => { const u = data.usage.find(x => x.agencyId === a.id); const m = data.users.filter(x => x.agencyId === a.id); return (
             <tr key={a.id}><td className="td font-medium">{a.name}</td><td className="td">{PLAN_LABEL[a.plan]}</td><td className="td">{m.length}</td><td className="td">{m.filter(x => within(x.lastSeenAt, 7)).length}</td><td className="td">{u?.contacts ?? 0}</td><td className="td">{u?.listings ?? 0}</td><td className="td">{u?.deals ?? 0}</td><td className="td">{u?.visits ?? 0}</td><td className="td">{u?.media ?? 0}</td></tr>) })}</tbody></table>
       </section>
@@ -165,7 +166,7 @@ function Agencies({ data, run, onSecret }: { data: Data; run: (b: object, after?
   return (
     <div className="space-y-5">
       <section className="card p-4">
-        <h2 className="mb-3 flex items-center gap-2 font-semibold"><Plus size={16} /> Nouvelle agence</h2>
+        <h2 className="mb-3 flex items-center gap-2 font-semibold"><Plus size={16} />{" "}{tr("Nouvelle agence")}</h2>
         <div className="grid gap-2 sm:grid-cols-3">
           <input className="input" placeholder="Nom de l’agence *" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
           <select className="input" value={f.plan} onChange={e => setF({ ...f, plan: e.target.value as Plan })}>{Object.entries(PLAN_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
@@ -175,10 +176,10 @@ function Agencies({ data, run, onSecret }: { data: Data; run: (b: object, after?
           <input className="input" placeholder="Courriel de facturation / contact" value={f.contactEmail} onChange={e => setF({ ...f, contactEmail: e.target.value })} />
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand-600" checked={f.withDemo} onChange={e => setF({ ...f, withDemo: e.target.checked })} /> Inclure des données d’exemple</label>
         </div>
-        <button className="btn-primary mt-3" disabled={!f.name} onClick={() => run({ action: 'createAgency', ...f, seats: f.seats === '' ? undefined : +f.seats }, b => { if (b.password) onSecret({ title: `Accès admin — ${f.name}`, email: f.adminEmail, password: b.password }); if (b.error) alert(b.error); setF({ name: '', plan: 'essai', seats: '', contactEmail: '', adminName: '', adminEmail: '', withDemo: false }) })}>Créer l’agence</button>
+        <button className="btn-primary mt-3" disabled={!f.name} onClick={() => run({ action: 'createAgency', ...f, seats: f.seats === '' ? undefined : +f.seats }, b => { if (b.password) onSecret({ title: `Accès admin — ${f.name}`, email: f.adminEmail, password: b.password }); if (b.error) alert(b.error); setF({ name: '', plan: 'essai', seats: '', contactEmail: '', adminName: '', adminEmail: '', withDemo: false }) })}>{tr("Créer l’agence")}</button>
       </section>
       <section className="card overflow-x-auto">
-        <table className="w-full"><thead><tr><th className="th">Agence</th><th className="th">Forfait</th><th className="th">Sièges</th><th className="th">Statut</th><th className="th">Créée</th><th className="th">Fin d’essai</th><th className="th" /></tr></thead>
+        <table className="w-full"><thead><tr><th className="th">{tr("Agence")}</th><th className="th">Forfait</th><th className="th">Sièges</th><th className="th">{tr("Statut")}</th><th className="th">Créée</th><th className="th">Fin d’essai</th><th className="th" /></tr></thead>
           <tbody>{data.agencies.map(a => (
             <tr key={a.id}>
               <td className="td font-medium">{a.name}<div className="text-xs text-slate-500">{a.contactEmail}</div></td>
@@ -187,7 +188,7 @@ function Agencies({ data, run, onSecret }: { data: Data; run: (b: object, after?
               <td className="td"><button className={`badge ${a.status === 'actif' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`} onClick={() => run({ action: 'updateAgency', id: a.id, patch: { status: a.status === 'actif' ? 'suspendu' : 'actif' } })}>{a.status}</button></td>
               <td className="td text-xs">{fmt(a.createdAt)}</td>
               <td className="td"><input className="input py-1" type="date" defaultValue={a.trialEnds} onBlur={e => e.target.value !== a.trialEnds && run({ action: 'updateAgency', id: a.id, patch: { trialEnds: e.target.value } })} /></td>
-              <td className="td"><a className="btn-outline py-1 text-xs" href={`/app?agency=${a.id}`}><ExternalLink size={13} /> Ouvrir l’espace</a></td>
+              <td className="td"><a className="btn-outline py-1 text-xs" href={`/app?agency=${a.id}`}><ExternalLink size={13} />{" "}{tr("Ouvrir l’espace")}</a></td>
             </tr>
           ))}</tbody></table>
       </section>
@@ -203,18 +204,18 @@ function UsersTab({ data, run, onSecret }: { data: Data; run: (b: object, after?
   return (
     <div className="space-y-5">
       <section className="card p-4">
-        <h2 className="mb-3 flex items-center gap-2 font-semibold"><Plus size={16} /> Nouvel utilisateur</h2>
+        <h2 className="mb-3 flex items-center gap-2 font-semibold"><Plus size={16} />{" "}{tr("Nouvel utilisateur")}</h2>
         <div className="grid gap-2 sm:grid-cols-4">
-          <input className="input" placeholder="Nom" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
-          <input className="input" placeholder="Courriel" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} />
+          <input className="input" placeholder={tr("Nom")} value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
+          <input className="input" placeholder={tr("Courriel")} value={f.email} onChange={e => setF({ ...f, email: e.target.value })} />
           <select className="input" value={f.role} onChange={e => setF({ ...f, role: e.target.value })}>{Object.entries(ROLE_LABEL).filter(([k]) => k !== 'superadmin').map(([k, l]) => <option key={k} value={k}>{l}</option>)}<option value="superadmin">Super-admin (plateforme)</option></select>
           <select className="input" value={f.agencyId} onChange={e => setF({ ...f, agencyId: e.target.value })}>{data.agencies.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}<option value="platform">Plateforme</option></select>
         </div>
-        <button className="btn-primary mt-3" disabled={!f.email} onClick={() => run({ action: 'createUser', ...f }, b => { onSecret({ title: `Accès — ${f.name || f.email}`, email: f.email, password: b.password }); setF({ ...f, name: '', email: '' }) })}>Créer l’accès</button>
+        <button className="btn-primary mt-3" disabled={!f.email} onClick={() => run({ action: 'createUser', ...f }, b => { onSecret({ title: `Accès — ${f.name || f.email}`, email: f.email, password: b.password }); setF({ ...f, name: '', email: '' }) })}>{tr("Créer l’accès")}</button>
       </section>
       <input className="input" placeholder="Rechercher un utilisateur…" value={q} onChange={e => setQ(e.target.value)} />
       <section className="card overflow-x-auto">
-        <table className="w-full"><thead><tr><th className="th">Utilisateur</th><th className="th">Agence</th><th className="th">Rôle</th><th className="th">Dernière connexion</th><th className="th">Dernière activité</th><th className="th">Connexions</th><th className="th">Google</th><th className="th">Statut</th><th className="th" /></tr></thead>
+        <table className="w-full"><thead><tr><th className="th">Utilisateur</th><th className="th">{tr("Agence")}</th><th className="th">{tr("Rôle")}</th><th className="th">{tr("Dernière connexion")}</th><th className="th">{tr("Dernière activité")}</th><th className="th">Connexions</th><th className="th">Google</th><th className="th">{tr("Statut")}</th><th className="th" /></tr></thead>
           <tbody>{list.map(u => (
             <tr key={u.id}>
               <td className="td font-medium">{u.name}<div className="text-xs text-slate-500">{u.email}{u.mustChangePassword && ' · mot de passe temporaire'}</div></td>
@@ -225,7 +226,7 @@ function UsersTab({ data, run, onSecret }: { data: Data; run: (b: object, after?
               <td className="td">{u.loginCount}</td>
               <td className="td text-xs">{u.googleEmail || <span className="text-slate-400">—</span>}</td>
               <td className="td">{u.role === 'superadmin' ? '—' : <button className={`badge ${u.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`} onClick={() => run({ action: 'updateUser', id: u.id, patch: { active: !u.active } })}>{u.active ? 'actif' : 'désactivé'}</button>}</td>
-              <td className="td"><button className="btn-ghost py-1 text-xs" onClick={() => confirm(`Réinitialiser le mot de passe de ${u.email}?`) && run({ action: 'resetPassword', id: u.id }, b => onSecret({ title: `Nouveau mot de passe — ${u.name}`, email: u.email, password: b.password }))}><KeyRound size={13} /> Réinitialiser</button></td>
+              <td className="td"><button className="btn-ghost py-1 text-xs" onClick={() => confirm(`Réinitialiser le mot de passe de ${u.email}?`) && run({ action: 'resetPassword', id: u.id }, b => onSecret({ title: `Nouveau mot de passe — ${u.name}`, email: u.email, password: b.password }))}><KeyRound size={13} />{" "}{tr("Réinitialiser")}</button></td>
             </tr>
           ))}</tbody></table>
       </section>

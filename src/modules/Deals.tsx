@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { CalendarPlus, ListPlus, Mail, Plus, Trash2 } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -38,7 +39,7 @@ export default function Deals({ openId, go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Dossiers & transactions" subtitle="Processus vendeur et acheteur étape par étape, délais et tableau blanc"
+      <PageHeader title={tr("Dossiers & transactions")} subtitle="Processus vendeur et acheteur étape par étape, délais et tableau blanc"
         actions={<>
           <ScopeFilter />
           <select className="input w-auto" value={kind} onChange={e => setKind(e.target.value as DealKind)}><option value="">Vente + achat</option><option value="vente">Vente</option><option value="achat">Achat</option></select>
@@ -161,11 +162,11 @@ function DealDetail({ id, onClose, go }: { id: string; onClose: () => void; go: 
             <div className="grid gap-2">
               <Field label="Titre du dossier"><input className="input" value={d.title} onChange={e => set('title', e.target.value)} /></Field>
               <div className="grid grid-cols-2 gap-2">
-                <Field label="Type"><select className="input" value={d.kind} onChange={e => set('kind', e.target.value as DealKind)}><option value="vente">Vente</option><option value="achat">Achat</option></select></Field>
-                <Field label="Statut"><select className="input" value={d.status} onChange={e => set('status', e.target.value as Deal['status'])}><option value="ouvert">Ouvert</option><option value="conclu">Conclu</option><option value="annule">Annulé</option></select></Field>
+                <Field label={tr("Type")}><select className="input" value={d.kind} onChange={e => set('kind', e.target.value as DealKind)}><option value="vente">Vente</option><option value="achat">Achat</option></select></Field>
+                <Field label={tr("Statut")}><select className="input" value={d.status} onChange={e => set('status', e.target.value as Deal['status'])}><option value="ouvert">Ouvert</option><option value="conclu">Conclu</option><option value="annule">Annulé</option></select></Field>
               </div>
-              <Field label="Courtier"><MemberSelect value={d.agentId} onChange={v => set('agentId', v)} /></Field>
-              <Field label="Inscription liée"><ListingSelect value={d.listingId} onChange={v => set('listingId', v)} /></Field>
+              <Field label={tr("Courtier")}><MemberSelect value={d.agentId} onChange={v => set('agentId', v)} /></Field>
+              <Field label={tr("Inscription liée")}><ListingSelect value={d.listingId} onChange={v => set('listingId', v)} /></Field>
               <Field label="Clients"><MultiContact value={d.contactIds} onChange={v => set('contactIds', v)} /></Field>
             </div>
           </div>
@@ -206,8 +207,8 @@ function DealDetail({ id, onClose, go }: { id: string; onClose: () => void; go: 
               <div className="flex justify-between"><dt>Part courtier ({agent?.split ?? 0} %)</dt><dd className="font-semibold text-emerald-700">{money(agentShare, 2)}</dd></div>
             </dl>
           </div>
-          <Field label="Notes"><textarea className="input min-h-20" value={d.notes} onChange={e => set('notes', e.target.value)} /></Field>
-          <button className="btn-ghost text-rose-600" onClick={() => { if (confirm('Supprimer ce dossier?')) { remove('deals', id); onClose() } }}><Trash2 size={15} /> Supprimer</button>
+          <Field label={tr("Notes")}><textarea className="input min-h-20" value={d.notes} onChange={e => set('notes', e.target.value)} /></Field>
+          <button className="btn-ghost text-rose-600" onClick={() => { if (confirm('Supprimer ce dossier?')) { remove('deals', id); onClose() } }}><Trash2 size={15} />{" "}{tr("Supprimer")}</button>
         </div>
       </div>
     </Modal>

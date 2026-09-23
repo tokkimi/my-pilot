@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState, type ReactNode } from 'react'
 import { Printer } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -11,7 +12,7 @@ export default function Tools(_: PageProps) {
   const [tab, setTab] = useState<Tab>('bilan')
   return (
     <div>
-      <PageHeader title="Calculateurs" subtitle="Bilan du vendeur, rétribution, taxe de bienvenue, hypothèque, rendement plex" />
+      <PageHeader title={tr("Calculateurs")} subtitle="Bilan du vendeur, rétribution, taxe de bienvenue, hypothèque, rendement plex" />
       <Tabs<Tab> value={tab} onChange={setTab} tabs={[['bilan', 'Bilan du vendeur'], ['commission', 'Rétribution & partage'], ['mutation', 'Taxe de bienvenue'], ['hypotheque', 'Hypothèque'], ['plex', 'Rendement plex']]} />
       {tab === 'bilan' && <Bilan />}
       {tab === 'commission' && <Commission />}

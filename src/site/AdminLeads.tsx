@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 // Onglet « Nouvelles demandes » de la console des fondateurs : boîte de réception des demandes du site
 // (abonnements, formations, démonstrations), avec réponse par courriel, création d'agence et suivi.
 import { useState } from 'react'
@@ -110,7 +111,7 @@ function Detail({ l, run, onSecret }: { l: Lead; run: Run; onSecret: Secret }) {
       <div className="flex flex-wrap gap-2">
         <button className="btn-primary" onClick={() => setReply(replyFor(l))}><Send size={15} /> Répondre</button>
         {l.phone && <a className="btn-outline" href={`tel:${l.phone}`} onClick={() => void update({ status: l.status === 'nouveau' ? 'contacte' : l.status }, 'Appel')}><Phone size={15} /> Appeler</a>}
-        {(t === 'abonnement' || t === 'demo') && l.status !== 'converti' && <button className="btn-outline" onClick={createAgency}><Building2 size={15} /> Créer l’agence</button>}
+        {(t === 'abonnement' || t === 'demo') && l.status !== 'converti' && <button className="btn-outline" onClick={createAgency}><Building2 size={15} />{" "}{tr("Créer l’agence")}</button>}
         <label className="btn-outline cursor-pointer"><CalendarClock size={15} /> {t === 'formation' ? 'Date de formation' : 'Rendez-vous'}
           <input type="datetime-local" className="ml-1 border-0 bg-transparent p-0 text-sm outline-none" value={l.scheduledAt?.slice(0, 16) ?? ''} onChange={e => void update({ scheduledAt: e.target.value, status: l.status === 'nouveau' ? 'contacte' : l.status }, e.target.value ? `${t === 'formation' ? 'Formation' : 'Rendez-vous'} prévu le ${when(e.target.value)}` : 'Rendez-vous retiré')} />
         </label>
@@ -120,12 +121,12 @@ function Detail({ l, run, onSecret }: { l: Lead; run: Run; onSecret: Secret }) {
         <div className="space-y-2 rounded-lg border border-brand-200 bg-violet-50/40 p-3">
           <input className="input" value={reply.subject} onChange={e => setReply({ ...reply, subject: e.target.value })} />
           <textarea className="input min-h-48 text-sm" value={reply.body} onChange={e => setReply({ ...reply, body: e.target.value })} />
-          <div className="flex justify-end gap-2"><button className="btn-ghost" onClick={() => setReply(null)}>Annuler</button><button className="btn-primary" disabled={busy} onClick={send}>{busy ? 'Envoi…' : `Envoyer à ${l.email}`}</button></div>
+          <div className="flex justify-end gap-2"><button className="btn-ghost" onClick={() => setReply(null)}>{tr("Annuler")}</button><button className="btn-primary" disabled={busy} onClick={send}>{busy ? 'Envoi…' : `Envoyer à ${l.email}`}</button></div>
         </div>
       )}
 
       <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
-        <label><span className="label">Statut</span><select className="input" value={l.status} onChange={e => void update({ status: e.target.value }, `Statut : ${STATUS.find(s => s[0] === e.target.value)?.[1]}`)}>{STATUS.map(([k, v]) => <option key={k} value={k}>{v.replace(/s$/, '')}</option>)}</select></label>
+        <label><span className="label">{tr("Statut")}</span><select className="input" value={l.status} onChange={e => void update({ status: e.target.value }, `Statut : ${STATUS.find(s => s[0] === e.target.value)?.[1]}`)}>{STATUS.map(([k, v]) => <option key={k} value={k}>{v.replace(/s$/, '')}</option>)}</select></label>
         <label><span className="label">Notes internes</span><input className="input" defaultValue={l.notes} placeholder="Budget, besoins, prochaine étape…" onBlur={e => e.target.value !== l.notes && void update({ notes: e.target.value })} /></label>
       </div>
 
@@ -133,7 +134,7 @@ function Detail({ l, run, onSecret }: { l: Lead; run: Run; onSecret: Secret }) {
         <div><div className="label">Historique</div>
           <ul className="space-y-1 text-xs text-slate-600">{[...l.history!].reverse().map((h, i) => <li key={i}>• {when(h.at)} — {h.text} <span className="text-slate-400">({h.by})</span></li>)}</ul></div>
       )}
-      <button className="btn-ghost text-xs text-rose-600" onClick={() => confirm('Supprimer définitivement cette demande?') && void run({ action: 'deleteLead', id: l.id })}><Trash2 size={13} /> Supprimer</button>
+      <button className="btn-ghost text-xs text-rose-600" onClick={() => confirm('Supprimer définitivement cette demande?') && void run({ action: 'deleteLead', id: l.id })}><Trash2 size={13} />{" "}{tr("Supprimer")}</button>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { useStore } from '../lib/store'
 import { Field, Modal } from '../lib/ui'
@@ -17,7 +18,7 @@ export function AccountModal({ onClose, forced }: { onClose: () => void; forced?
     setOk(true); setMsg('Mot de passe modifié.')
   }
   return (
-    <Modal title="Mon compte" onClose={onClose} footer={ok ? <button className="btn-primary" onClick={onClose}>Fermer</button> : <><button className="btn-ghost" onClick={onClose}>{forced ? 'Plus tard' : 'Annuler'}</button><button className="btn-primary" onClick={submit}>Changer le mot de passe</button></>}>
+    <Modal title="Mon compte" onClose={onClose} footer={ok ? <button className="btn-primary" onClick={onClose}>{tr("Fermer")}</button> : <><button className="btn-ghost" onClick={onClose}>{forced ? 'Plus tard' : 'Annuler'}</button><button className="btn-primary" onClick={submit}>Changer le mot de passe</button></>}>
       <div className="mb-3 text-sm text-slate-600">{session?.user.name} · {session?.user.email}</div>
       {forced && <p className="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Vous utilisez un mot de passe temporaire. Choisissez votre propre mot de passe.</p>}
       {!ok && (

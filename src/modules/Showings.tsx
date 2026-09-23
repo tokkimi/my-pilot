@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -18,7 +19,7 @@ export default function Showings(_: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Visites & rétroactions" subtitle="Suivi des visiteurs et compte-rendu au vendeur après chaque visite"
+      <PageHeader title={tr("Visites & rétroactions")} subtitle="Suivi des visiteurs et compte-rendu au vendeur après chaque visite"
         actions={<>
           <div className="w-64"><ListingSelect value={listing} onChange={setListing} /></div>
           <button className="btn-primary" onClick={() => setEditing(newShowing({ listingId: listing }))}><Plus size={16} /> Nouvelle visite</button>
@@ -31,7 +32,7 @@ export default function Showings(_: PageProps) {
       {list.length === 0 ? <Empty>Aucune visite consignée.</Empty> : (
         <div className="card overflow-x-auto">
           <table className="w-full">
-            <thead><tr><th className="th">Date</th><th className="th">Propriété</th><th className="th">Courtier / acheteur</th><th className="th">Intérêt</th><th className="th">Prix</th><th className="th">Commentaires</th></tr></thead>
+            <thead><tr><th className="th">{tr("Date")}</th><th className="th">Propriété</th><th className="th">Courtier / acheteur</th><th className="th">Intérêt</th><th className="th">Prix</th><th className="th">Commentaires</th></tr></thead>
             <tbody>
               {list.map(s => (
                 <tr key={s.id} className="cursor-pointer hover:bg-slate-50" onClick={() => setEditing(s)}>
@@ -60,9 +61,9 @@ export function ShowingForm({ showing, onClose }: { showing: Showing; onClose: (
   return (
     <Modal title="Rétroaction de visite" onClose={onClose}
       footer={<>
-        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('showings', s.id); onClose() }}><Trash2 size={15} /> Supprimer</button>}
-        <button className="btn-ghost" onClick={onClose}>Annuler</button>
-        <button className="btn-primary" onClick={() => { upsert('showings', s); onClose() }}>Enregistrer</button>
+        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('showings', s.id); onClose() }}><Trash2 size={15} />{" "}{tr("Supprimer")}</button>}
+        <button className="btn-ghost" onClick={onClose}>{tr("Annuler")}</button>
+        <button className="btn-primary" onClick={() => { upsert('showings', s); onClose() }}>{tr("Enregistrer")}</button>
       </>}>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Propriété"><ListingSelect value={s.listingId} onChange={v => set('listingId', v)} /></Field>

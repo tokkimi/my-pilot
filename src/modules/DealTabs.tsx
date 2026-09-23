@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { BellRing, Mail, Plus, Trash2 } from 'lucide-react'
 import { useStore } from '../lib/store'
@@ -150,7 +151,7 @@ export function OffersTab({ d, set }: { d: Deal; set: (p: Partial<Deal>) => void
       {offers.length === 0 ? <p className="text-sm text-slate-500">Aucune promesse, contre-proposition ou modification consignée.</p> : (
         <div className="overflow-x-auto rounded-lg border border-slate-200">
           <table className="w-full">
-            <thead><tr><th className="th">Document</th><th className="th">Date</th><th className="th">Prix</th><th className="th">Statut</th><th className="th">Signée vendeur</th><th className="th">Accusé réception</th><th className="th">Preuve</th><th /></tr></thead>
+            <thead><tr><th className="th">Document</th><th className="th">{tr("Date")}</th><th className="th">Prix</th><th className="th">{tr("Statut")}</th><th className="th">Signée vendeur</th><th className="th">Accusé réception</th><th className="th">Preuve</th><th /></tr></thead>
             <tbody>{offers.map(o => (
               <tr key={o.id}>
                 <td className="td"><b>{o.kind}</b> {o.number && `#${o.number}`}<div className="text-xs text-slate-500">{o.notes}</div></td>

@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 // Onglet « Activité du site » de la console des fondateurs : fil d'activité, inscrits (fondateurs puis agences
 // et leurs équipes), demandes reçues par type, et comptabilité de la plateforme ImmoPilot.
 import { useMemo, useState } from 'react'
@@ -30,7 +31,7 @@ export default function SiteActivity({ data, run, onSecret }: { data: SiteData; 
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Kpi icon={Users} label="Inscrits" value={members.length} sub={`${members.filter(u => within(u.createdAt, 30)).length} nouveaux en 30 j`} />
-        <Kpi icon={Building2} label="Agences" value={data.agencies.length} sub={`${data.agencies.filter(a => a.plan === 'essai').length} en essai`} />
+        <Kpi icon={Building2} label={tr("Agences")} value={data.agencies.length} sub={`${data.agencies.filter(a => a.plan === 'essai').length} en essai`} />
         <Kpi icon={Inbox} label="Demandes d’abonnement" value={open('abonnement')} sub="à traiter" />
         <Kpi icon={GraduationCap} label="Cours et formations" value={open('formation')} sub="à traiter" />
         <Kpi icon={Receipt} label="Revenu mensuel récurrent" value={money(mrr)} sub={`${money(mrr * 12)} par an`} />
@@ -94,10 +95,10 @@ function Directory({ data, run, onSecret }: { data: SiteData; run: Run; onSecret
           <button className="btn-outline ml-auto text-xs" onClick={() => setF({ name: '', email: '' })}><UserPlus size={14} /> Ajouter un fondateur</button></div>
         {f && (
           <div className="mb-2 flex flex-wrap gap-2 rounded-lg bg-slate-50 p-2">
-            <input className="input w-48" placeholder="Nom" value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
-            <input className="input w-64" placeholder="Courriel" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} />
-            <button className="btn-primary" disabled={!f.email} onClick={() => run({ action: 'createUser', role: 'superadmin', agencyId: 'platform', title: 'Fondateur·rice ImmoPilot', name: f.name, email: f.email }, b => { if (b.password) onSecret({ title: `Accès fondateur — ${f.name || f.email}`, email: f.email, password: b.password }); setF(null) })}>Créer l’accès</button>
-            <button className="btn-ghost" onClick={() => setF(null)}>Annuler</button>
+            <input className="input w-48" placeholder={tr("Nom")} value={f.name} onChange={e => setF({ ...f, name: e.target.value })} />
+            <input className="input w-64" placeholder={tr("Courriel")} value={f.email} onChange={e => setF({ ...f, email: e.target.value })} />
+            <button className="btn-primary" disabled={!f.email} onClick={() => run({ action: 'createUser', role: 'superadmin', agencyId: 'platform', title: 'Fondateur·rice ImmoPilot', name: f.name, email: f.email }, b => { if (b.password) onSecret({ title: `Accès fondateur — ${f.name || f.email}`, email: f.email, password: b.password }); setF(null) })}>{tr("Créer l’accès")}</button>
+            <button className="btn-ghost" onClick={() => setF(null)}>{tr("Annuler")}</button>
           </div>
         )}
         <ul className="divide-y divide-slate-100">{founders.map(u => <Person key={u.id} u={u} />)}</ul>
@@ -156,7 +157,7 @@ function Books({ data, run }: { data: SiteData; run: Run }) {
           <span className="text-xs text-slate-500">Tarif mensuel négocié (hors taxes) par agence</span>
           <input type="month" className="input ml-auto w-auto" value={month} onChange={ev => setMonth(ev.target.value)} />
           <button className="btn-outline" onClick={() => run({ action: 'billMonth', month }, b => alert(b.added ? `${b.added} abonnement(s) inscrit(s) aux revenus de ${month}.` : `Rien de nouveau à inscrire pour ${month}.`))}>Inscrire les abonnements du mois</button></div>
-        <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr><th className="th">Agence</th><th className="th">Forfait</th><th className="th">Statut</th><th className="th text-right">Tarif mensuel</th></tr></thead>
+        <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr><th className="th">{tr("Agence")}</th><th className="th">Forfait</th><th className="th">{tr("Statut")}</th><th className="th text-right">Tarif mensuel</th></tr></thead>
           <tbody>{paying.map(a => (
             <tr key={a.id}><td className="td font-medium">{a.name}</td><td className="td">{PLAN_LABEL[a.plan]}</td><td className="td">{a.status}</td>
               <td className="td text-right"><input type="number" min="0" step="1" className="input w-32 py-1 text-right" defaultValue={a.monthlyFee ?? ''} placeholder="0 $" onBlur={ev => { const v = +ev.target.value || 0; if (v !== (a.monthlyFee ?? 0)) void run({ action: 'updateAgency', id: a.id, patch: { monthlyFee: v } }) }} /></td></tr>
@@ -166,7 +167,7 @@ function Books({ data, run }: { data: SiteData; run: Run }) {
       <section className="card overflow-x-auto p-4">
         <h3 className="mb-2 font-semibold">Écritures {year}</h3>
         {list.length === 0 ? <p className="text-sm text-slate-500">Aucune écriture. Ajoutez vos dépenses (hébergement, logiciels…) et vos revenus (formations, implantation), ou inscrivez les abonnements du mois.</p> : (
-          <table className="w-full text-sm"><thead><tr><th className="th">Date</th><th className="th">Description</th><th className="th">Catégorie</th><th className="th">Référence</th><th className="th text-right">Montant</th><th className="th text-right">TPS + TVQ</th><th className="th" /></tr></thead>
+          <table className="w-full text-sm"><thead><tr><th className="th">{tr("Date")}</th><th className="th">Description</th><th className="th">{tr("Catégorie")}</th><th className="th">Référence</th><th className="th text-right">Montant</th><th className="th text-right">TPS + TVQ</th><th className="th" /></tr></thead>
             <tbody>{list.map(x => (
               <tr key={x.id} className="cursor-pointer hover:bg-slate-50" onClick={() => setE(x)}>
                 <td className="td text-xs">{x.date}</td><td className="td">{x.kind === 'revenu' ? '+ ' : '− '}{x.description}</td>
@@ -183,9 +184,9 @@ function Books({ data, run }: { data: SiteData; run: Run }) {
           <div className="card w-full max-w-lg p-5" onClick={ev => ev.stopPropagation()}>
             <h3 className="mb-3 font-semibold">Écriture comptable</h3>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label><span className="label">Type</span><select className="input" value={e.kind} onChange={ev => setE({ ...e, kind: ev.target.value as PlatformEntry['kind'], category: ev.target.value === 'revenu' ? 'abonnement' : 'hebergement' })}><option value="depense">Dépense</option><option value="revenu">Revenu</option></select></label>
-              <label><span className="label">Date</span><input type="date" className="input" value={e.date} onChange={ev => setE({ ...e, date: ev.target.value })} /></label>
-              <label className="sm:col-span-2"><span className="label">Catégorie</span><select className="input" value={e.category} onChange={ev => setE({ ...e, category: ev.target.value })}>{Object.entries(e.kind === 'revenu' ? REV_CATS : DEP_CATS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
+              <label><span className="label">{tr("Type")}</span><select className="input" value={e.kind} onChange={ev => setE({ ...e, kind: ev.target.value as PlatformEntry['kind'], category: ev.target.value === 'revenu' ? 'abonnement' : 'hebergement' })}><option value="depense">Dépense</option><option value="revenu">Revenu</option></select></label>
+              <label><span className="label">{tr("Date")}</span><input type="date" className="input" value={e.date} onChange={ev => setE({ ...e, date: ev.target.value })} /></label>
+              <label className="sm:col-span-2"><span className="label">{tr("Catégorie")}</span><select className="input" value={e.category} onChange={ev => setE({ ...e, category: ev.target.value })}>{Object.entries(e.kind === 'revenu' ? REV_CATS : DEP_CATS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
               <label className="sm:col-span-2"><span className="label">Description</span><input className="input" value={e.description} onChange={ev => setE({ ...e, description: ev.target.value })} placeholder={e.kind === 'revenu' ? 'Formation de groupe — Agence X' : 'Vercel Pro — septembre'} /></label>
               {e.kind === 'revenu' && <label className="sm:col-span-2"><span className="label">Agence (facultatif)</span><select className="input" value={e.agencyId} onChange={ev => setE({ ...e, agencyId: ev.target.value })}><option value="">—</option>{data.agencies.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>}
               <label><span className="label">Montant hors taxes</span><input type="number" step="0.01" className="input" value={e.amount || ''} onChange={ev => setE(withTax(e, +ev.target.value))} /></label>
@@ -194,7 +195,7 @@ function Books({ data, run }: { data: SiteData; run: Run }) {
               <label><span className="label">TVQ</span><input type="number" step="0.01" className="input" value={e.tvq || ''} onChange={ev => setE({ ...e, tvq: +ev.target.value })} /></label>
             </div>
             <p className="mt-2 text-xs text-slate-500">TPS et TVQ calculées automatiquement; mettez 0 pour un fournisseur étranger ou non inscrit.</p>
-            <div className="mt-4 flex justify-end gap-2"><button className="btn-ghost" onClick={() => setE(null)}>Annuler</button><button className="btn-primary" disabled={!e.description || !e.amount} onClick={() => run({ action: 'saveEntry', entry: e }, () => setE(null))}>Enregistrer</button></div>
+            <div className="mt-4 flex justify-end gap-2"><button className="btn-ghost" onClick={() => setE(null)}>{tr("Annuler")}</button><button className="btn-primary" disabled={!e.description || !e.amount} onClick={() => run({ action: 'saveEntry', entry: e }, () => setE(null))}>{tr("Enregistrer")}</button></div>
           </div>
         </div>
       )}

@@ -1,9 +1,10 @@
+import { locale } from './i18n'
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4)
 
 export const money = (n: number | undefined, decimals = 0) =>
-  new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: decimals, minimumFractionDigits: decimals }).format(n || 0)
+  new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: decimals, minimumFractionDigits: decimals }).format(n || 0)
 
-export const pct = (n: number) => `${(n || 0).toLocaleString('fr-CA', { maximumFractionDigits: 2 })} %`
+export const pct = (n: number) => `${(n || 0).toLocaleString(locale, { maximumFractionDigits: 2 })} %`
 
 const pad = (n: number) => String(n).padStart(2, '0')
 export const isoDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -20,7 +21,7 @@ export function parseDate(s: string) {
 export function fmtDate(s: string, withTime = false) {
   const d = parseDate(s)
   if (!d) return '—'
-  return d.toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', year: 'numeric', ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}) })
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}) })
 }
 
 export function daysUntil(s: string) {

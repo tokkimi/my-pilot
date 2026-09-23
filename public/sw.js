@@ -1,7 +1,7 @@
 // Service worker : l'application s'ouvre instantanément et reste utilisable avec un réseau faible.
 // Les données (/api) ne sont jamais mises en cache.
-const CACHE = 'immopilot-v1'
-self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/', '/app', '/icon.svg', '/manifest.webmanifest']).catch(() => undefined))) })
+const CACHE = 'immopilot-v2'
+self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/', '/app', '/immopilot-logo.png?v=2', '/manifest.webmanifest']).catch(() => undefined))) })
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE).map(x => caches.delete(x)))).then(() => self.clients.claim())) })
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url)

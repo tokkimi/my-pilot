@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useRef, useState } from 'react'
 import { Copy, Plus, Send, Trash2 } from 'lucide-react'
 import SendTemplate from '../components/SendTemplate'
@@ -18,7 +19,7 @@ export default function Templates(_: PageProps) {
   const list = db.templates.filter(t => !ch || t.channel === ch)
   return (
     <div>
-      <PageHeader title="Courriels & textos" subtitle="Choisissez un modèle et un client : le message se remplit tout seul, vous le relisez et l’envoyez."
+      <PageHeader title={tr("Courriels & textos")} subtitle="Choisissez un modèle et un client : le message se remplit tout seul, vous le relisez et l’envoyez."
         actions={<>
           <select className="input w-auto" value={ch} onChange={e => setCh(e.target.value)}><option value="">Tous les canaux</option>{Object.entries(CH).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
           <button className="btn-primary" onClick={() => setEditing({ id: uid(), name: '', channel: 'courriel', category: 'Général', subject: '', body: '' })}><Plus size={16} /> Modèle</button>
@@ -64,16 +65,16 @@ function TemplateForm({ tpl, onClose }: { tpl: Template; onClose: () => void }) 
   return (
     <Modal title={exists ? 'Modifier le modèle' : 'Nouveau modèle'} onClose={onClose}
       footer={<>
-        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('templates', t.id); onClose() }}><Trash2 size={15} /> Supprimer</button>}
-        <button className="btn-ghost" onClick={onClose}>Annuler</button>
-        <button className="btn-primary" onClick={() => { if (t.name) { upsert('templates', { ...t, subject: fromFriendly(t.subject), body: fromFriendly(t.body) }); onClose() } }}>Enregistrer</button>
+        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { remove('templates', t.id); onClose() }}><Trash2 size={15} />{" "}{tr("Supprimer")}</button>}
+        <button className="btn-ghost" onClick={onClose}>{tr("Annuler")}</button>
+        <button className="btn-primary" onClick={() => { if (t.name) { upsert('templates', { ...t, subject: fromFriendly(t.subject), body: fromFriendly(t.body) }); onClose() } }}>{tr("Enregistrer")}</button>
       </>}>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Nom"><input className="input" value={t.name} onChange={e => set('name', e.target.value)} /></Field>
-        <Field label="Catégorie"><input className="input" value={t.category} onChange={e => set('category', e.target.value)} /></Field>
+        <Field label={tr("Nom")}><input className="input" value={t.name} onChange={e => set('name', e.target.value)} /></Field>
+        <Field label={tr("Catégorie")}><input className="input" value={t.category} onChange={e => set('category', e.target.value)} /></Field>
         <Field label="Canal"><select className="input" value={t.channel} onChange={e => set('channel', e.target.value as Template['channel'])}>{Object.entries(CH).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
         {t.channel === 'courriel' && <Field label="Objet"><input className="input" value={t.subject} onChange={e => set('subject', e.target.value)} /></Field>}
-        <Field label="Message" className="sm:col-span-2"><textarea ref={area} className="input min-h-56 text-sm" value={t.body} onChange={e => set('body', e.target.value)} /></Field>
+        <Field label={tr("Message")} className="sm:col-span-2"><textarea ref={area} className="input min-h-56 text-sm" value={t.body} onChange={e => set('body', e.target.value)} /></Field>
         <div className="sm:col-span-2">
           <div className="mb-1 text-xs text-slate-500">Champs remplis automatiquement à l’envoi — cliquez pour insérer :</div>
           <div className="flex flex-wrap gap-1">{Object.values(VAR_LABELS).map(l => <button key={l} type="button" className="rounded-full bg-violet-50 px-2 py-0.5 text-xs text-brand-700 hover:bg-violet-100" onClick={() => insert(`[${l}]`)}>+ {l}</button>)}</div>

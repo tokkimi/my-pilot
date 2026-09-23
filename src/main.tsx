@@ -5,6 +5,12 @@ import { StoreProvider, type Session } from './lib/store'
 import { setMediaContext } from './lib/media'
 import type { DB } from './lib/types'
 import Landing from './site/Landing'
+import { language } from './lib/i18n'
+
+document.documentElement.lang = language
+function LanguageSwitch() {
+  return <div className="language-switch no-print" aria-label="Language / Langue">{(['fr', 'en'] as const).map(code => <button key={code} aria-pressed={language === code} onClick={() => { if (code === language) return; localStorage.setItem('immopilot-language', code); location.reload() }}>{code.toUpperCase()}</button>)}</div>
+}
 
 const App = lazy(() => import('./App'))
 const Admin = lazy(() => import('./site/Admin'))
@@ -44,6 +50,6 @@ if ('serviceWorker' in navigator && location.hostname !== 'localhost') window.ad
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Suspense fallback={<Loading />}>{page}</Suspense>
+    <LanguageSwitch /><Suspense fallback={<Loading />}>{page}</Suspense>
   </StrictMode>,
 )

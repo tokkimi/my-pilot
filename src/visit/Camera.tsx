@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useEffect, useRef, useState } from 'react'
 import { Camera as CamIcon, Check, Circle, RefreshCw, Square, Upload, X } from 'lucide-react'
 
@@ -75,7 +76,7 @@ export default function VideoRecorder({ title, onSave, onClose, onFrame }: { tit
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-black text-white">
       <div className="flex items-center gap-3 p-3">
-        <button onClick={() => { stream.current?.getTracks().forEach(t => t.stop()); onClose() }} aria-label="Fermer"><X /></button>
+        <button onClick={() => { stream.current?.getTracks().forEach(t => t.stop()); onClose() }} aria-label={tr("Fermer")}><X /></button>
         <div className="flex-1 truncate font-semibold">🎥 {title}</div>
         {state === 'recording' && <span className="flex items-center gap-1 rounded-full bg-rose-600 px-2 py-0.5 text-sm"><Circle size={10} className="animate-pulse fill-white" /> {mmss(elapsed)}</span>}
       </div>
@@ -105,7 +106,7 @@ export default function VideoRecorder({ title, onSave, onClose, onFrame }: { tit
             </label>
             {state === 'recording'
               ? <button onClick={stop} className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white" aria-label="Arrêter"><Square className="fill-rose-600 text-rose-600" /></button>
-              : <button onClick={start} disabled={state !== 'ready'} className="h-16 w-16 rounded-full border-4 border-white bg-rose-600 disabled:opacity-40" aria-label="Enregistrer" />}
+              : <button onClick={start} disabled={state !== 'ready'} className="h-16 w-16 rounded-full border-4 border-white bg-rose-600 disabled:opacity-40" aria-label={tr("Enregistrer")} />}
             {onFrame && state !== 'error'
               ? <button className="btn border border-white/40 text-white" onClick={snap} disabled={state === 'starting'}><CamIcon size={16} /> Image → mesurer</button>
               : <button className="btn border border-white/40 text-white" onClick={() => setFacing(f => (f === 'environment' ? 'user' : 'environment'))}><RefreshCw size={16} /></button>}

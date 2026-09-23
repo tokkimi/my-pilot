@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { AlertTriangle, CheckCircle2, FileWarning, ShieldCheck } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -26,14 +27,14 @@ export default function Compliance({ go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Conformité des dossiers" subtitle="Documents requis selon le type de dossier et la situation — avis et rappels aux courtiers"
+      <PageHeader title={tr("Conformité des dossiers")} subtitle="Documents requis selon le type de dossier et la situation — avis et rappels aux courtiers"
         actions={<>
           <ScopeFilter />
           <select className="input w-auto" value={agent} onChange={e => setAgent(e.target.value)}><option value="">Tous les courtiers</option>{db.members.filter(m => m.active).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
           <select className="input w-auto" value={only} onChange={e => setOnly(e.target.value as 'incomplets' | 'tous')}><option value="incomplets">Dossiers incomplets</option><option value="tous">Tous les dossiers</option></select>
         </>} />
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Dossiers ouverts" value={all.length} icon={<ShieldCheck size={20} />} />
+        <Stat label={tr("Dossiers ouverts")} value={all.length} icon={<ShieldCheck size={20} />} />
         <Stat label="Dossiers complets" value={all.filter(p => p.pct === 100).length} sub={`${all.length ? Math.round((all.filter(p => p.pct === 100).length / all.length) * 100) : 0} % de l’agence`} icon={<CheckCircle2 size={20} />} tone="green" />
         <Stat label="Documents manquants" value={all.reduce((s, p) => s + p.missing.length, 0)} sub={`${all.reduce((s, p) => s + p.pending.length, 0)} annoncés « à venir »`} icon={<FileWarning size={20} />} tone="amber" />
         <Stat label="Échéances dépassées" value={overdue.length} icon={<AlertTriangle size={20} />} tone={overdue.length ? 'rose' : 'sky'} />
@@ -57,7 +58,7 @@ export default function Compliance({ go }: PageProps) {
       {deals.length === 0 ? <Empty>Tous les dossiers sont complets 👌</Empty> : (
         <div className="card overflow-x-auto">
           <table className="w-full">
-            <thead><tr><th className="th">Dossier</th><th className="th">Type</th><th className="th">Courtier</th><th className="th">Complétude</th><th className="th">Manquants</th><th className="th">Échéance</th><th className="th">Dernier avis</th></tr></thead>
+            <thead><tr><th className="th">Dossier</th><th className="th">{tr("Type")}</th><th className="th">{tr("Courtier")}</th><th className="th">Complétude</th><th className="th">Manquants</th><th className="th">{tr("Échéance")}</th><th className="th">Dernier avis</th></tr></thead>
             <tbody>
               {deals.map(({ d, p, last }) => (
                 <tr key={d.id} className="cursor-pointer hover:bg-slate-50" onClick={() => go('deals', d.id)}>

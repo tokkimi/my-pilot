@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useMemo, useState } from 'react'
 import { Camera, Car, Download, FileArchive, FileSpreadsheet, FileText, Mail, Paperclip, Plus, Printer, Receipt, Trash2, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -23,12 +24,12 @@ export default function Accounting({ go }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Comptabilité" subtitle={`Panneau comptable — ${ownerName}`}
+      <PageHeader title={tr("Comptabilité")} subtitle={`Panneau comptable — ${ownerName}`}
         actions={<>
           {isAdmin && (
             <div className="inline-flex rounded-lg border border-slate-300 bg-white p-0.5 text-sm">
               <button onClick={() => setOwner(me.id)} className={`rounded-md px-3 py-1.5 font-medium ${owner === me.id ? 'bg-brand-600 text-white' : 'text-slate-600'}`}>Mon panneau</button>
-              <button onClick={() => setOwner('agence')} className={`rounded-md px-3 py-1.5 font-medium ${owner === 'agence' ? 'bg-brand-600 text-white' : 'text-slate-600'}`}>Agence</button>
+              <button onClick={() => setOwner('agence')} className={`rounded-md px-3 py-1.5 font-medium ${owner === 'agence' ? 'bg-brand-600 text-white' : 'text-slate-600'}`}>{tr("Agence")}</button>
             </div>
           )}
           <select className="input w-auto" value={year} onChange={e => setYear(+e.target.value)}>{[0, 1, 2, 3].map(i => new Date().getFullYear() - i).map(y => <option key={y}>{y}</option>)}</select>
@@ -101,7 +102,7 @@ function AgentCommissions({ year, go }: { year: number; go: PageProps['go'] }) {
     <section className="card overflow-x-auto">
       <h2 className="px-4 pt-3 font-semibold">Commissions par courtier — {year}</h2>
       <table className="w-full">
-        <thead><tr><th className="th">Courtier</th><th className="th">Ventes</th><th className="th">Brut</th><th className="th">Part courtier</th><th className="th">Part agence</th><th className="th">Projection</th></tr></thead>
+        <thead><tr><th className="th">{tr("Courtier")}</th><th className="th">Ventes</th><th className="th">Brut</th><th className="th">Part courtier</th><th className="th">Part agence</th><th className="th">Projection</th></tr></thead>
         <tbody>{db.members.filter(m => m.active).map(m => {
           const c = closed.filter(d => d.agentId === m.id); const g = gross(c)
           return <tr key={m.id} className="cursor-pointer hover:bg-slate-50" onClick={() => go('deals')}><td className="td"><span className="flex items-center gap-2"><Avatar memberId={m.id} />{m.name}</span></td><td className="td">{c.length}</td><td className="td">{money(g)}</td><td className="td text-emerald-700">{money(g * m.split / 100)}</td><td className="td">{money(g * (100 - m.split) / 100)}</td><td className="td text-sky-700">{money(gross(open.filter(d => d.agentId === m.id)))}</td></tr>
@@ -148,7 +149,7 @@ function Entries({ owner, entries }: { owner: Owner; entries: LedgerEntry[] }) {
       {list.length === 0 ? <Empty>Aucune écriture.</Empty> : (
         <div className="card overflow-x-auto">
           <table className="w-full">
-            <thead><tr><th className="th">Date</th><th className="th">Description</th><th className="th">Catégorie</th><th className="th text-right">Montant</th><th className="th text-right">Taxes</th><th className="th">Justif.</th></tr></thead>
+            <thead><tr><th className="th">{tr("Date")}</th><th className="th">Description</th><th className="th">{tr("Catégorie")}</th><th className="th text-right">Montant</th><th className="th text-right">Taxes</th><th className="th">Justif.</th></tr></thead>
             <tbody>{list.map(e => (
               <tr key={e.id} className="cursor-pointer hover:bg-slate-50" onClick={() => setEdit(e)}>
                 <td className="td whitespace-nowrap text-xs">{fmtDate(e.date)}</td>
@@ -196,9 +197,9 @@ function EntryForm({ entry, onClose }: { entry: LedgerEntry; onClose: () => void
   return (
     <Modal title={`${exists ? 'Modifier' : 'Nouveau'} ${e.kind === 'revenu' ? 'revenu' : 'dépense'}`} onClose={onClose}
       footer={<>
-        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { if (confirm('Supprimer cette écriture et ses justificatifs?')) { e.receipts.forEach(r => void deleteMedia(r)); remove('ledger', e.id); onClose() } }}><Trash2 size={15} /> Supprimer</button>}
-        <button className="btn-ghost" onClick={onClose}>Annuler</button>
-        <button className="btn-primary" onClick={() => { upsert('ledger', e); onClose() }}>Enregistrer</button>
+        {exists && <button className="btn-ghost mr-auto text-rose-600" onClick={() => { if (confirm('Supprimer cette écriture et ses justificatifs?')) { e.receipts.forEach(r => void deleteMedia(r)); remove('ledger', e.id); onClose() } }}><Trash2 size={15} />{" "}{tr("Supprimer")}</button>}
+        <button className="btn-ghost" onClick={onClose}>{tr("Annuler")}</button>
+        <button className="btn-primary" onClick={() => { upsert('ledger', e); onClose() }}>{tr("Enregistrer")}</button>
       </>}>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -217,8 +218,8 @@ function EntryForm({ entry, onClose }: { entry: LedgerEntry; onClose: () => void
           </div>
           {busy && <p className="mt-1 text-xs text-brand-700">{busy}</p>}
         </div>
-        <Field label="Date"><input className="input" type="date" value={e.date} onChange={x => set({ date: x.target.value })} /></Field>
-        <Field label="Catégorie"><select className="input" value={e.category} onChange={x => set({ category: x.target.value })}>{cats.map(c => <option key={c.id} value={c.id}>{c.label} (ligne {c.line})</option>)}</select></Field>
+        <Field label={tr("Date")}><input className="input" type="date" value={e.date} onChange={x => set({ date: x.target.value })} /></Field>
+        <Field label={tr("Catégorie")}><select className="input" value={e.category} onChange={x => set({ category: x.target.value })}>{cats.map(c => <option key={c.id} value={c.id}>{c.label} (ligne {c.line})</option>)}</select></Field>
         <Field label="Description" className="sm:col-span-2"><input className="input" value={e.description} onChange={x => set({ description: x.target.value })} /></Field>
         <Field label={e.kind === 'revenu' ? 'Payeur' : 'Fournisseur'}><input className="input" value={e.counterpart} onChange={x => set({ counterpart: x.target.value })} /></Field>
         <Field label="Mode de paiement"><select className="input" value={e.paymentMethod} onChange={x => set({ paymentMethod: x.target.value })}>{PAYMENT_METHODS.map(m => <option key={m}>{m}</option>)}</select></Field>
@@ -256,7 +257,7 @@ function Invoices({ owner }: { owner: Owner }) {
       {list.length === 0 ? <Empty>Aucun devis ni facture. Créez votre premier devis : il reprendra le logo et les coordonnées de l’agence.</Empty> : (
         <div className="card overflow-x-auto">
           <table className="w-full">
-            <thead><tr><th className="th">No</th><th className="th">Client</th><th className="th">Date</th><th className="th text-right">Total</th><th className="th">Statut</th></tr></thead>
+            <thead><tr><th className="th">No</th><th className="th">Client</th><th className="th">{tr("Date")}</th><th className="th text-right">Total</th><th className="th">{tr("Statut")}</th></tr></thead>
             <tbody>{list.map(i => (
               <tr key={i.id} className="cursor-pointer hover:bg-slate-50" onClick={() => setEdit(i)}>
                 <td className="td text-sm font-medium">{i.number}<div className="text-xs text-slate-500">{i.kind === 'devis' ? 'Devis' : 'Facture'}</div></td>
@@ -318,23 +319,23 @@ function InvoiceEditor({ inv, onClose, onOpen }: { inv: Invoice; onClose: () => 
         <button className="btn-outline" onClick={() => { save(); setView('apercu'); setTimeout(() => printElement('invoice-doc', `${label} ${i.number}`), 100) }}><Printer size={15} /> Imprimer / PDF</button>
         <button className="btn-outline" onClick={() => { setView('apercu'); setTimeout(send, 100) }}><Mail size={15} /> Envoyer</button>
         {i.kind === 'devis' && !['refuse', 'annule'].includes(i.status) && <button className="btn-outline" onClick={toInvoice}><FileText size={15} /> Convertir en facture</button>}
-        <button className="btn-primary" onClick={() => { save(); onClose() }}>Enregistrer</button>
+        <button className="btn-primary" onClick={() => { save(); onClose() }}>{tr("Enregistrer")}</button>
       </>}>
       <Tabs value={view} onChange={setView} tabs={[['edit', 'Modifier'], ['apercu', 'Aperçu (logo de l’agence)']]} />
       {view === 'edit' ? (
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-4">
             <Field label="Numéro"><input className="input" value={i.number} onChange={e => set({ number: e.target.value })} /></Field>
-            <Field label="Date"><input className="input" type="date" value={i.date} onChange={e => set({ date: e.target.value })} /></Field>
+            <Field label={tr("Date")}><input className="input" type="date" value={i.date} onChange={e => set({ date: e.target.value })} /></Field>
             <Field label={i.kind === 'devis' ? 'Valide jusqu’au' : 'Échéance'}><input className="input" type="date" value={i.due} onChange={e => set({ due: e.target.value })} /></Field>
-            <Field label="Statut"><select className="input" value={i.status} onChange={e => set({ status: e.target.value as Invoice['status'] })}>{Object.entries(INVOICE_STATUS).filter(([k]) => i.kind === 'devis' ? !['paye', 'partiel'].includes(k) : !['accepte', 'refuse'].includes(k)).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</select></Field>
+            <Field label={tr("Statut")}><select className="input" value={i.status} onChange={e => set({ status: e.target.value as Invoice['status'] })}>{Object.entries(INVOICE_STATUS).filter(([k]) => i.kind === 'devis' ? !['paye', 'partiel'].includes(k) : !['accepte', 'refuse'].includes(k)).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</select></Field>
           </div>
           <div className="grid gap-3 rounded-lg border border-slate-200 p-3 sm:grid-cols-2">
             <Field label="Client (fiche)"><ContactSelect value={i.contactId} onChange={id => { const c = db.contacts.find(x => x.id === id); set({ contactId: id, client: c ? { name: fullName(c), email: c.email, address: [c.address, c.city].filter(Boolean).join(', '), phone: c.phone } : i.client }) }} /></Field>
-            <Field label="Nom"><input className="input" value={i.client.name} onChange={e => set({ client: { ...i.client, name: e.target.value } })} /></Field>
-            <Field label="Courriel"><input className="input" type="email" value={i.client.email} onChange={e => set({ client: { ...i.client, email: e.target.value } })} /></Field>
-            <Field label="Téléphone"><input className="input" value={i.client.phone} onChange={e => set({ client: { ...i.client, phone: e.target.value } })} /></Field>
-            <Field label="Adresse" className="sm:col-span-2"><input className="input" value={i.client.address} onChange={e => set({ client: { ...i.client, address: e.target.value } })} /></Field>
+            <Field label={tr("Nom")}><input className="input" value={i.client.name} onChange={e => set({ client: { ...i.client, name: e.target.value } })} /></Field>
+            <Field label={tr("Courriel")}><input className="input" type="email" value={i.client.email} onChange={e => set({ client: { ...i.client, email: e.target.value } })} /></Field>
+            <Field label={tr("Téléphone")}><input className="input" value={i.client.phone} onChange={e => set({ client: { ...i.client, phone: e.target.value } })} /></Field>
+            <Field label={tr("Adresse")} className="sm:col-span-2"><input className="input" value={i.client.address} onChange={e => set({ client: { ...i.client, address: e.target.value } })} /></Field>
           </div>
           <div className="rounded-lg border border-slate-200">
             <div className="hidden grid-cols-[1fr_70px_90px_110px_110px_32px] gap-2 bg-slate-50 px-3 py-2 text-xs font-semibold uppercase text-slate-500 sm:grid"><span>Description</span><span>Qté</span><span>Unité</span><span>Prix</span><span className="text-right">Montant</span><span /></div>
@@ -354,7 +355,7 @@ function InvoiceEditor({ inv, onClose, onOpen }: { inv: Invoice; onClose: () => 
             <Field label="Rabais (%)"><input className="input" type="number" value={i.discountPct || ''} onChange={e => set({ discountPct: +e.target.value })} /></Field>
             <label className="flex items-center gap-2 self-end pb-2 text-sm"><input type="checkbox" className="accent-brand-600" checked={i.taxable} onChange={e => set({ taxable: e.target.checked })} /> Appliquer TPS et TVQ</label>
             <div className="rounded-lg bg-slate-50 p-2 text-right text-sm">Total : <b>{money(t.total, 2)}</b></div>
-            <Field label="Notes" className="sm:col-span-3"><textarea className="input min-h-16" value={i.notes} onChange={e => set({ notes: e.target.value })} /></Field>
+            <Field label={tr("Notes")} className="sm:col-span-3"><textarea className="input min-h-16" value={i.notes} onChange={e => set({ notes: e.target.value })} /></Field>
             <Field label="Conditions" className="sm:col-span-3"><textarea className="input min-h-16" value={i.terms} onChange={e => set({ terms: e.target.value })} /></Field>
           </div>
         </div>
@@ -439,7 +440,7 @@ function Mileage({ owner, year }: { owner: Owner; year: number }) {
       </div>
       {trips.length === 0 ? <Empty>Aucun déplacement consigné. Le registre de kilométrage justifie la déduction des frais de véhicule.</Empty> : (
         <div className="card overflow-x-auto">
-          <table className="w-full"><thead><tr><th className="th">Date</th><th className="th">Trajet</th><th className="th">Motif</th><th className="th text-right">Km</th><th /></tr></thead>
+          <table className="w-full"><thead><tr><th className="th">{tr("Date")}</th><th className="th">Trajet</th><th className="th">Motif</th><th className="th text-right">Km</th><th /></tr></thead>
             <tbody>{trips.map(t => <tr key={t.id}><td className="td text-xs">{fmtDate(t.date)}</td><td className="td text-sm">{t.from} → {t.to}</td><td className="td text-sm">{t.purpose}</td><td className="td text-right">{t.km}</td><td className="td"><button className="text-rose-600" onClick={() => remove('trips', t.id)}><Trash2 size={14} /></button></td></tr>)}</tbody></table>
         </div>
       )}
@@ -513,7 +514,7 @@ function Declarations({ owner, year, ownerName }: { owner: Owner; year: number; 
           </section>
 
           <section><h2 className="mb-1 border-b-2 border-slate-200 pb-1 font-bold uppercase">Dépenses d’entreprise (T2125 / TP-80)</h2>
-            <table className="w-full"><thead><tr className="text-left text-xs uppercase text-slate-500"><th>Ligne</th><th>Catégorie</th><th className="text-right">Montant</th><th className="text-right">Déductible</th></tr></thead>
+            <table className="w-full"><thead><tr className="text-left text-xs uppercase text-slate-500"><th>Ligne</th><th>{tr("Catégorie")}</th><th className="text-right">Montant</th><th className="text-right">Déductible</th></tr></thead>
               <tbody>{d.expenseLines.map(l => <tr key={l.line}><td className="py-1">{l.line}</td><td className="py-1">{l.label}{l.line === '9281' && <span className="text-xs text-slate-500"> ({d.vehiclePct} % d’usage d’affaires)</span>}</td><td className="py-1 text-right">{money(l.gross, 2)}</td><td className="py-1 text-right">{money(l.deductible, 2)}</td></tr>)}
                 <tr className="font-bold"><td /><td className="pt-1">Total des dépenses déductibles</td><td /><td className="pt-1 text-right">{money(d.totalDeductible, 2)}</td></tr></tbody></table>
           </section>
@@ -530,7 +531,7 @@ function Declarations({ owner, year, ownerName }: { owner: Owner; year: number; 
           </section>
 
           <section><h2 className="mb-1 border-b-2 border-slate-200 pb-1 font-bold uppercase">Détail des écritures ({d.entries.length})</h2>
-            <table className="w-full text-xs"><thead><tr className="text-left uppercase text-slate-500"><th>Date</th><th>Description</th><th>Ligne</th><th className="text-right">Montant</th><th className="text-right">TPS</th><th className="text-right">TVQ</th><th className="pl-3">Justif.</th></tr></thead>
+            <table className="w-full text-xs"><thead><tr className="text-left uppercase text-slate-500"><th>{tr("Date")}</th><th>Description</th><th>Ligne</th><th className="text-right">Montant</th><th className="text-right">TPS</th><th className="text-right">TVQ</th><th className="pl-3">Justif.</th></tr></thead>
               <tbody>{d.entries.sort((a, b) => a.date.localeCompare(b.date)).map(e => <tr key={e.id} className="border-t border-slate-100"><td className="py-0.5">{e.date}</td><td>{e.kind === 'revenu' ? '+ ' : '− '}{e.description}</td><td>{catOf(e)?.line}</td><td className="text-right">{money(e.amount, 2)}</td><td className="text-right">{money(e.tps, 2)}</td><td className="text-right">{money(e.tvq, 2)}</td><td className="pl-3">{e.receipts.length ? '✓' : e.kind === 'depense' ? '✗' : ''}</td></tr>)}</tbody></table>
             {d.missingReceipts.length > 0 && <p className="mt-2 text-xs text-amber-700">⚠ {d.missingReceipts.length} dépense(s) sans justificatif — conservez les pièces justificatives 6 ans.</p>}
           </section>

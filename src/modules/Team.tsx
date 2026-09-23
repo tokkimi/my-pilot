@@ -1,3 +1,4 @@
+import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -14,20 +15,20 @@ export default function Team(_: PageProps) {
   const setA = (k: keyof typeof a, v: string) => patch({ agency: { ...a, [k]: v } })
   return (
     <div>
-      <PageHeader title="Équipe" subtitle="Une agence, plusieurs profils : courtiers, adjointes et membres d’équipe"
+      <PageHeader title={tr("Équipe")} subtitle="Une agence, plusieurs profils : courtiers, adjointes et membres d’équipe"
         actions={isAdmin && <button className="btn-primary" onClick={() => setEditing({ id: uid(), name: '', role: 'courtier', title: 'Courtier immobilier', phone: '', email: '', color: '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'), split: 70, licence: '', active: true, googleDrive: false, googleCalendar: false })}><Plus size={16} /> Membre</button>} />
 
       {!isAdmin && <p className="mb-4 rounded-lg bg-slate-100 p-3 text-sm text-slate-600">Seul un administrateur de l’agence peut modifier l’équipe et les informations de l’agence.</p>}
       {mode === 'remote' && isAdmin && <p className="mb-4 rounded-lg bg-brand-50 p-3 text-sm text-brand-700">Chaque membre ajouté reçoit son propre accès (courriel + mot de passe temporaire à lui transmettre). Il devra choisir son mot de passe à la première connexion.</p>}
       <fieldset disabled={!isAdmin} className="card mb-5 p-4">
-        <h2 className="mb-3 font-semibold">Agence</h2>
+        <h2 className="mb-3 font-semibold">{tr("Agence")}</h2>
         <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg bg-slate-50 p-3">
           <div className="flex h-20 w-40 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white">{a.logo ? <img src={a.logo} alt="Logo" className="max-h-16 max-w-36 object-contain" /> : <span className="text-xs text-slate-400">Aucun logo</span>}</div>
           <div className="space-y-2 text-sm">
             <label className="btn-outline cursor-pointer"><ImagePlus size={15} /> {a.logo ? 'Changer le logo' : 'Ajouter le logo de l’agence'}
               <input type="file" accept="image/*" hidden onChange={async e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) patch({ agency: { ...a, logo: await resizeImage(f, 480) } }) }} />
             </label>
-            {a.logo && <button className="btn-ghost text-xs text-rose-600" onClick={() => patch({ agency: { ...a, logo: '' } })}>Retirer</button>}
+            {a.logo && <button className="btn-ghost text-xs text-rose-600" onClick={() => patch({ agency: { ...a, logo: '' } })}>{tr("Retirer")}</button>}
             <div className="flex items-center gap-2"><span className="text-xs text-slate-500">Couleur de marque</span><input type="color" value={a.brandColor || '#6d28d9'} onChange={e => setA('brandColor', e.target.value)} className="h-8 w-12 cursor-pointer rounded border border-slate-300" /></div>
           </div>
           <p className="max-w-xs text-xs text-slate-500">Le logo et la couleur apparaissent dans l’application, les guides clients, les fiches, les rapports de visite, les devis, les factures et les rapports comptables.</p>
@@ -35,9 +36,9 @@ export default function Team(_: PageProps) {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Nom de l’agence / équipe"><input className="input" value={a.name} onChange={e => setA('name', e.target.value)} /></Field>
           <Field label="Bureau"><input className="input" value={a.office} onChange={e => setA('office', e.target.value)} /></Field>
-          <Field label="Téléphone"><input className="input" value={a.phone} onChange={e => setA('phone', e.target.value)} /></Field>
+          <Field label={tr("Téléphone")}><input className="input" value={a.phone} onChange={e => setA('phone', e.target.value)} /></Field>
           <Field label="Courriel général"><input className="input" value={a.email} onChange={e => setA('email', e.target.value)} /></Field>
-          <Field label="Site Web"><input className="input" value={a.website} onChange={e => setA('website', e.target.value)} /></Field>
+          <Field label={tr("Site Web")}><input className="input" value={a.website} onChange={e => setA('website', e.target.value)} /></Field>
           <Field label="Linktree"><input className="input" value={a.linktree} onChange={e => setA('linktree', e.target.value)} /></Field>
           <Field label="Adresse (documents)"><input className="input" value={a.address ?? ''} onChange={e => setA('address', e.target.value)} /></Field>
           <Field label="No de TPS de l’agence"><input className="input" value={a.tpsNo ?? ''} onChange={e => setA('tpsNo', e.target.value)} /></Field>
@@ -82,7 +83,7 @@ function MemberForm({ m: init, onClose }: { m: Member; onClose: () => void }) {
   const set = <K extends keyof Member>(k: K, v: Member[K]) => setM(x => ({ ...x, [k]: v }))
   return (
     <Modal title={m.name || 'Nouveau membre'} onClose={onClose}
-      footer={<><button className="btn-ghost" onClick={onClose}>Annuler</button><button className="btn-primary" onClick={() => {
+      footer={<><button className="btn-ghost" onClick={onClose}>{tr("Annuler")}</button><button className="btn-primary" onClick={() => {
         if (!m.name) return
         if (needsAccess && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m.email)) return alert('Courriel valide requis pour créer l’accès.')
         upsert('members', (needsAccess ? { ...m, password } : m) as Member)
@@ -91,10 +92,10 @@ function MemberForm({ m: init, onClose }: { m: Member; onClose: () => void }) {
       }}>{needsAccess ? 'Créer l’accès' : 'Enregistrer'}</button></>}>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Nom complet"><input className="input" value={m.name} onChange={e => set('name', e.target.value)} /></Field>
-        <Field label="Rôle"><select className="input" value={m.role} onChange={e => set('role', e.target.value as Role)}>{Object.entries(ROLES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <Field label={tr("Rôle")}><select className="input" value={m.role} onChange={e => set('role', e.target.value as Role)}>{Object.entries(ROLES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
         <Field label="Titre"><input className="input" value={m.title} onChange={e => set('title', e.target.value)} /></Field>
         <Field label="No de permis OACIQ"><input className="input" value={m.licence} onChange={e => set('licence', e.target.value)} /></Field>
-        <Field label="Téléphone"><input className="input" value={m.phone} onChange={e => set('phone', e.target.value)} /></Field>
+        <Field label={tr("Téléphone")}><input className="input" value={m.phone} onChange={e => set('phone', e.target.value)} /></Field>
         <Field label={needsAccess ? 'Courriel de connexion *' : 'Courriel'}><input className="input" type="email" value={m.email} disabled={mode === 'remote' && !isNew} onChange={e => set('email', e.target.value)} /></Field>
         {needsAccess && <Field label="Mot de passe temporaire"><input className="input font-mono" value={password} onChange={e => setPassword(e.target.value)} /></Field>}
         <Field label="No de TPS (courtier autonome)"><input className="input" value={m.tpsNo ?? ''} onChange={e => set('tpsNo', e.target.value)} /></Field>
