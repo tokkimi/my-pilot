@@ -331,25 +331,19 @@ function HeroMock() {
 
 function PhoneMock() {
   return (
-    <div className="mx-auto w-72 rounded-[2.5rem] border-8 border-slate-900 bg-white p-3 shadow-2xl">
-      <div className="mb-2 flex items-center justify-between text-xs"><b>Visite — 1245 des Érables</b><span className="badge bg-rose-100 text-rose-700">● 12:04</span></div>
-      <div className="mb-2 flex gap-1 text-[10px]">{['Infos', 'Pièces', 'Notes', 'Plan'].map((t, i) => <span key={tr(t)} className={`rounded px-2 py-1 ${i === 1 ? 'bg-brand-600 text-white' : 'bg-slate-100'}`}>{tr(t)}</span>)}</div>
-      {[['Salon', '14 × 16 pi', true], ['Cuisine', '12 × 13 pi', true], ['Chambre principale', 'Non mesurée', false]].map(([n, d, ok]) => (
-        <div key={n as string} className="mb-1.5 flex items-center gap-2 rounded-lg border border-slate-100 p-2 text-[11px]">
-          <span className={`flex h-6 w-6 items-center justify-center rounded ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100'}`}>{ok ? '✓' : <Ruler size={12} />}</span>
-          <div className="flex-1"><b>{n}</b><div className="text-slate-500">{d}</div></div>
-        </div>
-      ))}
-      <div className="mt-2 grid grid-cols-2 gap-1.5 text-[10px]">
-        <span className="flex items-center justify-center gap-1 rounded-lg bg-brand-600 py-2 text-white"><Video size={12} /> Filmer</span>
-        <span className="flex items-center justify-center gap-1 rounded-lg bg-emerald-600 py-2 text-white"><ScanLine size={12} /> Mesure AR</span>
+    <div className="visit-phone" aria-label="Aperçu de l’application de visite">
+      <div className="visit-phone-camera" />
+      <div className="visit-phone-top"><span>9:41</span><span>••• ▰</span></div>
+      <div className="visit-phone-heading"><span className="visit-live"><span /> Visite en cours</span><h3>1245, des Érables</h3><p>Une maison. Tous les détails.</p></div>
+      <div className="visit-phone-tabs"><span className="active">Pièces</span><span>Notes</span><span>Plan</span></div>
+      <div className="visit-room-feature">
+        <div className="visit-room-art"><div className="visit-window"/><div className="visit-sofa"/><div className="visit-rug"/></div>
+        <div className="visit-room-caption"><div><h4>Salon</h4><p>14 × 16 pi · 224 pi²</p></div><span className="visit-room-check"><Check size={18}/></span></div>
       </div>
-      <svg viewBox="0 0 32 20" className="mt-3 w-full rounded border border-slate-100 bg-slate-50">
-        <rect x="1" y="1" width="16" height="14" fill="#ede9fe" stroke="#6d28d9" strokeWidth=".3" /><text x="9" y="8.5" fontSize="1.8" textAnchor="middle" fontWeight="700">Salon</text>
-        <rect x="17" y="1" width="13" height="12" fill="#ede9fe" stroke="#6d28d9" strokeWidth=".3" /><text x="23.5" y="7.5" fontSize="1.8" textAnchor="middle" fontWeight="700">Cuisine</text>
-        <rect x="17" y="13" width="3" height=".6" fill="#fef3c7" stroke="#b45309" strokeWidth=".15" />
-      </svg>
+      <div className="visit-room-row"><span className="visit-room-symbol"><Home size={20}/></span><div><b>Cuisine</b><p>12 × 13 pi · 156 pi²</p></div><Check size={17}/></div>
+      <div className="visit-room-row"><span className="visit-room-symbol"><Ruler size={20}/></span><div><b>Chambre principale</b><p>Mesures à compléter</p></div><span className="visit-pending"/></div>
+      <div className="visit-phone-actions"><span><Video size={18}/> Filmer</span><span><Mic size={18}/> Dicter</span></div>
+      <div className="visit-phone-home" />
     </div>
   )
 }
-

@@ -133,3 +133,30 @@ body { background: radial-gradient(ellipse at 0% 10%,#7da6c5 0,transparent 46%),
   #fonctionnalites>div>.grid>.card, #marketing>.grid>.card { scroll-snap-align:start; min-width:0; }
 }
 
+
+.visit-phone { width:min(100%,340px); margin:auto; position:relative; padding:14px 20px 18px; border:6px solid #25313e; border-radius:46px; background:linear-gradient(145deg,#ffffffa8,#d9e5e9b8); backdrop-filter:blur(28px); box-shadow:0 32px 60px #20374f30,inset 0 0 0 1px #fff; color:#263747; }
+.visit-phone-camera { position:absolute; width:84px; height:22px; top:9px; left:50%; transform:translateX(-50%); border-radius:30px; background:#25313e; }
+.visit-phone-top { display:flex;justify-content:space-between;font-size:12px;font-weight:650;padding:0 5px;margin-bottom:30px; }
+.visit-phone-heading h3 { font-size:23px; font-weight:650;margin-top:12px;letter-spacing:-.04em; }
+.visit-phone-heading p { font-size:13px;color:#566b7a;margin-top:4px; }
+.visit-live { display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#326456; }
+.visit-live>span { width:7px;height:7px;border-radius:50%;background:#568d72;box-shadow:0 0 0 4px #568d7218; }
+.visit-phone-tabs { display:flex;gap:4px;padding:4px;margin:20px 0 16px;background:#49667a10;border:1px solid #ffffffa0;border-radius:14px; }
+.visit-phone-tabs>span { flex:1;text-align:center;padding:8px 0;font-size:13px;color:#566b7a;border-radius:10px; }
+.visit-phone-tabs>.active { background:#ffffffab;box-shadow:0 2px 6px #273d5010;color:#24394b;font-weight:600; }
+.visit-room-feature { border-radius:20px;overflow:hidden;border:1px solid #ffffffbb;background:#ffffff40; }
+.visit-room-art { height:136px;position:relative;overflow:hidden;background:linear-gradient(180deg,#c5c1b6 0 68%,#a89d89 68%); }
+.visit-window { position:absolute;left:22px;top:0;width:76px;height:88px;border:6px solid #f1f0e4;background:linear-gradient(125deg,#aac7cc,#eef1de);box-shadow:40px 24px 30px #fff7; }
+.visit-window:after { content:'';position:absolute;left:50%;height:100%;width:3px;background:#f1f0e4; }
+.visit-sofa { position:absolute;right:20px;bottom:22px;width:132px;height:52px;background:#e2ded1;border-radius:13px 13px 5px 5px;box-shadow:0 8px 10px #493d312a,inset 0 -14px #cbc6b9;z-index:2; }
+.visit-rug { position:absolute;bottom:-12px;left:32px;width:190px;height:48px;transform:skewX(-25deg);background:#e4dccc88;border-radius:50%; }
+.visit-room-caption { display:flex;align-items:center;justify-content:space-between;padding:13px 15px; }
+.visit-room-caption h4 { font-size:16px;font-weight:600; }
+.visit-room-caption p,.visit-room-row p { font-size:12px;color:#617080;margin-top:3px; }
+.visit-room-check { display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#e0eee5;color:#52836a; }
+.visit-room-row { display:flex;align-items:center;gap:12px;padding:14px 2px;border-bottom:1px solid #ffffff99; }
+.visit-room-row>div { flex:1;min-width:0; }.visit-room-row b { font-size:13px;font-weight:600; }.visit-room-row>svg { color:#52836a; }
+.visit-room-symbol { width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:#ffffff60;color:#57768a; }
+.visit-pending { width:7px;height:7px;border-radius:50%;background:#b29b78; }
+.visit-phone-actions { display:flex;gap:10px;margin-top:18px; }.visit-phone-actions>span { display:flex;align-items:center;justify-content:center;gap:8px;flex:1;background:#2a485f;color:#fff;padding:12px 6px;border-radius:14px;font-size:13px; }.visit-phone-actions>span+span { background:#ffffff70;color:#2a485f;border:1px solid #fff; }
+.visit-phone-home { width:92px;height:4px;border-radius:9px;background:#273c4c;margin:23px auto 0; }
