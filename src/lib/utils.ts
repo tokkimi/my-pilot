@@ -1,16 +1,13 @@
 import { locale } from './i18n'
-export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4)
+import { isoDate } from './core.js'
+export { uid, isoDate, isoDateTime, addDays } from './core.js'
 
 export const money = (n: number | undefined, decimals = 0) =>
   new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: decimals, minimumFractionDigits: decimals }).format(n || 0)
 
 export const pct = (n: number) => `${(n || 0).toLocaleString(locale, { maximumFractionDigits: 2 })} %`
 
-const pad = (n: number) => String(n).padStart(2, '0')
-export const isoDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-export const isoDateTime = (d: Date) => `${isoDate(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 export const today = () => isoDate(new Date())
-export const addDays = (days: number, from = new Date()) => { const d = new Date(from); d.setDate(d.getDate() + days); return d }
 
 export function parseDate(s: string) {
   if (!s) return null

@@ -1,7 +1,7 @@
 import type { Contact, DB, Deal, Listing, Task, CalEvent, Showing, Partner, Expense, Post } from './types.js'
 import { OBJECTIONS_SEED, TEMPLATES_SEED } from './content.js'
 import { PLATFORM_CATALOG } from './platforms.js'
-import { addDays, isoDate, isoDateTime, uid } from './utils.js'
+import { addDays, isoDate, isoDateTime, uid } from './core.js'
 
 export const newContact = (ownerId: string, p: Partial<Contact> = {}): Contact => ({
   id: uid(), type: 'prospect', firstName: '', lastName: '', email: '', phone: '', address: '', city: '', birthday: '', source: '', tags: [],
