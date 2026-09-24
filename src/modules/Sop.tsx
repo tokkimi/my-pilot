@@ -1,3 +1,4 @@
+import AgencyResources from '../components/AgencyResources'
 import { tr } from '../lib/i18n'
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from 'lucide-react'
@@ -16,12 +17,14 @@ export default function Sop({ go }: PageProps) {
     <div>
       <PageHeader title={tr("SOP & scripts")} subtitle="Procédures de l’équipe : rendez-vous vendeur, processus, réactivation, objections" />
       <Tabs<Tab> value={tab} onChange={setTab} tabs={[['rdv', 'SOP rendez-vous vendeur'], ['present', '▶ Mode présentation'], ['process', 'Processus vendeur / acheteur'], ['reactivation', 'Réactivation « All In »'], ['objections', 'Objections'], ['maitrise', 'À maîtriser par cœur']]} />
+      <AgencyResources key={tab} area="sop" slot={tab === 'present' ? 'rdv' : tab} title={tab === 'rdv' || tab === 'present' ? 'Rendez-vous vendeur' : tab} initial={tab === 'rdv' || tab === 'present' ? SOP_SELLER.sections.map(s => [s.title, ...(s.bullets ?? []), ...(s.quotes ?? []), s.note ?? ''].join('\n')).join('\n\n') : ''}>
       {tab === 'rdv' && <SopFull />}
       {tab === 'present' && <Presenter />}
       {tab === 'process' && <Process />}
       {tab === 'reactivation' && <Reactivation go={go} />}
       {tab === 'objections' && <Objections />}
       {tab === 'maitrise' && <Mastery />}
+      </AgencyResources>
     </div>
   )
 }

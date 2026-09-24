@@ -156,7 +156,7 @@ export async function bootstrap() {
 /** Données de démarrage d'une agence (exemples) — les ids des membres de démonstration sont remappés. */
 export function seedAgencyDb(name: string, remap: Record<string, string | undefined> = {}, withDemo = true): Omit<DB, 'members' | 'currentUserId'> {
   const s = seed()
-  let json = JSON.stringify(withDemo ? s : { ...s, contacts: [], activities: [], listings: [], deals: [], tasks: [], events: [], showings: [], posts: [], expenses: [], visits: [] })
+  let json = JSON.stringify(withDemo ? s : { ...s, contacts: [], activities: [], listings: [], deals: [], tasks: [], events: [], showings: [], posts: [], expenses: [], visits: [], partners: [], ledger: [], trips: [], invoices: [], acctYears: [], marketingItems: [], operations: [], resources: [] })
   for (const [from, to] of Object.entries(remap)) if (to) json = json.replaceAll(`"${from}"`, `"${to}"`)
   const d = JSON.parse(json) as DB
   const { members: _m, currentUserId: _c, ...rest } = d

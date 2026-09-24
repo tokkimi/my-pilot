@@ -1,3 +1,4 @@
+import AgencyResources from '../components/AgencyResources'
 import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
@@ -16,6 +17,7 @@ export default function Guides(_: PageProps) {
       <PageHeader title={tr("Guides clients")} subtitle="Guides acheteur et vendeur prêts à imprimer ou à envoyer en PDF"
         actions={<button className="btn-primary" onClick={() => window.print()}><Printer size={16} /> Imprimer / PDF</button>} />
       <Tabs value={tab} onChange={setTab} tabs={[['acheteur', 'Guide acheteur'], ['vendeur', 'Guide vendeur']]} />
+      <AgencyResources key={tab} area="guides" slot={tab} title={tab === 'acheteur' ? 'Guide acheteur' : 'Guide vendeur'} initial={guide.map(g => g.title + '\n' + g.body).join('\n\n')}>
       <article className="card mx-auto max-w-3xl p-8">
         <Letterhead />
         <div className="mb-6 pb-2">
@@ -40,6 +42,7 @@ export default function Guides(_: PageProps) {
           ))}
         </div>
       </article>
+      </AgencyResources>
     </div>
   )
 }

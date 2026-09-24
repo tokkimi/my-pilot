@@ -63,12 +63,18 @@ export async function writeJson(p: string, data: unknown, etag: string | null): 
     }
   }
   const full = fsPath(p)
-  let cur: string | null = null
-  try { cur = hash(await fs.readFile(full)) } catch { /* absent */ }
-  if (cur !== etag) return false
   await fs.mkdir(path.dirname(full), { recursive: true })
-  await fs.writeFile(full, body)
-  return true
+  let lock
+  try { lock = await fs.open(full + '.lock', 'wx') }
+  catch (e) { if ((e as NodeJS.ErrnoException).code === 'EEXIST') return false; throw e }
+  try {
+    let cur: string | null = null
+    try { cur = hash(await fs.readFile(full)) } catch (e) { if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e }
+    if (cur !== etag) return false
+    await fs.writeFile(full + '.pending', body)
+    await fs.rename(full + '.pending', full)
+    return true
+  } finally { await lock.close(); await fs.unlink(full + '.lock') }
 }
 
 /** Lecture-modification-écriture avec concurrence optimiste. */

@@ -83,7 +83,7 @@ export default function Landing() {
             <p className="mt-4 text-lg text-slate-300">{tr("CRM, inscriptions, dossiers, visites terrain et Studio marketing : direction, courtiers, adjointes et équipe communication travaillent dans un espace agence partagé, au bureau comme sur le terrain.")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="#contact" className="btn bg-white px-5 py-3 text-base text-brand-700 hover:bg-violet-50">{tr("Demander une démo")}{" "}<ArrowRight size={18} /></a>
-              <a href="/demo" className="btn border border-white/30 px-5 py-3 text-base text-white hover:bg-white/10">{tr("Essayer maintenant")}</a>
+              <a href="/inscription" className="btn border border-white/30 px-5 py-3 text-base text-white hover:bg-white/10">{tr("Essayer maintenant")}</a>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-300">
               {['Aucune installation', 'Cellulaire, tablette, ordinateur', 'Formation incluse'].map(t => <span key={tr(t)} className="flex items-center gap-1"><Check size={15} className="text-emerald-400" /> {tr(t)}</span>)}

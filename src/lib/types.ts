@@ -120,6 +120,8 @@ export interface Invoice {
 
 export interface Operation { id: ID; kind: 'document' | 'goal' | 'request' | 'process'; title: string; ownerId: ID; due: string; status: 'open' | 'progress' | 'done'; priority: 'normal' | 'high'; notes: string; url: string; target: number; current: number; unit: string; checklist: { id: string; text: string; done: boolean }[] }
 
+export interface AgencyResource { id: ID; area: 'guides' | 'sop'; title: string; body: string; updatedAt: string; attachment?: MediaRef }
+
 export interface DB {
   version: number
   agency: Agency
@@ -128,7 +130,7 @@ export interface DB {
   events: CalEvent[]; showings: Showing[]; partners: Partner[]; platforms: Platform[]; templates: Template[]; posts: Post[]
   objections: Objection[]; expenses: Expense[]; visits: Visit[]
   ledger: LedgerEntry[]; trips: Trip[]; acctYears: AcctYear[]; invoices: Invoice[]
-  marketingItems: MarketingItem[]; operations: Operation[]
+  marketingItems: MarketingItem[]; operations: Operation[]; resources: AgencyResource[]
 }
 export type Coll = Exclude<keyof DB, 'version' | 'agency' | 'currentUserId'>
 

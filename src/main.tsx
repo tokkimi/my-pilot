@@ -42,7 +42,7 @@ const path = location.pathname.replace(/\/+$/, '') || '/'
 const page =
   path === '/demo' ? <StoreProvider mode="local"><App /></StoreProvider>
   : path === '/app' ? <RemoteApp />
-  : path === '/connexion' ? <Login />
+  : (path === '/connexion' || path === '/inscription') ? <Login />
   : path === '/admin' ? <Admin />
   : <Landing />
 
