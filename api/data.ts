@@ -10,7 +10,7 @@ const PRIVATE = ['ledger', 'trips', 'acctYears', 'invoices']
 const canSee = (ownerId: unknown, u: User) => u.role === 'superadmin' || ownerId === u.id || (ownerId === 'agence' && u.role === 'admin')
 type Op = { t: 'upsert'; c: string; item: { id: string } & Record<string, unknown> } | { t: 'remove'; c: string; id: string } | { t: 'patch'; p: Record<string, unknown> }
 
-const toMember = (u: User): Member => { const g = allowed(u); return { toolAccess: u.toolAccess ?? {}, id: u.id, name: u.name, role: u.role === 'superadmin' ? 'admin' : u.role, title: u.title, phone: u.phone, email: u.email, color: u.color, split: u.split, licence: u.licence, active: u.active, googleDrive: g.drive, googleCalendar: g.calendar, googleEmail: u.googleEmail ?? '', driveUrl: (u as User & { driveUrl?: string }).driveUrl ?? '', tpsNo: u.tpsNo ?? '', tvqNo: u.tvqNo ?? '' } }
+const toMember = (u: User): Member => { const g = allowed(u); return { avatar: u.avatar, toolAccess: u.toolAccess ?? {}, id: u.id, name: u.name, role: u.role === 'superadmin' ? 'admin' : u.role, title: u.title, phone: u.phone, email: u.email, color: u.color, split: u.split, licence: u.licence, active: u.active, googleDrive: g.drive, googleCalendar: g.calendar, googleEmail: u.googleEmail ?? '', driveUrl: (u as User & { driveUrl?: string }).driveUrl ?? '', tpsNo: u.tpsNo ?? '', tvqNo: u.tvqNo ?? '' } }
 
 async function context(req: Request) {
   const u = await currentUser(req)

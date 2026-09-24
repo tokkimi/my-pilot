@@ -1,3 +1,4 @@
+import Messages from './modules/Messages'
 import Connections from './modules/Connections'
 import Operations from './modules/Operations'
 import { tr } from './lib/i18n'
@@ -36,6 +37,7 @@ export type Page = keyof typeof PAGES
 export interface PageProps { go: (p: Page, id?: string) => void; openId?: string }
 
 const PAGES = {
+  messages: { label: 'Messagerie', icon: Mail, C: Messages, group: 'Agence' },
   connections: { label: 'Connexions', icon: Cloud, C: Connections, group: 'Réseau' },
   operations: { label: 'Pilotage', icon: ClipboardList, C: Operations, group: 'Général' },
   dashboard: { label: 'Tableau de bord', icon: LayoutDashboard, C: Dashboard, group: 'Général' },

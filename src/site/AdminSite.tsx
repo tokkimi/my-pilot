@@ -121,13 +121,15 @@ function Directory({ data, run, onSecret }: { data: SiteData; run: Run; onSecret
   )
 }
 
-function Books({ data, run }: { data: SiteData; run: Run }) {
+export function Books({ data, run }: { data: SiteData; run: Run }) {
   const years = [...new Set([new Date().getFullYear(), ...(data.finance ?? []).map(e => +e.date.slice(0, 4))])].sort((a, b) => b - a)
   const [year, setYear] = useState(years[0])
+  const [agencyFilter,setAgencyFilter]=useState('')
+  const [period,setPeriod]=useState('')
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const blank = (): PlatformEntry => ({ id: Math.random().toString(36).slice(2, 10), date: new Date().toISOString().slice(0, 10), kind: 'depense', category: 'hebergement', description: '', amount: 0, tps: 0, tvq: 0, agencyId: '', reference: '', createdAt: '' })
   const [e, setE] = useState<PlatformEntry | null>(null)
-  const list = (data.finance ?? []).filter(x => x.date.startsWith(String(year))).sort((a, b) => b.date.localeCompare(a.date))
+  const list = (data.finance ?? []).filter(x => x.date.startsWith(period || String(year)) && (!agencyFilter || x.agencyId===agencyFilter)).sort((a, b) => b.date.localeCompare(a.date))
   const sum = (k: 'revenu' | 'depense', f: 'amount' | 'tps' | 'tvq') => list.filter(x => x.kind === k).reduce((s, x) => s + x[f], 0)
   const rev = sum('revenu', 'amount'), dep = sum('depense', 'amount')
   const byCat = (k: 'revenu' | 'depense') => Object.entries(k === 'revenu' ? REV_CATS : DEP_CATS).map(([c, l]) => [l, list.filter(x => x.kind === k && x.category === c).reduce((s, x) => s + x.amount, 0)] as const).filter(([, v]) => v)
@@ -139,10 +141,11 @@ function Books({ data, run }: { data: SiteData; run: Run }) {
   }
   const withTax = (x: PlatformEntry, amount: number) => ({ ...x, amount, tps: Math.round(amount * 5) / 100, tvq: Math.round(amount * 9.975) / 100 })
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <select className="input w-auto" value={year} onChange={ev => setYear(+ev.target.value)}>{years.map(y => <option key={y}>{y}</option>)}</select>
-        <button className="btn-primary" onClick={() => setE(blank())}><Plus size={15} /> Écriture</button>
+    <div className="finance-report space-y-4">
+      <h1 className="text-2xl font-semibold">Comptabilité ImmoPilot</h1><p className="text-sm text-slate-500">Relevé des écritures saisies · montants en CAD. Les revenus enregistrés ne constituent pas une confirmation de paiement bancaire.</p>
+      <div className="finance-controls flex flex-wrap items-center gap-2">
+        <select className="input w-auto" value={year} onChange={ev => {setYear(+ev.target.value);setPeriod('')}}>{years.map(y => <option key={y}>{y}</option>)}</select>
+        <input aria-label="Mois du relevé" className="input w-auto" type="month" value={period} onChange={ev=>setPeriod(ev.target.value)}/><select aria-label="Agence du relevé" className="input w-auto" value={agencyFilter} onChange={ev=>setAgencyFilter(ev.target.value)}><option value="">Toutes les agences</option>{data.agencies.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select><button className="btn-outline" onClick={()=>window.print()}>Imprimer / PDF</button><button className="btn-primary" onClick={() => setE(blank())}><Plus size={15} /> Ajouter une dépense / un revenu</button>
         <button className="btn-outline" onClick={csv}><Download size={15} /> CSV pour le comptable</button>
       </div>
       <div className="grid gap-3 sm:grid-cols-4">
@@ -152,7 +155,7 @@ function Books({ data, run }: { data: SiteData; run: Run }) {
         <Kpi icon={Receipt} label="Taxes nettes à remettre" value={money(sum('revenu', 'tps') + sum('revenu', 'tvq') - sum('depense', 'tps') - sum('depense', 'tvq'))} sub={`TPS ${money(sum('revenu', 'tps') - sum('depense', 'tps'))} · TVQ ${money(sum('revenu', 'tvq') - sum('depense', 'tvq'))}`} />
       </div>
 
-      <section className="card p-4">
+      <section className="card p-4 no-print">
         <div className="mb-2 flex flex-wrap items-center gap-2"><h3 className="font-semibold">Abonnements des agences</h3>
           <span className="text-xs text-slate-500">Tarif mensuel négocié (hors taxes) par agence</span>
           <input type="month" className="input ml-auto w-auto" value={month} onChange={ev => setMonth(ev.target.value)} />
@@ -181,7 +184,7 @@ function Books({ data, run }: { data: SiteData; run: Run }) {
 
       {e && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={() => setE(null)}>
-          <div className="card w-full max-w-lg p-5" onClick={ev => ev.stopPropagation()}>
+          <div className="card max-h-[90dvh] overflow-y-auto w-full max-w-lg p-5" onClick={ev => ev.stopPropagation()}>
             <h3 className="mb-3 font-semibold">Écriture comptable</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <label><span className="label">{tr("Type")}</span><select className="input" value={e.kind} onChange={ev => setE({ ...e, kind: ev.target.value as PlatformEntry['kind'], category: ev.target.value === 'revenu' ? 'abonnement' : 'hebergement' })}><option value="depense">Dépense</option><option value="revenu">Revenu</option></select></label>

@@ -6,6 +6,7 @@ import type { DB, ToolAccess } from '../src/lib/types.js'
 
 export type PlatformRole = 'superadmin' | 'admin' | 'courtier' | 'adjointe' | 'marketing' | 'agent'
 export interface User {
+  avatar?: string
   toolAccess?: ToolAccess
   id: string; email: string; name: string; role: PlatformRole; agencyId: string; active: boolean
   title: string; phone: string; color: string; split: number; licence: string

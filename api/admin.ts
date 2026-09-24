@@ -77,7 +77,7 @@ export async function POST(req: Request) {
         return json({ user: publicUser(user), password })
       }
       case 'updateUser': {
-        const out = await mutate<User[]>(USERS, () => [], l => l.map(u => u.id === b.id && u.id !== me.id ? { ...u, ...pick(b.patch, ['name', 'role', 'active', 'agencyId', 'title']) } : u))
+        const out = await mutate<User[]>(USERS, () => [], l => l.map(u => u.id === b.id ? { ...u, ...pick(b.patch, u.id === me.id ? ['name', 'title'] : ['name', 'role', 'active', 'agencyId', 'title']) } : u))
         return json({ user: publicUser(out.find(u => u.id === b.id)!) })
       }
       case 'resetPassword': {
@@ -94,6 +94,7 @@ export async function POST(req: Request) {
       case 'saveEntry': {
         const e = b.entry as PlatformEntry
         if (!e?.id || !/^\d{4}-\d{2}-\d{2}$/.test(e.date) || !['revenu', 'depense'].includes(e.kind)) return json({ error: 'Écriture invalide.' }, 400)
+        if (![e.amount,e.tps,e.tvq].every(v=>Number.isFinite(Number(v))&&Number(v)>=0)) return json({error:'Montants invalides.'},400)
         const clean: PlatformEntry = { id: String(e.id), date: e.date, kind: e.kind, category: String(e.category || ''), description: String(e.description || ''), amount: +e.amount || 0, tps: +e.tps || 0, tvq: +e.tvq || 0, agencyId: String(e.agencyId || ''), reference: String(e.reference || ''), createdAt: e.createdAt || new Date().toISOString() }
         await mutate<PlatformEntry[]>(FINANCE, () => [], l => [...l.filter(x => x.id !== clean.id), clean])
         return json({ ok: true })

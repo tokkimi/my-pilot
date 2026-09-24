@@ -173,6 +173,12 @@ function VisitSession({ visit: v, onClose, go }: { visit: Visit; onClose: () => 
     try { return await saveMedia(blob, kind, name, remote, p => setBusy(`Envoi… ${Math.round(p * 100)} %`)) }
     catch (e) { setErr((e as Error).message); return null } finally { setBusy('') }
   }
+  const addPhotos = async (files: File[]) => {
+    if (busy) return
+    const refs: MediaRef[] = []
+    for (const file of files) { if (!file.type.startsWith('image/')) { setErr('Sélectionnez uniquement des images.'); continue } const ref = await store(file, 'photo', file.name); if (ref) refs.push(ref) }
+    if (refs.length) save({ photos: [...v.photos, ...refs] })
+  }
   const addRoomMedia = async (roomId: string, blob: Blob, kind: MediaRef['kind'], name: string) => {
     const ref = await store(blob, kind, name)
     if (!ref) return
@@ -310,9 +316,11 @@ function VisitSession({ visit: v, onClose, go }: { visit: Visit; onClose: () => 
             </div>
             <div className="card p-4">
               <div className="mb-2 font-semibold">Photos générales</div>
-              <label className="btn-outline cursor-pointer"><Camera size={15} /> Prendre / ajouter des photos
-                <input type="file" accept="image/*" capture="environment" multiple hidden onChange={async e => { const files = Array.from(e.target.files ?? []); e.target.value = ''; const refs: MediaRef[] = []; for (const f of files) { const r = await store(f, 'photo', f.name); if (r) refs.push(r) } if (refs.length) save({ photos: [...v.photos, ...refs] }) }} />
-              </label>
+              <div className="rounded-xl border-2 border-dashed border-slate-300 p-4" onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect='copy'}} onDrop={e=>{e.preventDefault();void addPhotos(Array.from(e.dataTransfer.files))}}>
+                <p className="mb-3 text-sm text-slate-500">Glissez vos photos ici ou sélectionnez plusieurs images.</p><div className="flex flex-wrap gap-2">
+                <label className="btn-outline cursor-pointer"><Camera size={15}/>Prendre une photo<input type="file" accept="image/*" capture="environment" hidden disabled={!!busy} onChange={e=>{void addPhotos(Array.from(e.target.files??[]));e.target.value=''}}/></label>
+                <label className="btn-outline cursor-pointer">Ajouter des photos<input type="file" accept="image/*" multiple hidden disabled={!!busy} onChange={e=>{void addPhotos(Array.from(e.target.files??[]));e.target.value=''}}/></label></div>
+              </div>
               <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">{v.photos.map(p => <Thumb key={p.id} media={p} onClick={() => setViewer(p)} onRemove={() => { void deleteMedia(p); save({ photos: v.photos.filter(x => x.id !== p.id) }) }} />)}</div>
             </div>
           </div>

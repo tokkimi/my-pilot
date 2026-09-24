@@ -92,6 +92,7 @@ export function Avatar({ memberId, size = 24 }: { memberId: string; size?: numbe
   const { db } = useStore()
   const m = db.members.find(x => x.id === memberId)
   if (!m) return null
+  if (m.avatar) return <img src={m.avatar} alt={m.name} title={m.name} width={size} height={size} className="shrink-0 rounded-full object-cover" style={{width:size,height:size}} />
   const initials = m.name.split(' ').map(s => s[0]).slice(0, 2).join('')
   return (
     <span title={m.name} className="inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white" style={{ background: m.color, width: size, height: size, fontSize: size * 0.4 }}>

@@ -1,7 +1,8 @@
+import Messages from '../modules/Messages'
 import { tr } from '../lib/i18n'
 import { useEffect, useMemo, useState } from 'react'
-import { Building2, ExternalLink, Globe, Inbox, KeyRound, LogOut, Plus, RefreshCw, Users, Activity, ScanLine } from 'lucide-react'
-import SiteActivity, { type PlatformEntry } from './AdminSite'
+import { Building2, ExternalLink, Globe, Inbox, KeyRound, LogOut, Plus, RefreshCw, Users, Activity, ScanLine, Wallet, MessageCircle } from 'lucide-react'
+import SiteActivity, { Books, type PlatformEntry } from './AdminSite'
 import LeadsInbox from './AdminLeads'
 
 // Console des propriétaires de la plateforme : statistiques d'utilisation, agences, utilisateurs, demandes du site.
@@ -12,7 +13,7 @@ import type { Lead } from './AdminLeads'
 interface Usage { agencyId: string; contacts: number; listings: number; deals: number; tasks: number; visits: number; visitsDone: number; events: number; media: number }
 interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; finance?: PlatformEntry[]; storage: string; email?: { configured: boolean; from: string; ok: boolean; domains: { name: string; status: string }[]; error: string }; google: { configured: boolean; picker: boolean; redirect: string } }
 
-const PLAN_LABEL: Record<Plan, string> = { essai: 'Essai (30 j)', solo: 'Courtier solo', equipe: 'Équipe', agence: 'Agence', entreprise: 'Entreprise', illimite: 'Illimité (interne)' }
+const PLAN_LABEL: Record<Plan, string> = { essai: 'Essai (3 j)', solo: 'Courtier solo', equipe: 'Équipe', agence: 'Agence', entreprise: 'Entreprise', illimite: 'Illimité (interne)' }
 const ROLE_LABEL: Record<string, string> = { superadmin: 'Fondateur (super-admin)', admin: 'Admin agence', courtier: 'Courtier', adjointe: 'Adjointe', marketing: 'Équipe marketing', agent: 'Membre' }
 const fmt = (s: string) => (s ? new Date(s).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' }) : '—')
 const ago = (s: string) => { if (!s) return 'jamais'; const d = Math.floor((Date.now() - new Date(s).getTime()) / 86400000); return d <= 0 ? 'aujourd’hui' : d === 1 ? 'hier' : `il y a ${d} j` }
@@ -28,7 +29,7 @@ async function api(body?: object) {
 export default function Admin() {
   const [data, setData] = useState<Data | null>(null)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'overview' | 'site' | 'agencies' | 'users' | 'leads'>('overview')
+  const [tab, setTab] = useState<'overview' | 'site' | 'agencies' | 'users' | 'leads' | 'finance' | 'messages'>('overview')
   const [secret, setSecret] = useState<{ title: string; email: string; password: string } | null>(null)
   const [pw, setPw] = useState<{ current: string; next: string; msg: string } | null>(null)
   const changePw = async () => {
@@ -53,16 +54,16 @@ export default function Admin() {
   const newLeads = data.leads.filter(l => l.status === 'nouveau').length
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="admin-console min-h-screen bg-slate-50">
       <header className="bg-ink text-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
           <a href="/" className="font-bold"><img src="/immopilot-logo.png" alt="ImmoPilot" className="brand-logo" /></a><span className="badge bg-brand-600 text-white">{tr("Console propriétaires")}</span>
           <nav className="flex max-w-full gap-1 overflow-x-auto text-sm sm:ml-4">
-            {([['overview', 'Vue d’ensemble', Activity], ['leads', 'Nouvelles demandes', Inbox], ['site', 'Activité du site', Globe], ['agencies', 'Agences', Building2], ['users', 'Utilisateurs', Users]] as const).map(([k, l, I]) => (
+            {([['overview', 'Vue d’ensemble', Activity], ['leads', 'Nouvelles demandes', Inbox], ['site', 'Activité du site', Globe], ['agencies', 'Agences', Building2], ['users', 'Utilisateurs', Users], ['finance', 'Comptabilité', Wallet], ['messages', 'Messagerie', MessageCircle]] as const).map(([k, l, I]) => (
               <button key={k} onClick={() => setTab(k)} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 ${tab === k ? 'bg-white/15' : 'hover:bg-white/10'}`}><I size={15} />{l}{k === 'leads' && newLeads > 0 && <span className="rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">{newLeads}</span>}</button>
             ))}
           </nav>
-          <div className="ml-auto flex gap-2 text-sm">
+          <div className="admin-actions ml-auto flex flex-wrap gap-2 text-sm">
             <button className="flex items-center gap-1 rounded bg-brand-600 px-3 py-1" onClick={() => run({ action: 'openOwnAgency' }, b => { location.href = `/app?agency=${encodeURIComponent(b.agency.id)}` })}><Building2 size={15} />{" "}{tr("Mon agence")}</button>
             <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => void load()}><RefreshCw size={14} />{" "}{tr("Actualiser")}</button>
             <button className="flex items-center gap-1 rounded px-2 py-1 hover:bg-white/10" onClick={() => setPw({ current: '', next: '', msg: '' })}><KeyRound size={14} />{" "}{tr("Mot de passe")}</button>
@@ -72,6 +73,8 @@ export default function Admin() {
       </header>
       <main className="mx-auto max-w-7xl p-4 sm:p-6">
         {tab === 'overview' && <Overview data={data} />}
+        {tab === 'messages' && <Messages />}
+        {tab === 'finance' && <Books data={data} run={run} />}
         {tab === 'site' && <SiteActivity data={data} run={run} onSecret={setSecret} />}
         {tab === 'agencies' && <Agencies data={data} run={run} onSecret={setSecret} />}
         {tab === 'users' && <UsersTab data={data} run={run} onSecret={setSecret} />}
@@ -162,6 +165,7 @@ function Overview({ data }: { data: Data }) {
 }
 
 function Agencies({ data, run, onSecret }: { data: Data; run: (b: object, after?: (b: any) => void) => Promise<void>; onSecret: (s: { title: string; email: string; password: string }) => void }) {
+  const [edit, setEdit] = useState<Agency | null>(null)
   const [f, setF] = useState({ name: '', plan: 'essai' as Plan, seats: '', contactEmail: '', adminName: '', adminEmail: '', withDemo: false })
   return (
     <div className="space-y-5">
@@ -178,11 +182,12 @@ function Agencies({ data, run, onSecret }: { data: Data; run: (b: object, after?
         </div>
         <button className="btn-primary mt-3" disabled={!f.name} onClick={() => run({ action: 'createAgency', ...f, seats: f.seats === '' ? undefined : +f.seats }, b => { if (b.password) onSecret({ title: `Accès admin — ${f.name}`, email: f.adminEmail, password: b.password }); if (b.error) alert(b.error); setF({ name: '', plan: 'essai', seats: '', contactEmail: '', adminName: '', adminEmail: '', withDemo: false }) })}>{tr("Créer l’agence")}</button>
       </section>
+      {edit && <section className="card p-5 space-y-3"><h2 className="text-xl font-semibold">Fiche agence</h2><label className="block">Nom<input className="input" value={edit.name} onChange={e=>setEdit({...edit,name:e.target.value})}/></label><label className="block">Courriel de contact<input className="input" type="email" value={edit.contactEmail} onChange={e=>setEdit({...edit,contactEmail:e.target.value})}/></label><label className="block">Notes<textarea className="input" value={edit.notes} onChange={e=>setEdit({...edit,notes:e.target.value})}/></label><p>{data.users.filter(u=>u.agencyId===edit.id).length} membres · {data.usage.find(u=>u.agencyId===edit.id)?.contacts ?? 0} contacts · {data.usage.find(u=>u.agencyId===edit.id)?.deals ?? 0} dossiers</p><div className="flex flex-wrap gap-2"><button className="btn-primary" onClick={()=>run({action:'updateAgency',id:edit.id,patch:{name:edit.name,contactEmail:edit.contactEmail,notes:edit.notes}},()=>setEdit(null))}>Enregistrer</button><a className="btn-outline" href={`/app?agency=${encodeURIComponent(edit.id)}`}>Consulter l’espace client</a><button className="btn-ghost" onClick={()=>setEdit(null)}>Fermer</button></div></section>}
       <section className="card overflow-x-auto">
         <table className="w-full"><thead><tr><th className="th">{tr("Agence")}</th><th className="th">Forfait</th><th className="th">Sièges</th><th className="th">{tr("Statut")}</th><th className="th">Créée</th><th className="th">Fin d’essai</th><th className="th" /></tr></thead>
           <tbody>{data.agencies.map(a => (
             <tr key={a.id}>
-              <td className="td font-medium">{a.name}<div className="text-xs text-slate-500">{a.contactEmail}</div></td>
+              <td className="td font-medium"><button className="text-left underline underline-offset-4" onClick={() => setEdit(a)}>{a.name}</button><div className="text-xs text-slate-500">{a.contactEmail}</div></td>
               <td className="td"><select className="input py-1" value={a.plan} onChange={e => run({ action: 'updateAgency', id: a.id, patch: { plan: e.target.value } })}>{Object.entries(PLAN_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></td>
               <td className="td"><input className="input w-20 py-1" type="number" defaultValue={a.seats} onBlur={e => +e.target.value !== a.seats && run({ action: 'updateAgency', id: a.id, patch: { seats: +e.target.value } })} /></td>
               <td className="td"><button className={`badge ${a.status === 'actif' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`} onClick={() => run({ action: 'updateAgency', id: a.id, patch: { status: a.status === 'actif' ? 'suspendu' : 'actif' } })}>{a.status}</button></td>
@@ -198,6 +203,7 @@ function Agencies({ data, run, onSecret }: { data: Data; run: (b: object, after?
 
 function UsersTab({ data, run, onSecret }: { data: Data; run: (b: object, after?: (b: any) => void) => Promise<void>; onSecret: (s: { title: string; email: string; password: string }) => void }) {
   const [q, setQ] = useState('')
+  const [editUser, setEditUser] = useState<User | null>(null)
   const [f, setF] = useState({ name: '', email: '', role: 'courtier', agencyId: data.agencies[0]?.id ?? '' })
   const list = data.users.filter(u => !q || `${u.name} ${u.email}`.toLowerCase().includes(q.toLowerCase()))
   const agencyName = (id: string) => data.agencies.find(a => a.id === id)?.name ?? (id === 'platform' ? 'Plateforme' : id)
@@ -213,12 +219,13 @@ function UsersTab({ data, run, onSecret }: { data: Data; run: (b: object, after?
         </div>
         <button className="btn-primary mt-3" disabled={!f.email} onClick={() => run({ action: 'createUser', ...f }, b => { onSecret({ title: `Accès — ${f.name || f.email}`, email: f.email, password: b.password }); setF({ ...f, name: '', email: '' }) })}>{tr("Créer l’accès")}</button>
       </section>
+      {editUser && <section className="card space-y-3 p-5"><h2 className="text-xl font-semibold">Fiche utilisateur</h2><p>{editUser.email} · {agencyName(editUser.agencyId)}</p><label className="block">Nom<input className="input" value={editUser.name} onChange={e=>setEditUser({...editUser,name:e.target.value})}/></label><label className="block">Fonction<input className="input" value={editUser.title} onChange={e=>setEditUser({...editUser,title:e.target.value})}/></label><p>Inscription : {fmt(editUser.createdAt)} · Dernière connexion : {fmt(editUser.lastLoginAt)}</p><div className="flex flex-wrap gap-2"><button className="btn-primary" onClick={()=>run({action:'updateUser',id:editUser.id,patch:{name:editUser.name,title:editUser.title}},()=>setEditUser(null))}>Enregistrer</button>{editUser.role!=='superadmin'&&<a className="btn-outline" href={`/app?agency=${encodeURIComponent(editUser.agencyId)}`}>Consulter son agence</a>}<button className="btn-ghost" onClick={()=>setEditUser(null)}>Fermer</button></div></section>}
       <input className="input" placeholder="Rechercher un utilisateur…" value={q} onChange={e => setQ(e.target.value)} />
       <section className="card overflow-x-auto">
         <table className="w-full"><thead><tr><th className="th">Utilisateur</th><th className="th">{tr("Agence")}</th><th className="th">{tr("Rôle")}</th><th className="th">{tr("Dernière connexion")}</th><th className="th">{tr("Dernière activité")}</th><th className="th">Connexions</th><th className="th">Google</th><th className="th">{tr("Statut")}</th><th className="th" /></tr></thead>
           <tbody>{list.map(u => (
             <tr key={u.id}>
-              <td className="td font-medium">{u.name}<div className="text-xs text-slate-500">{u.email}{u.mustChangePassword && ' · mot de passe temporaire'}</div></td>
+              <td className="td font-medium"><button className="text-left underline underline-offset-4" onClick={()=>setEditUser(u)}>{u.name}</button><div className="text-xs text-slate-500">{u.email}{u.mustChangePassword && ' · mot de passe temporaire'}</div></td>
               <td className="td text-sm">{agencyName(u.agencyId)}</td>
               <td className="td">{u.role === 'superadmin' ? <span className="badge bg-brand-600 text-white">Super-admin</span> : <select className="input py-1" value={u.role} onChange={e => run({ action: 'updateUser', id: u.id, patch: { role: e.target.value } })}>{Object.entries(ROLE_LABEL).filter(([k]) => k !== 'superadmin').map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>}</td>
               <td className="td text-xs">{fmt(u.lastLoginAt)}</td>

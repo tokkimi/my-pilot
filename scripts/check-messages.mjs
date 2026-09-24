@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+const base='http://127.0.0.1:5184';
+async function req(path,cookie,body){const r=await fetch(base+path,{method:body?'POST':'GET',headers:{cookie:cookie||'','content-type':'application/json'},body:body?JSON.stringify(body):undefined});return {status:r.status,body:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]}}
+const login=async(email,password)=>{const r=await req('/api/auth','',{action:'login',email,password});assert.equal(r.status,200);return r.cookie};
+const admin=await login('client@example.test','Local-only-client-852!'),member=await login('member@example.test','Local-only-member-964!'),owner=await login('founder@example.test','Local-only-founder-739!');
+const a=(await req('/api/messages',admin)).body;const m=(await req('/api/messages',member)).body;
+assert.equal((await req('/api/messages')).status,401);
+const created=await req('/api/messages',admin,{action:'create',kind:'direct',members:[m.me.id]});assert.equal(created.status,200);const id=created.body.id;
+assert.equal((await req('/api/messages',admin,{action:'send',id,text:'Test privé 👋'})).status,200);
+let received=await req('/api/messages?thread='+id,member);assert.equal(received.body.messages.at(-1).text,'Test privé 👋');
+assert.equal((await req('/api/messages?thread='+id,owner)).status,403);
+const own=(await req('/api/messages',owner)).body;assert.equal((await req('/api/messages',admin,{action:'create',kind:'direct',members:[own.me.id]})).status,403);
+const group=await req('/api/messages',admin,{action:'create',kind:'group',members:[m.me.id],title:'Visites 🏡'});assert.equal(group.status,200);
+assert.equal((await req('/api/messages',member,{action:'rename',id:group.body.id,title:'Non'})).status,403);
+assert.equal((await req('/api/messages',admin,{action:'rename',id:group.body.id,title:'Marketing ✨'})).status,200);
+assert.equal((await req('/api/messages',member,{action:'react',id,messageId:received.body.messages.at(-1).id,emoji:'👍'})).status,200);
+const support=await req('/api/messages',member,{action:'create',kind:'support',members:[]});assert.equal(support.status,200);assert.equal((await req('/api/messages?thread='+support.body.id,admin)).status,403);
+assert.equal((await req('/api/messages',owner,{action:'send',id:support.body.id,text:'ImmoPilot vous répond'})).status,200);
+assert.equal((await req('/api/messages?thread='+support.body.id,member)).body.people.find(p=>p.id===own.me.id).name,'ImmoPilot');
+assert.equal((await req('/api/messages',member,{action:'avatar',avatar:'javascript:alert(1)'})).status,400);
+assert.equal((await req('/api/messages',member,{action:'avatar',avatar:'data:image/svg+xml;base64,abcd'})).status,400);
+assert.equal((await req('/api/messages',member,{action:'send',id,text:'x'.repeat(5001)})).status,400);
+console.log('PASS private messages, support isolation, cross-tenant rejection, group ownership, reactions and avatar validation');
