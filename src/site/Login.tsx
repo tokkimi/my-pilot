@@ -16,7 +16,7 @@ export default function Login() {
   useEffect(() => {
     fetch('/api/auth').then(r => r.json()).then(b => {
       setStorage(b.storage ?? '')
-      if (b.user) location.href = b.user.role === 'superadmin' ? '/admin' : b.subscriptionRequired ? '/abonnement' : '/app'
+      // Opening this page never signs in automatically, even with an existing session.
     }).catch(() => setStorage('offline'))
   }, [])
   const submit = async (e: React.FormEvent) => {
