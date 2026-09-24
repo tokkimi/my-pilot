@@ -2,10 +2,11 @@
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
 import { mutate, readJson, writeJson } from './storage.js'
 import { seed } from '../src/lib/seed.js'
-import type { DB } from '../src/lib/types.js'
+import type { DB, ToolAccess } from '../src/lib/types.js'
 
 export type PlatformRole = 'superadmin' | 'admin' | 'courtier' | 'adjointe' | 'marketing' | 'agent'
 export interface User {
+  toolAccess?: ToolAccess
   id: string; email: string; name: string; role: PlatformRole; agencyId: string; active: boolean
   title: string; phone: string; color: string; split: number; licence: string
   salt: string; hash: string; createdAt: string; lastLoginAt: string; lastSeenAt: string; loginCount: number

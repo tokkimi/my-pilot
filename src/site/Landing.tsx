@@ -126,14 +126,17 @@ export default function Landing() {
       <section id="marketing" className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="text-3xl font-bold">{tr("Votre équipe marketing a son espace dédié")}</h2>
         <p className="mt-4 max-w-3xl text-lg text-slate-600">{tr("De la première idée au bilan de campagne, réunissez communication, publicité, création et événements dans le Studio marketing de votre agence.")}</p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[{ title: "Planning éditorial partagé", text: "Organisez les publications par date et réseau, attribuez un responsable et retrouvez les contenus à venir." },
-{ title: "Préparation et validation des contenus", text: "Rédigez les publications, associez les visuels et les inscriptions, puis soumettez les contenus à la validation de l’équipe." },
-{ title: "Campagnes et publicité", text: "Centralisez objectifs, audiences, canaux, budgets et dépenses. Consignez les résultats pour préparer votre bilan." },
-{ title: "Médiathèque et visuels", text: "Partagez les images et documents, leurs liens, les droits d’utilisation et les dates d’expiration." },
-{ title: "Charte graphique et identité", text: "Rassemblez couleurs, typographies, ton de communication et références pour garder une image cohérente." },
-{ title: "Réseaux sociaux", text: "Répertoriez les comptes et leurs responsables, puis accédez aux outils officiels pour publier et gérer vos publicités." },
-{ title: "Événements et communication", text: "Préparez visites libres, lancements et événements : dates, lieux, responsables, listes de tâches et participation." },
-{ title: "Une équipe, un suivi commun", text: "Direction, courtiers, adjointes et marketing retrouvent les mêmes contenus dans l’espace de leur agence, avec un circuit de validation." }].map(item => <article key={item.title} className="card p-6"><Megaphone className="mb-4 text-brand-600" size={24}/><h3 className="text-lg font-semibold">{tr(item.title)}</h3><p className="mt-3 text-base text-slate-600">{tr(item.text)}</p></article>)}</div>
+        <div className="marketing-story mt-10">
+          <div className="marketing-studio-preview" aria-label={tr("Aperçu illustratif du Studio marketing")}>
+            <div className="studio-toolbar"><span className="studio-dots">● ● ●</span><b>Studio marketing</b><span>{tr("Votre agence")}</span></div>
+            <div className="studio-preview-body">
+              <div className="studio-preview-tabs"><span>{tr("Rédaction")}</span><span>{tr("Planning")}</span><span>{tr("Visuels")}</span></div>
+              <div className="studio-editor"><span className="studio-channel">{tr("Newsletter · Brouillon")}</span><h3>{tr("Les nouvelles de votre quartier")}</h3><p>{tr("Une nouvelle adresse, des conseils pour votre projet et les rendez-vous à ne pas manquer.")}</p><div className="studio-property-art"><Home size={62}/><span>{tr("Votre prochaine histoire commence ici.")}</span></div><div className="studio-editor-footer"><span>{tr("Aux couleurs de votre agence")}</span><span>{tr("À valider")}</span></div></div>
+              <div className="studio-timeline"><span><b>{tr("Lundi")}</b>{tr("Newsletter · Quartier")}</span><span><b>{tr("Mercredi")}</b>{tr("Post · Nouvelle propriété")}</span><span><b>{tr("Samedi")}</b>{tr("Événement · Visite libre")}</span></div>
+            </div>
+          </div>
+          <div className="marketing-story-copy"><h3>{tr("Écrivez. Préparez. Coordonnez.")}</h3><p>{tr("Rédigez vos newsletters avec les modèles de courriels personnalisables et préparez vos posts avec leurs textes, visuels et propriétés associées. Votre équipe relit et valide les publications dans le Studio.")}</p><p>{tr("Organisez le planning éditorial, les campagnes publicitaires, les budgets et les événements. Gardez votre médiathèque, votre charte graphique et vos références de marque au même endroit.")}</p><p>{tr("Ajoutez vos propres guides et trames pour que chaque contenu respecte les méthodes et l’identité de votre agence.")}</p><a href="/inscription" className="btn-primary">{tr("Essayer 3 jours gratuitement")}<ArrowRight size={18}/></a></div>
+        </div>
         <p className="mt-6 max-w-4xl text-base text-slate-600">{tr("Le Studio prépare et coordonne vos actions. La publication sur les réseaux et l’achat publicitaire se font dans les plateformes concernées ; la connexion automatique des comptes et les statistiques synchronisées ne sont pas encore disponibles.")}</p>
         <a href="/inscription" className="btn-primary mt-6">{tr("Découvrir le Studio marketing")}<ArrowRight size={18}/></a>
       </section>
@@ -191,7 +194,7 @@ export default function Landing() {
       <section id="tarifs" className="bg-gradient-to-b from-slate-50 to-white py-16">
         <div className="mx-auto max-w-6xl px-4">
           <h2 className="text-center text-3xl font-bold">{tr("Des abonnements pensés pour les agences")}</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600">{tr("Abonnement mensuel ou annuel selon la taille de votre équipe. Tarifs sur demande, adaptés à votre agence.")}</p>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600">{tr("Abonnement mensuel selon la taille de votre équipe, ou achat avec installation sur demande.")}</p>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {PLANS.map(p => (
               <div key={tr(p.name)} className={`card flex flex-col p-6 ${p.featured ? 'border-brand-500 ring-2 ring-brand-100' : ''}`}>

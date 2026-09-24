@@ -10,7 +10,7 @@ const PRIVATE = ['ledger', 'trips', 'acctYears', 'invoices']
 const canSee = (ownerId: unknown, u: User) => u.role === 'superadmin' || ownerId === u.id || (ownerId === 'agence' && u.role === 'admin')
 type Op = { t: 'upsert'; c: string; item: { id: string } & Record<string, unknown> } | { t: 'remove'; c: string; id: string } | { t: 'patch'; p: Record<string, unknown> }
 
-const toMember = (u: User): Member => { const g = allowed(u); return { id: u.id, name: u.name, role: u.role === 'superadmin' ? 'admin' : u.role, title: u.title, phone: u.phone, email: u.email, color: u.color, split: u.split, licence: u.licence, active: u.active, googleDrive: g.drive, googleCalendar: g.calendar, googleEmail: u.googleEmail ?? '', driveUrl: (u as User & { driveUrl?: string }).driveUrl ?? '', tpsNo: u.tpsNo ?? '', tvqNo: u.tvqNo ?? '' } }
+const toMember = (u: User): Member => { const g = allowed(u); return { toolAccess: u.toolAccess ?? {}, id: u.id, name: u.name, role: u.role === 'superadmin' ? 'admin' : u.role, title: u.title, phone: u.phone, email: u.email, color: u.color, split: u.split, licence: u.licence, active: u.active, googleDrive: g.drive, googleCalendar: g.calendar, googleEmail: u.googleEmail ?? '', driveUrl: (u as User & { driveUrl?: string }).driveUrl ?? '', tpsNo: u.tpsNo ?? '', tvqNo: u.tvqNo ?? '' } }
 
 async function context(req: Request) {
   const u = await currentUser(req)
@@ -64,6 +64,7 @@ export async function POST(req: Request) {
             if (o.t !== 'upsert') continue
             const m = o.item as unknown as Member & { password?: string }
             const existing = out.find(x => x.id === m.id)
+            const toolAccess = Object.fromEntries(['meta', 'calendly', 'canva', 'linkedin', 'microsoft'].map(key => [key, ['read', 'manage'].includes(String(m.toolAccess?.[key as keyof NonNullable<Member['toolAccess']>])) ? m.toolAccess![key as keyof NonNullable<Member['toolAccess']>] : 'none'])) as Member['toolAccess']
             const role = (['admin', 'courtier', 'adjointe', 'marketing', 'agent'] as const).includes(m.role as never) ? m.role : 'agent'
             if (existing) {
               if (existing.agencyId !== agencyId) continue
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
               const before = allowed(existing)
               const drive = m.googleDrive ?? before.drive, calendar = m.googleCalendar ?? before.calendar
               if (existing.googleEmail && ((before.drive && !drive) || (before.calendar && !calendar) || m.active === false)) toRevoke.add(existing.id)
-              out = out.map(x => x.id === m.id ? { ...x, name: m.name, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, active: x.id === u.id ? true : m.active, role: x.id === u.id ? x.role : role, googleDrive: drive, googleCalendar: calendar, driveUrl: m.driveUrl ?? '', tpsNo: m.tpsNo ?? '', tvqNo: m.tvqNo ?? '' } : x)
+              out = out.map(x => x.id === m.id ? { ...x, toolAccess, name: m.name, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, active: x.id === u.id ? true : m.active, role: x.id === u.id ? x.role : role, googleDrive: drive, googleCalendar: calendar, driveUrl: m.driveUrl ?? '', tpsNo: m.tpsNo ?? '', tvqNo: m.tvqNo ?? '' } : x)
             } else {
               const email = String(m.email || '').trim().toLowerCase()
               if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errors.push(`Courriel invalide pour ${m.name}.`); continue }
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
               const seats = agency.seats || PLAN_SEATS[agency.plan]
               if (seats && out.filter(x => x.agencyId === agencyId && x.active).length >= seats) { errors.push(`Limite de ${seats} utilisateur(s) atteinte pour votre forfait.`); continue }
               if (!m.password || m.password.length < 8) { errors.push('Mot de passe temporaire de 8 caractères minimum requis.'); continue }
-              out.push({ ...newUser({ email, name: m.name, role, agencyId, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, mustChangePassword: true, googleDrive: !!m.googleDrive, googleCalendar: !!m.googleCalendar }, m.password), id: m.id, driveUrl: m.driveUrl ?? '' } as User)
+              out.push({ ...newUser({ email, name: m.name, role, agencyId, toolAccess, title: m.title, phone: m.phone, color: m.color, split: +m.split || 0, licence: m.licence, mustChangePassword: true, googleDrive: !!m.googleDrive, googleCalendar: !!m.googleCalendar }, m.password), id: m.id, driveUrl: m.driveUrl ?? '' } as User)
             }
           }
           return out
