@@ -1,4 +1,4 @@
-import { AGENCIES, agencyDb, newUser, seedAgencyDb, uid, type Agency, bootstrap, checkPassword, clearCookie, currentUser, hashPassword, json, loadAgencies, loadUsers, publicUser, renewCookie, sameOrigin, sessionCookie, trackActivity, USERS, type User } from '../server/platform.js'
+import { trialExpired, AGENCIES, agencyDb, newUser, seedAgencyDb, uid, type Agency, bootstrap, checkPassword, clearCookie, currentUser, hashPassword, json, loadAgencies, loadUsers, publicUser, renewCookie, sameOrigin, sessionCookie, trackActivity, USERS, type User } from '../server/platform.js'
 import { mutate, storageMode, storageReady, StorageUnavailable, uploadMode } from '../server/storage.js'
 import { createHash } from 'node:crypto'
 
@@ -6,10 +6,10 @@ export async function GET(req: Request) {
   if (!storageReady()) return json({ user: null, storage: storageMode() })
   try {
     await bootstrap()
-    const u = await currentUser(req)
+    const u = await currentUser(req, true)
     if (!u) return json({ user: null, storage: storageMode() })
     const agency = (await loadAgencies()).find(a => a.id === u.agencyId) ?? null
-    return json({ user: publicUser(u), agency, storage: storageMode(), upload: uploadMode() }, 200, { 'set-cookie': renewCookie(u) })
+    return json({ user: publicUser(u), agency, subscriptionRequired: trialExpired(agency ?? undefined), storage: storageMode(), upload: uploadMode() }, 200, { 'set-cookie': renewCookie(u) })
   } catch (e) { return fail(e) }
 }
 
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         if (e instanceof Error && e.message === 'EMAIL_EXISTS') return json({ error: 'Ce courriel est déjà utilisé. Connectez-vous à votre compte.' }, 409)
         throw e
       }
-      const agency: Agency = { id: agencyId, name: agencyName, plan: 'essai', seats: 3, status: 'actif', createdAt: new Date().toISOString(), contactEmail: email, notes: '', trialEnds: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10) }
+      const agency: Agency = { id: agencyId, name: agencyName, plan: 'essai', seats: 3, status: 'actif', createdAt: new Date().toISOString(), contactEmail: email, notes: '', trialEnds: new Date(Date.now() + 3 * 86400000).toISOString() }
       try {
         await mutate(agencyDb(agencyId), () => seedAgencyDb(agencyName, {}, false), d => d)
         await mutate<Agency[]>(AGENCIES, () => [], list => [...list, agency])
@@ -71,11 +71,11 @@ export async function POST(req: Request) {
       const agency = (await loadAgencies()).find(a => a.id === u.agencyId)
       if (u.role !== 'superadmin' && agency?.status === 'suspendu') return json({ error: 'L’abonnement de votre agence est suspendu. Contactez-nous.' }, 403)
       await trackActivity(u, true)
-      return json({ user: publicUser(u), redirect: u.role === 'superadmin' ? '/admin' : '/app' }, 200, { 'set-cookie': sessionCookie(u.id, u.sessionVersion ?? 0) })
+      return json({ user: publicUser(u), redirect: u.role === 'superadmin' ? '/admin' : trialExpired(agency) ? '/abonnement' : '/app' }, 200, { 'set-cookie': sessionCookie(u.id, u.sessionVersion ?? 0) })
     }
 
     if (body.action === 'password') {
-      const u = await currentUser(req)
+      const u = await currentUser(req, true)
       if (!u) return json({ error: 'Non connecté.' }, 401)
       if (!checkPassword(u, String(body.current || ''))) return json({ error: 'Mot de passe actuel invalide.' }, 400)
       if (String(body.next || '').length < 8) return json({ error: 'Le nouveau mot de passe doit contenir au moins 8 caractères.' }, 400)

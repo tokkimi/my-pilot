@@ -1,3 +1,4 @@
+import { MONTHLY_PLANS } from '../lib/plans'
 import { tr } from '../lib/i18n'
 import { useState } from 'react'
 import {
@@ -29,9 +30,9 @@ const VISIT_STEPS = [
   { icon: PenTool, title: 'Obtenez le plan', text: 'Plan 2D à l’échelle généré depuis vos mesures, ou importez un plan existant. Export PNG/SVG.' },
 ]
 const PLANS = [
-  { name: 'Courtier solo', icon: UserRound, who: '1 courtier', items: ['CRM, pipeline, tâches, agenda', 'Visites terrain illimitées', 'SOP, guides et calculateurs', 'Accès aux plateformes et guides'] },
-  { name: 'Équipe', icon: Users, who: 'Jusqu’à 5 membres', items: ['Tout le forfait Solo', 'Rôles : courtiers et adjointes', 'Dossiers et délais partagés', 'Commissions par membre', 'Marketing partagé et validation des contenus'], featured: true },
-  { name: 'Agence', icon: Building2, who: 'Jusqu’à 25 membres et plus', items: ['Tout le forfait Équipe', 'Administration de l’agence', 'Statistiques d’utilisation', 'Accompagnement prioritaire'] },
+  { name: 'Courtier solo', price: MONTHLY_PLANS[0].price, icon: UserRound, who: '1 courtier', items: ['CRM, pipeline, tâches, agenda', 'Visites terrain illimitées', 'SOP, guides et calculateurs', 'Accès aux plateformes et guides'] },
+  { name: 'Équipe', price: MONTHLY_PLANS[1].price, icon: Users, who: 'Jusqu’à 5 membres', items: ['Tout le forfait Solo', 'Rôles : courtiers et adjointes', 'Dossiers et délais partagés', 'Commissions par membre', 'Marketing partagé et validation des contenus'], featured: true },
+  { name: 'Agence', price: MONTHLY_PLANS[2].price, icon: Building2, who: 'Jusqu’à 25 membres', items: ['Tout le forfait Équipe', 'Administration de l’agence', 'Statistiques d’utilisation', 'Accompagnement prioritaire'] },
 ]
 const FAQ = [
   ["Comment les espaces agence et ImmoPilot sont-ils séparés?","Chaque agence cliente dispose de son espace et de ses membres. La console de gestion de l’entreprise ImmoPilot est réservée aux super-administrateurs. Les fondateurs disposent aussi de leur propre espace agence pour utiliser les outils métier."],
@@ -40,12 +41,12 @@ const FAQ = [
   ['Peut-on importer nos contacts actuels?', 'Oui, par fichier CSV (exporté de Prospects, Rechat, Excel, Google Contacts…). Les colonnes prénom, nom, courriel, téléphone et ville sont reconnues automatiquement.'],
   ['Comment se passe la formation?', 'Nous offrons des formations de groupe pour les agences (en personne ou en visioconférence) ainsi que des séances individuelles. Le contenu est adapté à vos processus et à vos SOP.'],
   ['Et la confidentialité (Loi 25)?', 'Chaque agence a son espace privé; les médias des visites sont stockés de façon privée et accessibles seulement aux membres connectés. Le registre de visite libre inclut le consentement à être recontacté.'],
-  ['Peut-on essayer avant?', 'Oui : la démo est accessible sans inscription et contient des données fictives. Pour un espace réel de votre agence, contactez-nous.'],
+  ['Peut-on essayer avant?', 'Oui : créez votre agence et profitez de 3 jours gratuits. Un abonnement est ensuite requis pour continuer à utiliser votre espace.'],
 ]
 
 export default function Landing() {
   const [menu, setMenu] = useState(false)
-  const [interest, setInterest] = useState('Démonstration')
+  const [interest, setInterest] = useState('Abonnement — Agence')
   const pick = (i: string) => { setInterest(i); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }) }
   return (
     <div className="landing-glass text-slate-800">
@@ -62,14 +63,13 @@ export default function Landing() {
           </nav>
           <div className="ml-auto hidden items-center gap-2 md:flex">
             <a href="/connexion" className="btn-ghost">{tr("Connexion")}</a>
-            <a href="/demo" className="btn-outline">{tr("Essayer la démo")}</a>
-            <a href="#contact" className="btn-primary">{tr("Demander une démo")}</a>
+            <a href="/inscription" className="btn-primary">{tr("Essayer 3 jours gratuitement")}</a>
           </div>
           <button className="ml-auto md:hidden" onClick={() => setMenu(!menu)}>{menu ? <X /> : <Menu />}</button>
         </div>
         {menu && (
           <div className="flex flex-col gap-1 border-t border-slate-200 p-3 md:hidden" onClick={() => setMenu(false)}>
-            {[['#fonctionnalites', 'Fonctionnalités'], ['#marketing', 'Studio marketing'], ['#visites', 'Visites terrain'], ['#integrations', 'Intégrations'], ['#tarifs', 'Forfaits'], ['#formation', 'Formation'], ['#contact', 'Contact'], ['/connexion', 'Connexion'], ['/demo', 'Essayer la démo']].map(([h, l]) => <a key={h} href={h} className="rounded px-2 py-2 hover:bg-slate-50">{tr(l)}</a>)}
+            {[['#fonctionnalites', 'Fonctionnalités'], ['#marketing', 'Studio marketing'], ['#visites', 'Visites terrain'], ['#integrations', 'Intégrations'], ['#tarifs', 'Forfaits'], ['#formation', 'Formation'], ['#contact', 'Contact'], ['/connexion', 'Connexion'], ['/inscription', 'Essayer 3 jours gratuitement']].map(([h, l]) => <a key={h} href={h} className="rounded px-2 py-2 hover:bg-slate-50">{tr(l)}</a>)}
           </div>
         )}
       </header>
@@ -82,8 +82,8 @@ export default function Landing() {
             <h1 className="mt-4 text-4xl font-extrabold leading-tight md:text-5xl">{tr("Toute votre agence dans")}{" "}<span className="text-violet-300">{tr("une seule plateforme")}</span>.</h1>
             <p className="mt-4 text-lg text-slate-300">{tr("CRM, inscriptions, dossiers, visites terrain et Studio marketing : direction, courtiers, adjointes et équipe communication travaillent dans un espace agence partagé, au bureau comme sur le terrain.")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#contact" className="btn bg-white px-5 py-3 text-base text-brand-700 hover:bg-violet-50">{tr("Demander une démo")}{" "}<ArrowRight size={18} /></a>
-              <a href="/inscription" className="btn border border-white/30 px-5 py-3 text-base text-white hover:bg-white/10">{tr("Essayer maintenant")}</a>
+              <a href="/inscription" className="btn bg-white px-5 py-3 text-base text-brand-700 hover:bg-violet-50">{tr("Essayer 3 jours gratuitement")}{" "}<ArrowRight size={18} /></a>
+              <a href="#tarifs" className="btn border border-white/30 px-5 py-3 text-base text-white hover:bg-white/10">{tr("Voir les forfaits")}</a>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-300">
               {['Aucune installation', 'Cellulaire, tablette, ordinateur', 'Formation incluse'].map(t => <span key={tr(t)} className="flex items-center gap-1"><Check size={15} className="text-emerald-400" /> {tr(t)}</span>)}
@@ -135,7 +135,7 @@ export default function Landing() {
 { title: "Événements et communication", text: "Préparez visites libres, lancements et événements : dates, lieux, responsables, listes de tâches et participation." },
 { title: "Une équipe, un suivi commun", text: "Direction, courtiers, adjointes et marketing retrouvent les mêmes contenus dans l’espace de leur agence, avec un circuit de validation." }].map(item => <article key={item.title} className="card p-6"><Megaphone className="mb-4 text-brand-600" size={24}/><h3 className="text-lg font-semibold">{tr(item.title)}</h3><p className="mt-3 text-base text-slate-600">{tr(item.text)}</p></article>)}</div>
         <p className="mt-6 max-w-4xl text-base text-slate-600">{tr("Le Studio prépare et coordonne vos actions. La publication sur les réseaux et l’achat publicitaire se font dans les plateformes concernées ; la connexion automatique des comptes et les statistiques synchronisées ne sont pas encore disponibles.")}</p>
-        <a href="/demo#/marketing" className="btn-primary mt-6">{tr("Découvrir le Studio marketing")}<ArrowRight size={18}/></a>
+        <a href="/inscription" className="btn-primary mt-6">{tr("Découvrir le Studio marketing")}<ArrowRight size={18}/></a>
       </section>
       {/* VISITES */}
       <section id="visites" className="mx-auto max-w-6xl px-4 py-16">
@@ -199,12 +199,14 @@ export default function Landing() {
                 <p.icon className="text-brand-600" />
                 <h3 className="mt-2 text-xl font-bold">{tr(p.name)}</h3>
                 <div className="text-sm text-slate-500">{tr(p.who)}</div>
-                <div className="my-4 text-2xl font-extrabold">{tr("Prix sur demande")}</div>
+                <div className="my-4 text-2xl font-extrabold">{p.price} $ CAD<span className="text-base font-normal"> / {tr("mois")}</span></div>
                 <ul className="flex-1 space-y-2 text-sm">{p.items.map(i => <li key={i} className="flex gap-2"><Check size={16} className="shrink-0 text-emerald-600" /> {tr(i)}</li>)}</ul>
-                <button onClick={() => pick(`Abonnement — ${tr(p.name)}`)} className={`${p.featured ? 'btn-primary' : 'btn-outline'} mt-6 justify-center`}>{tr("Obtenir une soumission")}</button>
+                <a href="/inscription" className={`${p.featured ? 'btn-primary' : 'btn-outline'} mt-6 justify-center`}>{tr("Essayer 3 jours gratuitement")}</a>
               </div>
             ))}
           </div>
+          <p className="mt-4 text-center text-sm text-slate-600">{tr("Tarifs en dollars canadiens, par équipe et par mois, hors taxes. Chaque membre actif compte dans la limite du forfait. Au-delà de 25 membres : sur devis.")}</p>
+          <div className="card mt-4 p-6"><h3 className="text-xl font-bold">{tr("Achat + installation sur demande")}</h3><p className="mt-2 text-slate-600">{tr("Vous préférez acheter la solution ? Recevez un devis adapté à la taille de votre équipe, à l’installation et à l’accompagnement souhaités.")}</p><button className="btn-primary mt-4" onClick={() => pick('Achat + installation sur demande')}>{tr("Demander un devis")}</button></div>
           <div className="card mt-4 flex flex-col items-start gap-4 p-6 md:flex-row md:items-center">
             <Building2 className="shrink-0 text-brand-600" size={32} />
             <div className="flex-1"><h3 className="font-bold">{tr("Réseaux et bannières")}</h3><p className="text-sm text-slate-600">Plusieurs bureaux, image de marque, SOP et contenus propres à votre réseau, intégrations sur mesure.</p></div>
@@ -243,7 +245,7 @@ export default function Landing() {
       <footer className="border-t border-slate-200 py-8 text-sm text-slate-500">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4">
           <span>© {new Date().getFullYear()} ImmoPilot — Plateforme pour agences et courtiers immobiliers</span>
-          <span className="flex gap-4"><a href="/connexion" className="hover:underline">{tr("Connexion")}</a><a href="/demo" className="hover:underline">Démo</a><a href="#contact" className="hover:underline">Contact</a></span>
+          <span className="flex gap-4"><a href="/connexion" className="hover:underline">{tr("Connexion")}</a><a href="/inscription" className="hover:underline">{tr("Créer mon agence")}</a><a href="#contact" className="hover:underline">Contact</a></span>
         </div>
       </footer>
     </div>
@@ -273,11 +275,11 @@ function ContactForm({ interest, setInterest }: { interest: string; setInterest:
       <div className="grid gap-10 md:grid-cols-2">
         <div>
           <h2 className="text-3xl font-bold">{tr("Parlons de votre agence")}</h2>
-          <p className="mt-3 text-slate-600">Démonstration, soumission d’abonnement ou formation de groupe : laissez-nous vos coordonnées, on vous revient rapidement.</p>
+          <p className="mt-3 text-slate-600">Abonnement ou formation de groupe : laissez-nous vos coordonnées, on vous revient rapidement.</p>
           <ul className="mt-6 space-y-3 text-sm">
-            {['Démonstration personnalisée de 30 minutes', 'Soumission selon le nombre de courtiers', 'Migration de vos contacts incluse', 'Formation de groupe sur demande'].map(i => <li key={i} className="flex gap-2"><Check size={17} className="text-emerald-600" /> {tr(i)}</li>)}
+            {['Essai gratuit de 3 jours après inscription', 'Soumission selon le nombre de courtiers', 'Migration de vos contacts incluse', 'Formation de groupe sur demande'].map(i => <li key={i} className="flex gap-2"><Check size={17} className="text-emerald-600" /> {tr(i)}</li>)}
           </ul>
-          <div className="mt-8 flex items-center gap-3 rounded-xl bg-brand-50 p-4 text-sm text-brand-700"><Ruler /> Envie de tester tout de suite? <a href="/demo" className="font-semibold underline">{tr("Ouvrez la démo")}</a>.</div>
+          <div className="mt-8 flex items-center gap-3 rounded-xl bg-brand-50 p-4 text-sm text-brand-700"><Ruler /> Envie de tester tout de suite? <a href="/inscription" className="font-semibold underline">{tr("Essayer 3 jours gratuitement")}</a>.</div>
         </div>
         {state === 'ok' ? (
           <div className="card flex flex-col items-center justify-center p-10 text-center"><Check size={40} className="text-emerald-600" /><h3 className="mt-3 text-xl font-bold">{tr("Merci!")}</h3><p className="text-slate-600">{tr("Votre demande a bien été reçue. Nous vous contactons très bientôt.")}</p></div>
@@ -285,7 +287,7 @@ function ContactForm({ interest, setInterest }: { interest: string; setInterest:
           <form onSubmit={submit} className="card grid gap-3 p-6 sm:grid-cols-2">
             <label className="sm:col-span-2"><span className="label">{tr("Je souhaite")}</span>
               <select className="input" value={interest} onChange={e => setInterest(e.target.value)}>
-                {['Démonstration', 'Abonnement — Courtier solo', 'Abonnement — Équipe', 'Abonnement — Agence', 'Abonnement — Réseau / bannière', 'Formation de groupe', 'Autre'].map(o => <option key={o}>{o}</option>)}
+                {['Achat + installation sur demande', 'Abonnement — Courtier solo', 'Abonnement — Équipe', 'Abonnement — Agence', 'Abonnement — Réseau / bannière', 'Formation de groupe', 'Autre'].map(o => <option key={o}>{o}</option>)}
               </select>
             </label>
             <label><span className="label">Nom complet *</span><input className="input" required value={f.name} onChange={set('name')} /></label>

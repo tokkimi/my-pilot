@@ -94,11 +94,23 @@ export async function ensureOwnAgency(u: User) {
   return agency
 }
 
-export async function currentUser(req: Request): Promise<User | null> {
+export function trialExpired(agency: Agency | undefined) {
+  if (!agency || agency.plan !== 'essai') return false
+  const limit = Date.parse(agency.createdAt) + 3 * 86400000
+  const configured = agency.trialEnds ? Date.parse(agency.trialEnds) : limit
+  return Date.now() >= Math.min(limit, Number.isFinite(configured) ? configured : limit)
+}
+
+export async function currentUser(req: Request, allowExpired = false): Promise<User | null> {
   const sess = readSession(req)
   if (!sess) return null
   const u = (await loadUsers()).find(x => x.id === sess.u)
-  return u && u.active && (u.sessionVersion ?? 0) === sess.v ? u : null
+  if (!u || !u.active || (u.sessionVersion ?? 0) !== sess.v) return null
+  if (!allowExpired && u.role !== 'superadmin') {
+    const agency = (await loadAgencies()).find(a => a.id === u.agencyId)
+    if (!agency || agency.status !== 'actif' || trialExpired(agency)) return null
+  }
+  return u
 }
 
 // ---------- Initialisation : super-admin + agence de test illimitée ----------

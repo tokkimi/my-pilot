@@ -14,6 +14,7 @@ function LanguageSwitch() {
 
 const App = lazy(() => import('./App'))
 const Admin = lazy(() => import('./site/Admin'))
+const Subscription = lazy(() => import('./site/Subscription'))
 const Login = lazy(() => import('./site/Login'))
 
 const Loading = ({ text = 'Chargement…' }: { text?: string }) => <div className="flex min-h-screen items-center justify-center text-slate-500">{text}</div>
@@ -24,6 +25,7 @@ function RemoteApp() {
     ;(async () => {
       const me = await fetch('/api/auth').then(r => r.json()).catch(() => null)
       if (!me?.user) { location.href = '/connexion'; return }
+      if (me.subscriptionRequired) { location.href = '/abonnement'; return }
       const agency = new URLSearchParams(location.search).get('agency') ?? undefined
       if (me.user.role === 'superadmin' && !agency) { location.href = '/admin'; return }
       const r = await fetch('/api/data' + (agency ? `?agency=${encodeURIComponent(agency)}` : ''))
@@ -32,6 +34,8 @@ function RemoteApp() {
       setMediaContext(me.storage, b.agency.id, me.upload)
       setState({ db: b.db, session: { user: b.me, agency: b.agency }, agency })
     })()
+    const expiryCheck = window.setInterval(() => { void fetch('/api/auth').then(r => r.json()).then(b => { if (b.subscriptionRequired) location.href = '/abonnement' }).catch(() => undefined) }, 60000)
+    return () => window.clearInterval(expiryCheck)
   }, [])
   if (!state) return <Loading text="Ouverture de votre espace…" />
   if ('error' in state) return <div className="flex min-h-screen items-center justify-center p-6"><div className="card max-w-md p-6 text-center"><p className="text-rose-600">{state.error}</p><a className="btn-primary mt-4" href="/connexion">Retour</a></div></div>
@@ -40,7 +44,8 @@ function RemoteApp() {
 
 const path = location.pathname.replace(/\/+$/, '') || '/'
 const page =
-  path === '/demo' ? <StoreProvider mode="local"><App /></StoreProvider>
+  path === '/demo' ? <Login />
+  : path === '/abonnement' ? <Subscription />
   : path === '/app' ? <RemoteApp />
   : (path === '/connexion' || path === '/inscription') ? <Login />
   : path === '/admin' ? <Admin />

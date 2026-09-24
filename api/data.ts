@@ -67,6 +67,8 @@ export async function POST(req: Request) {
             const role = (['admin', 'courtier', 'adjointe', 'marketing', 'agent'] as const).includes(m.role as never) ? m.role : 'agent'
             if (existing) {
               if (existing.agencyId !== agencyId) continue
+              const seats = agency.seats || PLAN_SEATS[agency.plan]
+              if (!existing.active && m.active && seats && out.filter(x => x.agencyId === agencyId && x.active).length >= seats) { errors.push(`Limite de ${seats} membres atteinte.`); continue }
               const before = allowed(existing)
               const drive = m.googleDrive ?? before.drive, calendar = m.googleCalendar ?? before.calendar
               if (existing.googleEmail && ((before.drive && !drive) || (before.calendar && !calendar) || m.active === false)) toRevoke.add(existing.id)

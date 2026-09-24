@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         const name = String(b.name || '').trim()
         if (!name) return json({ error: 'Nom requis.' }, 400)
         const plan = (b.plan || 'essai') as Plan
-        const agency: Agency = { id: uid('ag_'), name, plan, seats: +b.seats || PLAN_SEATS[plan], status: 'actif', createdAt: new Date().toISOString(), contactEmail: String(b.contactEmail || ''), notes: String(b.notes || ''), trialEnds: plan === 'essai' ? new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10) : '' }
+        const agency: Agency = { id: uid('ag_'), name, plan, seats: +b.seats || PLAN_SEATS[plan], status: 'actif', createdAt: new Date().toISOString(), contactEmail: String(b.contactEmail || ''), notes: String(b.notes || ''), trialEnds: plan === 'essai' ? new Date(Date.now() + 3 * 86400000).toISOString() : '' }
         await mutate<Agency[]>(AGENCIES, () => [], l => [...l, agency])
         await writeJson(agencyDb(agency.id), seedAgencyDb(name, {}, !!b.withDemo), null)
         let password = ''
