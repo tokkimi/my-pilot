@@ -248,7 +248,7 @@ export default function Landing() {
       <footer className="border-t border-slate-200 py-8 text-sm text-slate-500">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4">
           <span>© {new Date().getFullYear()} ImmoPilot — Plateforme pour agences et courtiers immobiliers</span>
-          <span className="flex gap-4"><a href="/connexion" className="hover:underline">{tr("Connexion")}</a><a href="/inscription" className="hover:underline">{tr("Créer mon agence")}</a><a href="#contact" className="hover:underline">Contact</a></span>
+          <span className="flex flex-wrap gap-4"><a href="/connexion" className="hover:underline">{tr("Connexion")}</a><a href="/inscription" className="hover:underline">{tr("Créer mon agence")}</a><a href="/confidentialite.html" className="hover:underline">{tr("Confidentialité")}</a><a href="#contact" className="hover:underline">Contact</a></span>
         </div>
       </footer>
     </div>
