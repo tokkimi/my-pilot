@@ -94,6 +94,7 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
 
   return (
     <Modal title={l.address || 'Nouvelle inscription'} onClose={onClose} wide>
+      {l.external&&<p className="mb-3 text-sm text-slate-500">Source : {l.external.source} · {l.external.id} · Importé le {new Date(l.external.syncedAt).toLocaleString("fr-CA")}</p>}
       <Tabs<Tab> value={tab} onChange={setTab} tabs={[['infos', 'Infos & mandat'], ['fiche', 'Caractéristiques'], ['pieces', 'Pièces'], ['docs', 'Documents requis'], ['classeur', `Classeur (${l.documents?.length ?? 0})`], ['marketing', 'Plan marketing'], ['horaire', 'Horaire visites'], ['visites', `Rétroactions (${showings.length})`], ['print', 'Fiche imprimable']]} />
 
       {tab === 'infos' && (

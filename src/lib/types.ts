@@ -21,6 +21,7 @@ export interface Activity { id: ID; contactId: ID; kind: ActivityKind; date: str
 export type ListingStatus = 'preparation' | 'active' | 'pa_acceptee' | 'conditions_realisees' | 'vendu' | 'expire' | 'retire'
 export interface Room { name: string; level: string; dim: string; floor: string }
 export interface Listing {
+  external?: { source: string; id: string; syncedAt: string }
   id: ID; address: string; city: string; centris: string; propertyType: string; price: number; status: ListingStatus
   sellerIds: ID[]; agentId: ID; mandateStart: string; mandateEnd: string; commissionPct: number; collabPct: number
   bedrooms: number; bathrooms: number; yearBuilt: number; lot: string; livingArea: string; taxesMun: number; taxesScol: number; condoFees: number

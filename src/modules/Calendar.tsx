@@ -23,13 +23,17 @@ export default function CalendarPage(_: PageProps) {
     const refresh = async () => {
       try {
         const params = new URLSearchParams({ from: cursor.toISOString(), to: new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1).toISOString(), ...(agencyParam ? {agency: agencyParam} : {}) })
-        const response = await fetch('/api/calendly?' + params)
-        const data = await response.json()
-        if (!active) return
-        if (!response.ok) { setExternal([]); setExternalMessage(data.error || 'Calendly indisponible'); return }
-        setExternal((data.events ?? []).map((e: {uri:string;name:string;start_time:string;end_time:string}) => newEvent(me.id, { id: 'calendly:' + e.uri, title: 'Calendly · ' + e.name, start: localTime(e.start_time), end: localTime(e.end_time), notes: 'Rendez-vous Calendly · consultation uniquement' })))
-        setExternalMessage(data.connected ? (data.hasMore ? 'Calendly : 50 rendez-vous affichés, d’autres rendez-vous existent.' : 'Calendly actualisé automatiquement chaque minute.') : 'Connectez Calendly dans Connexions pour afficher vos rendez-vous ici.')
-      } catch { if(active) { setExternal([]); setExternalMessage('Actualisation Calendly impossible. Réessayez.') } }
+        const results = await Promise.allSettled(['calendly','microsoft'].map(async provider => {
+          const response=await fetch('/api/'+provider+'?'+params)
+          const data=await response.json()
+          if(!response.ok){if(response.status===403)return {events:[] as CalEvent[],message:''};throw new Error(provider+' : '+(data.error||'Actualisation indisponible'))}
+          const mapped:CalEvent[]=provider==='calendly'?(data.events??[]).map((e:{uri:string;name:string;start_time:string;end_time:string})=>newEvent(me.id,{id:'calendly:'+e.uri,title:'Calendly · '+e.name,start:localTime(e.start_time),end:localTime(e.end_time),notes:'Rendez-vous Calendly · consultation uniquement'})):(data.events??[]).filter((e:{isCancelled:boolean})=>!e.isCancelled).map((e:{id:string;subject:string;start:{dateTime:string};end:{dateTime:string};location?:{displayName:string}})=>newEvent(me.id,{id:'microsoft:'+e.id,title:'Outlook · '+e.subject,start:localTime(e.start.dateTime+'Z'),end:localTime(e.end.dateTime+'Z'),location:e.location?.displayName||'',notes:'Rendez-vous Outlook · titre modifiable dans Connexions → Mon agenda Outlook'}))
+          return {events:mapped,message:data.connected?provider+(data.hasMore?' : résultats partiels.':' : actualisé chaque minute.'):''}
+        }))
+        if(!active)return
+        setExternal(results.flatMap(r=>r.status==='fulfilled'?r.value.events:[]))
+        setExternalMessage(results.map(r=>r.status==='fulfilled'?r.value.message:r.reason.message).filter(Boolean).join(' '))
+      } catch { if(active) { setExternal([]); setExternalMessage('Actualisation des agendas impossible. Réessayez.') } }
     }
     void refresh()
     const timer = window.setInterval(() => void refresh(), 60000)
@@ -77,7 +81,7 @@ export default function CalendarPage(_: PageProps) {
                 className={`min-h-24 border-b border-r border-slate-200 p-1 ${d.getMonth() !== cursor.getMonth() ? 'bg-slate-50 text-slate-400' : ''}`}>
                 <div className={`mb-1 text-right text-xs ${iso === todayIso ? 'font-bold text-brand-600' : ''}`}>{d.getDate()}</div>
                 {evs.map(e => (
-                  <button key={e.id} onClick={() => e.id.startsWith('calendly:') ? setExternalDetail(e) : setEditing(e)} className="mb-0.5 block w-full truncate rounded px-1 text-left text-[11px] text-white" style={{ background: EVENT_TYPES[e.type].color }}>
+                  <button key={e.id} onClick={() => (e.id.startsWith('calendly:') || e.id.startsWith('microsoft:')) ? setExternalDetail(e) : setEditing(e)} className="mb-0.5 block w-full truncate rounded px-1 text-left text-[11px] text-white" style={{ background: EVENT_TYPES[e.type].color }}>
                     {parseDate(e.start)?.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })} {e.title}
                   </button>
                 ))}
