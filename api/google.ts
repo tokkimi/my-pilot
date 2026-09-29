@@ -1,7 +1,8 @@
 // Intégration Google par utilisateur : statut, connexion, jetons d'accès, déconnexion, autorisations (admin d'agence).
 import { randomBytes } from 'node:crypto'
 import { currentUser, json, loadUsers, sameOrigin, USERS, type User } from '../server/platform.js'
-import { accessToken, allowed, googleConfigured, redirectUri, revokeGoogle, scopesFor, signState, SCOPES } from '../server/google.js'
+import { accessToken, allowed, EXTRA_SCOPES, googleConfigured, redirectUri, revokeGoogle, scopesFor, signState, SCOPES } from '../server/google.js'
+import { access, loadOffer, loadPolicy, offeredTo } from '../server/policy.js'
 import { mutate, StorageUnavailable } from '../server/storage.js'
 
 const NONCE = 'ip_gnonce'
@@ -23,11 +24,16 @@ export async function GET(req: Request) {
     if (action === 'start') {
       if (!googleConfigured()) return json({ error: 'Intégration Google non configurée par le propriétaire de la plateforme.' }, 503)
       if (!perms.drive && !perms.calendar) return json({ error: 'L’administrateur de votre agence n’a pas autorisé l’accès Google pour votre profil.' }, 403)
+      const policy = await loadPolicy(u.agencyId)
+      const acc = access(u, 'google', policy, offeredTo(await loadOffer(), u.agencyId))
+      if (!acc.use) return json({ error: acc.reason }, 403)
+      // services optionnels activés par l'administrateur (Contacts, Gmail en-têtes, YouTube, Business Profile)
+      const extra = Object.keys(EXTRA_SCOPES).filter(s => policy.providers.google?.services[s])
       const nonce = randomBytes(16).toString('base64url')
       const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
       url.search = new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID!, redirect_uri: redirectUri(req), response_type: 'code', access_type: 'offline', prompt: 'consent',
-        include_granted_scopes: 'false', scope: scopesFor(u).join(' '), state: signState(u.id, nonce), login_hint: u.googleEmail || u.email,
+        include_granted_scopes: 'false', scope: scopesFor(u, extra).join(' '), state: signState(u.id, nonce), login_hint: u.googleEmail || u.email,
       }).toString()
       const secure = process.env.VERCEL ? '; Secure' : ''
       return new Response(null, { status: 302, headers: { location: url.toString(), 'set-cookie': `${NONCE}=${nonce}; Path=/api; HttpOnly; SameSite=Lax; Max-Age=600${secure}` } })

@@ -1,4 +1,9 @@
 export type ID = string
+import type { Provenance, SourceRef } from './integrations/types'
+/** Traçabilité des données importées : sources externes (id, connexion, date) et provenance par champ. */
+export interface Tracked { _src?: SourceRef[]; _prov?: Provenance }
+/** Document externe (ex. fichier Google Drive) rattaché à une fiche, avec sa date. */
+export interface ExtDoc { id: string; name: string; url: string; modifiedAt: string; provider: string; fetchedAt: string }
 
 export type Role = 'admin' | 'courtier' | 'adjointe' | 'marketing' | 'agent'
 export interface Agency { name: string; office: string; phone: string; email: string; website: string; linktree: string
@@ -9,27 +14,28 @@ export interface Member { id: ID; name: string; role: Role; title: string; phone
 
 export type ContactType = 'vendeur' | 'acheteur' | 'prospect' | 'ancien_client' | 'sphere' | 'investisseur' | 'locataire'
 export type Stage = 'nouveau' | 'contacte' | 'rdv' | 'mandat' | 'actif' | 'sous_offre' | 'conclu' | 'perdu'
-export interface Contact {
+export interface Contact extends Tracked {
   id: ID; type: ContactType; firstName: string; lastName: string; email: string; phone: string; address: string; city: string
   birthday: string; source: string; tags: string[]; ownerId: ID; stage: Stage; budget: number; criteria: string; motivation: string
   timeline: string; notes: string; createdAt: string; lastContact: string; referredBy: string; closingDate: string; driveUrl?: string; documents?: FileDoc[]
 }
 export type ActivityKind = 'appel' | 'courriel' | 'texto' | 'rencontre' | 'note' | 'visite'
-export interface Activity { id: ID; contactId: ID; kind: ActivityKind; date: string; summary: string; memberId: ID }
+export interface Activity extends Tracked { id: ID; contactId: ID; kind: ActivityKind; date: string; summary: string; memberId: ID
+  /** communication importée d'un compte personnel : visible par son propriétaire seulement */ private?: boolean }
 
 export type ListingStatus = 'preparation' | 'active' | 'pa_acceptee' | 'conditions_realisees' | 'vendu' | 'expire' | 'retire'
 export interface Room { name: string; level: string; dim: string; floor: string }
-export interface Listing {
+export interface Listing extends Tracked {
   id: ID; address: string; city: string; centris: string; propertyType: string; price: number; status: ListingStatus
   sellerIds: ID[]; agentId: ID; mandateStart: string; mandateEnd: string; commissionPct: number; collabPct: number
   bedrooms: number; bathrooms: number; yearBuilt: number; lot: string; livingArea: string; taxesMun: number; taxesScol: number; condoFees: number
   mortgageBalance: number; features: Record<string, string[]>; rooms: Room[]; marketing: Record<string, boolean>; docs: Record<string, boolean>
   schedule: Record<string, string>; visitInfo: Record<string, string>; extInfo: string; intInfo: string; notes: string; photoUrl: string
-  certificatRedo: string; certificatYear: string; createdAt: string; soldPrice: number; soldDate: string; driveUrl?: string; driveFolderId?: string; documents?: FileDoc[]
+  certificatRedo: string; certificatYear: string; createdAt: string; soldPrice: number; soldDate: string; driveUrl?: string; driveFolderId?: string; documents?: FileDoc[]; extDocs?: ExtDoc[]; externalUrl?: string
 }
 
 export type DealKind = 'vente' | 'achat'
-export interface Deal {
+export interface Deal extends Tracked {
   id: ID; kind: DealKind; title: string; listingId: ID; contactIds: ID[]; agentId: ID; price: number
   checklist: Record<string, boolean>; dates: Record<string, string>; notaire: string; arpenteur: string; collabBroker: string
   lender: string; commissionPct: number; notes: string; status: 'ouvert' | 'conclu' | 'annule'; createdAt: string
@@ -37,14 +43,16 @@ export interface Deal {
   /** type de dossier, situation (condo, compagnie…) et statut de chaque document requis */ docType?: string; situation?: Record<string, boolean>; docs?: Record<string, DocStatus>; docsDue?: string; notices?: DocNotice[]
   /** fiche de suivi (numéros de dossiers, preuves, dates) */ fields?: Record<string, string>
   /** registre des offres et modifications */ offers?: Offer[]
-  documents?: FileDoc[]
+  documents?: FileDoc[]; extDocs?: ExtDoc[]
 }
 
 export type Priority = 'basse' | 'normale' | 'haute'
-export interface Task { id: ID; title: string; due: string; done: boolean; priority: Priority; assigneeId: ID; category: string; contactId: ID; listingId: ID; dealId: ID; notes: string }
+export interface Task extends Tracked {
+  /** clé de déduplication des tâches générées automatiquement */ key?: string
+  id: ID; title: string; due: string; done: boolean; priority: Priority; assigneeId: ID; category: string; contactId: ID; listingId: ID; dealId: ID; notes: string }
 
 export type EventType = 'rdv_vendeur' | 'rdv_acheteur' | 'visite' | 'visite_libre' | 'photo' | 'inspection' | 'notaire' | 'suivi' | 'autre'
-export interface CalEvent { id: ID; title: string; start: string; end: string; type: EventType; location: string; contactId: ID; listingId: ID; agentId: ID; notes: string
+export interface CalEvent extends Tracked { id: ID; title: string; start: string; end: string; type: EventType; location: string; contactId: ID; listingId: ID; agentId: ID; notes: string
   /** identifiant de l'événement dans Google Agenda, par utilisateur */ google?: Record<ID, string> }
 
 export interface Showing { id: ID; listingId: ID; date: string; broker: string; brokerPhone: string; buyer: string; interest: 'faible' | 'moyen' | 'fort'; rating: number; priceOpinion: string; feedback: string; followUp: boolean }
@@ -110,6 +118,11 @@ export interface Invoice {
   payments: Payment[]; sentAt: string; fromQuoteId: ID; dealId: ID; createdBy: ID
 }
 
+/** Campagne ou publication externe (Mailchimp, Facebook, Instagram, TikTok, Canva…) avec ses statistiques. */
+export interface Campaign extends Tracked { id: ID; provider: string; kind: 'infolettre' | 'publication' | 'video' | 'design' | 'formulaire'; title: string; date: string; url: string; metrics: Record<string, number>; ownerId: ID }
+/** Indicateur externe daté (abonnés, note Google, taille d'audience…). */
+export interface ExtMetric extends Tracked { id: ID; provider: string; label: string; value: number; unit: string; at: string; ownerId: ID }
+
 export interface DB {
   version: number
   agency: Agency
@@ -117,6 +130,7 @@ export interface DB {
   members: Member[]; contacts: Contact[]; activities: Activity[]; listings: Listing[]; deals: Deal[]; tasks: Task[]
   events: CalEvent[]; showings: Showing[]; partners: Partner[]; platforms: Platform[]; templates: Template[]; posts: Post[]
   objections: Objection[]; expenses: Expense[]; visits: Visit[]
+  campaigns: Campaign[]; metrics: ExtMetric[]
   ledger: LedgerEntry[]; trips: Trip[]; acctYears: AcctYear[]; invoices: Invoice[]
 }
 export type Coll = Exclude<keyof DB, 'version' | 'agency' | 'currentUserId'>

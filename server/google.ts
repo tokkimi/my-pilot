@@ -16,9 +16,21 @@ export const allowed = (u: Pick<User, 'role' | 'googleDrive' | 'googleCalendar'>
   drive: u.googleDrive ?? (u.role === 'admin' || u.role === 'superadmin'),
   calendar: u.googleCalendar ?? (u.role === 'admin' || u.role === 'superadmin'),
 })
-export const scopesFor = (u: Pick<User, 'role' | 'googleDrive' | 'googleCalendar'>) => {
+/** Portées optionnelles (activées par l'administrateur de l'agence dans la politique d'intégration). */
+export const EXTRA_SCOPES: Record<string, string> = {
+  contacts: 'https://www.googleapis.com/auth/contacts.readonly',
+  gmail: 'https://www.googleapis.com/auth/gmail.metadata',
+  youtube: 'https://www.googleapis.com/auth/youtube.readonly',
+  gbp: 'https://www.googleapis.com/auth/business.manage',
+}
+export const scopesFor = (u: Pick<User, 'role' | 'googleDrive' | 'googleCalendar'>, extra: string[] = []) => {
   const a = allowed(u)
-  return [...SCOPES.base, ...(a.drive ? [SCOPES.drive] : []), ...(a.calendar ? [SCOPES.calendar] : [])]
+  return [...SCOPES.base, ...(a.drive ? [SCOPES.drive] : []), ...(a.calendar ? [SCOPES.calendar] : []), ...extra.map(s => EXTRA_SCOPES[s]).filter(Boolean)]
+}
+/** Services ImmoPilot correspondant aux portées accordées par Google. */
+export const servicesFromScopes = (scopes: string) => {
+  const g = scopes.split(' ')
+  return [...(g.includes(SCOPES.drive) ? ['drive'] : []), ...(g.includes(SCOPES.calendar) ? ['calendar'] : []), ...Object.entries(EXTRA_SCOPES).filter(([, s]) => g.includes(s)).map(([k]) => k)]
 }
 export const redirectUri = (req: Request) => `${new URL(req.url).origin}/api/google-callback`
 

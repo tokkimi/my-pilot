@@ -7,7 +7,7 @@ import path from 'node:path'
 // Deux modes d'accès au Blob Store : jeton lecture-écriture (BLOB_READ_WRITE_TOKEN) ou OIDC Vercel (BLOB_STORE_ID).
 const useBlob = () => !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)
 export const uploadMode = () => (process.env.BLOB_READ_WRITE_TOKEN ? 'token' : 'presigned')
-const DIR = path.join(process.cwd(), '.data')
+const DIR = process.env.IMMOPILOT_DATA_DIR || path.join(process.cwd(), '.data')
 
 export const storageMode = () => (useBlob() ? 'blob' : process.env.VERCEL ? 'none' : 'fs')
 export const storageReady = () => storageMode() !== 'none'
@@ -59,13 +59,24 @@ export async function writeJson(p: string, data: unknown, etag: string | null): 
       throw e
     }
   }
-  const full = fsPath(p)
-  let cur: string | null = null
-  try { cur = hash(await fs.readFile(full)) } catch { /* absent */ }
-  if (cur !== etag) return false
-  await fs.mkdir(path.dirname(full), { recursive: true })
-  await fs.writeFile(full, body)
-  return true
+  // mode fichier (développement / tests) : vérification + écriture sérialisées par chemin, comme le ifMatch du Blob
+  return withLock(p, async () => {
+    const full = fsPath(p)
+    let cur: string | null = null
+    try { cur = hash(await fs.readFile(full)) } catch { /* absent */ }
+    if (cur !== etag) return false
+    await fs.mkdir(path.dirname(full), { recursive: true })
+    await fs.writeFile(full + '.tmp', body)
+    await fs.rename(full + '.tmp', full)
+    return true
+  })
+}
+const locks = new Map<string, Promise<unknown>>()
+function withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const prev = locks.get(key) ?? Promise.resolve()
+  const next = prev.then(fn, fn)
+  locks.set(key, next.catch(() => undefined))
+  return next
 }
 
 /** Lecture-modification-écriture avec concurrence optimiste. */

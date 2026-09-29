@@ -1,12 +1,12 @@
-import { bootstrap, checkPassword, clearCookie, currentUser, hashPassword, json, loadAgencies, loadUsers, publicUser, renewCookie, sameOrigin, sessionCookie, trackActivity, USERS, type User } from '../server/platform.js'
-import { mutate, storageMode, storageReady, StorageUnavailable, uploadMode } from '../server/storage.js'
+import { AGENCIES, agencyDb, bootstrap, checkPassword, clearCookie, currentUser, hashPassword, json, loadAgencies, loadUsers, newUser, PLAN_SEATS, publicUser, renewCookie, sameOrigin, seedAgencyDb, sessionCookie, trackActivity, uid, USERS, type Agency, type User } from '../server/platform.js'
+import { mutate, storageMode, storageReady, StorageUnavailable, uploadMode, writeJson } from '../server/storage.js'
 
 export async function GET(req: Request) {
-  if (!storageReady()) return json({ user: null, storage: storageMode() })
+  if (!storageReady()) return json({ user: null, storage: storageMode(), signup: false })
   try {
     await bootstrap()
     const u = await currentUser(req)
-    if (!u) return json({ user: null, storage: storageMode() })
+    if (!u) return json({ user: null, storage: storageMode(), signup: signupOpen() })
     const agency = (await loadAgencies()).find(a => a.id === u.agencyId) ?? null
     return json({ user: publicUser(u), agency, storage: storageMode(), upload: uploadMode() }, 200, { 'set-cookie': renewCookie(u) })
   } catch (e) { return fail(e) }
@@ -37,6 +37,15 @@ export async function POST(req: Request) {
       return json({ user: publicUser(u), redirect: u.role === 'superadmin' ? '/admin' : '/app' }, 200, { 'set-cookie': sessionCookie(u.id, u.sessionVersion ?? 0) })
     }
 
+    if (body.action === 'signup') return signup(req, body as Record<string, unknown>)
+
+    if (body.action === 'onboarded') {
+      const u = await currentUser(req)
+      if (!u) return json({ error: 'Non connecté.' }, 401)
+      await mutate<User[]>(USERS, () => [], l => l.map(x => (x.id === u.id ? { ...x, onboardedAt: new Date().toISOString() } : x)))
+      return json({ ok: true })
+    }
+
     if (body.action === 'password') {
       const u = await currentUser(req)
       if (!u) return json({ error: 'Non connecté.' }, 401)
@@ -50,6 +59,33 @@ export async function POST(req: Request) {
     }
     return json({ error: 'Action inconnue.' }, 400)
   } catch (e) { return fail(e) }
+}
+
+// ---------- Inscription libre-service : une agence (essai 30 jours) + son administrateur ----------
+const signupHits = new Map<string, { n: number; t: number }>()
+export const signupOpen = () => process.env.SIGNUP_ENABLED !== 'false'
+async function signup(req: Request, b: Record<string, unknown>) {
+  if (!signupOpen()) return json({ error: 'Les inscriptions sont fermées. Contactez-nous.' }, 403)
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || 'local'
+  const h = signupHits.get(ip)
+  if (h && Date.now() - h.t < 3600000 && h.n >= 5) return json({ error: 'Trop de tentatives, réessayez plus tard.' }, 429)
+  signupHits.set(ip, h && Date.now() - h.t < 3600000 ? { n: h.n + 1, t: h.t } : { n: 1, t: Date.now() })
+  if (b.website) return json({ ok: true }) // pot de miel anti-robots
+  const s = (k: string, max = 120) => String(b[k] ?? '').trim().slice(0, max)
+  const email = s('email', 200).toLowerCase(), name = s('name'), agencyName = s('agencyName'), password = String(b.password ?? '')
+  if (!name || !agencyName || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: 'Nom, agence et courriel valides requis.' }, 400)
+  if (password.length < 10) return json({ error: 'Le mot de passe doit contenir au moins 10 caractères.' }, 400)
+  if (!b.acceptTerms) return json({ error: 'Veuillez accepter les conditions et la politique de confidentialité.' }, 400)
+  if ((await loadUsers()).some(u => u.email === email)) return json({ error: 'Un compte existe déjà avec ce courriel. Connectez-vous.' }, 409)
+  const agency: Agency = { id: uid('ag_'), name: agencyName, plan: 'essai', seats: PLAN_SEATS.essai, status: 'actif', createdAt: new Date().toISOString(), contactEmail: email, notes: 'Inscription libre-service', trialEnds: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10) }
+  await mutate<Agency[]>(AGENCIES, () => [], l => [...l, agency])
+  await writeJson(agencyDb(agency.id), seedAgencyDb(agencyName, {}, false), null)
+  const user = newUser({ email, name, role: 'admin', agencyId: agency.id, title: s('title') || 'Courtier immobilier', phone: s('phone', 40) }, password)
+  let created = false
+  await mutate<User[]>(USERS, () => [], l => { created = !l.some(x => x.email === email); return created ? [...l, user] : l })
+  if (!created) return json({ error: 'Un compte existe déjà avec ce courriel.' }, 409)
+  await trackActivity(user, true)
+  return json({ user: publicUser(user), redirect: '/app' }, 200, { 'set-cookie': sessionCookie(user.id, 0) })
 }
 
 function fail(e: unknown) {

@@ -16,6 +16,7 @@ export interface User {
   googleEmail?: string; googleScopes?: string; googleConnectedAt?: string
   /** incrémenté pour invalider toutes les sessions (réinitialisation du mot de passe) */
   sessionVersion?: number; tpsNo?: string; tvqNo?: string
+  /** parcours d'accueil (IA + connexion des outils) terminé */ onboardedAt?: string
 }
 export type Plan = 'essai' | 'solo' | 'equipe' | 'agence' | 'entreprise' | 'illimite'
 export interface Agency { id: string; name: string; plan: Plan; seats: number; status: 'actif' | 'suspendu'; createdAt: string; contactEmail: string; notes: string; trialEnds: string; monthlyFee?: number }

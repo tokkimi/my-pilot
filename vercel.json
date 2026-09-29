@@ -2,6 +2,10 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
-  "functions": { "api/*.ts": { "maxDuration": 30 } }
+  "rewrites": [
+    { "source": "/api/connect/:path*", "destination": "/api/connect?route=:path*" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "functions": { "api/*.ts": { "maxDuration": 30 } },
+  "crons": [{ "path": "/api/sync?action=cron", "schedule": "17 8 * * *" }]
 }

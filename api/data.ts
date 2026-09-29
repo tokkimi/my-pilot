@@ -2,6 +2,7 @@ import { agencyDb, currentUser, json, renewCookie, loadAgencies, loadUsers, newU
 import { mutate, readJson, StorageUnavailable } from '../server/storage.js'
 import { allowed, revokeGoogle } from '../server/google.js'
 import type { DB, Member } from '../src/lib/types.js'
+import { migrate } from '../server/migrations.js'
 
 type AgencyDoc = Omit<DB, 'members' | 'currentUserId'>
 const COLLS = ['contacts', 'activities', 'listings', 'deals', 'tasks', 'events', 'showings', 'partners', 'platforms', 'templates', 'posts', 'objections', 'expenses', 'visits', 'ledger', 'trips', 'acctYears', 'invoices'] as const
@@ -29,6 +30,9 @@ export async function GET(req: Request) {
     if (!agency) return json({ error: 'Agence introuvable.' }, 404)
     let { data } = await readJson<AgencyDoc>(agencyDb(agencyId))
     if (!data) data = await mutate<AgencyDoc>(agencyDb(agencyId), () => seedAgencyDb(agency.name, {}, false), d => d)
+    if (migrate(data).changed) data = await mutate<AgencyDoc>(agencyDb(agencyId), () => seedAgencyDb(agency.name, {}, false), d => migrate(d).doc)
+    // communications importées d'un compte personnel : visibles par leur propriétaire seulement
+    data = { ...data, activities: (data.activities ?? []).filter(a => !a.private || a.memberId === u.id) }
     const members = (await loadUsers()).filter(x => x.agencyId === agencyId).map(toMember)
     for (const c of PRIVATE) (data as Record<string, unknown>)[c] = (((data as Record<string, unknown>)[c] as { ownerId: string }[] | undefined) ?? []).filter(x => canSee(x.ownerId, u))
     if (u.role !== 'superadmin') await trackActivity(u, false)
@@ -97,6 +101,10 @@ export async function POST(req: Request) {
           }
           if (!(COLLS as readonly string[]).includes(o.c)) continue
           const list = ((d[o.c] as { id: string; ownerId?: string }[] | undefined) ?? [])
+          if (o.c === 'activities') {
+            const existing = list.find(x => x.id === (o.t === 'upsert' ? o.item?.id : o.id)) as { private?: boolean; memberId?: string } | undefined
+            if (existing?.private && existing.memberId !== u.id) { errors.push('Communication privée d’un autre membre.'); continue }
+          }
           if (PRIVATE.includes(o.c)) {
             const existing = list.find(x => x.id === (o.t === 'upsert' ? o.item?.id : o.id))
             if ((existing && !canSee(existing.ownerId, u)) || (o.t === 'upsert' && !canSee(o.item?.ownerId, u))) { errors.push('Accès refusé à cette comptabilité.'); continue }
