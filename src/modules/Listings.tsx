@@ -11,6 +11,7 @@ import { ShowingForm } from './Showings'
 import { createVisit } from './Visits'
 import DrivePanel from '../components/DrivePanel'
 import DocumentsPanel from '../components/DocumentsPanel'
+import { ExtDocs, Sources, StreetView } from '../components/Provenance'
 
 export default function Listings({ openId, go }: PageProps) {
   const { db, me, mine, upsert } = useStore()
@@ -141,7 +142,11 @@ function ListingDetail({ id, onClose, go }: { id: string; onClose: () => void; g
               <p className="mt-2 text-xs text-slate-500">L’adjointe contacte le vendeur par courriel pour approbation avant toute commande à l’arpenteur.</p>
             </div>
             <DrivePanel category="Inscriptions" name={[l.address, l.city].filter(Boolean).join(', ')} folderId={l.driveFolderId} url={l.driveUrl} subfolders={['01 Contrat de courtage', '02 Identification et conformité', '03 Documents de la propriété', '04 Photos et marketing', '05 Promesses d’achat', '06 Notaire']} onLink={(id, u) => upsert('listings', { ...l, driveFolderId: id, driveUrl: u })} />
+            <ExtDocs docs={l.extDocs} />
             <div className="flex flex-col gap-2">
+              <StreetView address={[l.address, l.city].filter(Boolean).join(', ')} />
+              <Sources src={l._src} />
+              {l.externalUrl && <a className="btn-outline" target="_blank" rel="noreferrer" href={l.externalUrl}><ExternalLink size={15} /> Voir sur Realtor.ca</a>}
               {l.address && <a className="btn-outline" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/${encodeURIComponent(l.address + ' ' + l.city)}`}><MapPin size={15} /> Street View / carte</a>}
               {l.centris && <a className="btn-outline" target="_blank" rel="noreferrer" href={`https://www.centris.ca/fr/propriete~a-vendre?q=${l.centris}`}><ExternalLink size={15} /> Voir sur Centris</a>}
               <button className="btn-primary" onClick={() => { const v = createVisit(l.agentId, { type: l.status === 'preparation' ? 'evaluation' : 'photo', listingId: l.id, title: l.address, address: `${l.address}, ${l.city}`, contactIds: l.sellerIds, status: 'en_cours', startedAt: new Date().toISOString() }); upsert('visits', v); go('visits', v.id) }}>▶ Démarrer une visite (mesures, vidéo, plan)</button>

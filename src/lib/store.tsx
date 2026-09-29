@@ -5,7 +5,7 @@ import { seed } from './seed'
 const KEY = 'immopilot-db-v1'
 
 export type Mode = 'local' | 'remote'
-export interface Session { user: { id: string; name: string; email: string; role: string; mustChangePassword?: boolean }; agency: { id: string; name: string; plan: string; seats: number } }
+export interface Session { user: { id: string; name: string; email: string; role: string; mustChangePassword?: boolean; onboardedAt?: string }; agency: { id: string; name: string; plan: string; seats: number } }
 
 function loadLocal(): DB {
   try {

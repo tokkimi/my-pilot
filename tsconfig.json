@@ -24,6 +24,7 @@
     "server",
     "vite.config.ts",
     "vitest.config.ts",
-    "tests"
+    "tests",
+    "scripts"
   ]
 }

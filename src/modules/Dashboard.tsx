@@ -11,6 +11,9 @@ import { Play, ScanLine } from 'lucide-react'
 import { docProgress } from '../lib/compliance'
 import { FileWarning } from 'lucide-react'
 import { StartVisit, VISIT_TYPES, normalizeVisit, upcomingVisits } from './Visits'
+import SyncBar from '../components/SyncBar'
+import { BarChart3 } from 'lucide-react'
+import { CONNECTORS } from '../lib/integrations/catalog'
 
 export default function Dashboard({ go }: PageProps) {
   const { db, me, mine, upsert } = useStore()
@@ -43,11 +46,17 @@ export default function Dashboard({ go }: PageProps) {
   const byStage = (Object.keys(STAGES) as Stage[]).map(s => ({ s, n: contacts.filter(c => c.stage === s).length }))
   const maxStage = Math.max(1, ...byStage.map(x => x.n))
 
+  const metrics = (db.metrics ?? []).filter(m => mine(m.ownerId) || !m.ownerId).sort((a, b) => b.at.localeCompare(a.at))
+  const campaigns = (db.campaigns ?? []).filter(c => mine(c.ownerId)).sort((a, b) => b.date.localeCompare(a.date))
+  const srcName = (p: string) => CONNECTORS[p as keyof typeof CONNECTORS]?.name.split(' (')[0] ?? p
+
   const hello = now.getHours() < 12 ? 'Bon matin' : now.getHours() < 18 ? 'Bon après-midi' : 'Bonsoir'
 
   return (
     <div>
       <PageHeader title={`${hello}, ${me.name.split(' ')[0]} 👋`} subtitle={now.toLocaleDateString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} actions={<><ScopeFilter /><button className="btn-primary" onClick={() => setStartVisit(true)}><Play size={16} /> Démarrer une visite</button></>} />
+
+      <SyncBar onOpenPlatforms={() => go('platforms')} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Inscriptions en vigueur" value={active.length} sub={`${listings.filter(l => l.status === 'preparation').length} en préparation`} icon={<Home size={20} />} />
@@ -172,6 +181,31 @@ export default function Dashboard({ go }: PageProps) {
           )}
           <button className="btn-ghost mt-2 w-full justify-center" onClick={() => go('sop')}>Scripts de réactivation →</button>
         </section>
+
+        {(metrics.length > 0 || campaigns.length > 0) && (
+          <section className="card p-4 lg:col-span-3">
+            <h2 className="mb-3 flex items-center gap-2 font-semibold"><BarChart3 size={18} className="text-brand-600" /> Marketing & statistiques des outils connectés</h2>
+            {metrics.length > 0 && <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {metrics.slice(0, 8).map(m => (
+                <div key={m.id} className="rounded-lg bg-slate-50 p-2" title={`Source : ${srcName(m.provider)} — lu le ${fmtDate(m.at, true)}`}>
+                  <div className="text-lg font-bold">{m.value.toLocaleString('fr-CA')}{m.unit === '/5' ? '/5' : ''}</div>
+                  <div className="truncate text-[11px] text-slate-500">{m.label}</div>
+                  <div className="text-[10px] text-slate-400">{srcName(m.provider)} · {fmtDate(m.at)}</div>
+                </div>
+              ))}
+            </div>}
+            {campaigns.length > 0 && <ul className="divide-y divide-slate-100 text-sm">
+              {campaigns.slice(0, 6).map(c => (
+                <li key={c.id} className="flex items-center gap-2 py-1.5">
+                  <span className="badge bg-slate-100 text-slate-600">{srcName(c.provider)}</span>
+                  <a href={c.url || undefined} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate hover:underline">{c.title}</a>
+                  <span className="hidden text-xs text-slate-500 sm:inline">{Object.entries(c.metrics ?? {}).slice(0, 3).map(([k, v]) => `${k} ${v}`).join(' · ')}</span>
+                  <span className="text-xs text-slate-400">{fmtDate(c.date)}</span>
+                </li>
+              ))}
+            </ul>}
+          </section>
+        )}
 
         <section className="card p-4 lg:col-span-3">
           <h2 className="mb-3 flex items-center gap-2 font-semibold"><Users size={18} className="text-indigo-600" /> Pipeline de contacts</h2>

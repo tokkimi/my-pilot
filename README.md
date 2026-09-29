@@ -13,8 +13,22 @@ Plateforme unique qui regroupe les outils, les processus et les SOP d’une agen
 - **Guides clients** (acheteur / vendeur, imprimables), **Calculateurs** (bilan du vendeur, rétribution, taxe de bienvenue, hypothèque, rendement plex).
 - **Plateformes** (Centris, JLR, Prospects, ActivePipe, EZSign, Pancarte Express, Canva, Mailchimp, réseaux sociaux…), **Partenaires**, **Commissions & dépenses**, **Équipe**, **Paramètres** (sauvegarde / restauration JSON).
 
+## Espace de travail connecté
+- **Plateformes & connexions** : chaque outil se relie une fois (OAuth ou identifiants chiffrés); états honnêtes
+  (connecté, à reconnecter, erreur, lien seulement), déconnexion, actions confirmées, test d’affichage intégré.
+- **Actualiser** (tableau de bord) + synchronisation automatique : collecte, rapprochement sans doublon, fusion à trois
+  voies, **À vérifier** pour les écarts importants, historique et journal vérifiable.
+- **Assistant IA** (API OpenAI côté serveur, aucun compte ChatGPT requis) : résumés, incohérences, tâches proposées,
+  statistiques expliquées, avec la source et la date de chaque information.
+- Connecteurs : Google (Agenda, Drive, Contacts, Gmail en-têtes, YouTube, Business Profile), Microsoft 365, Mailchimp,
+  Calendly, Meta (Facebook, Instagram, Lead Ads), LinkedIn, TikTok, Canva, CREA DDF® (Realtor.ca), agendas .ics,
+  webhook entrant (Zapier, Make, Apify, eZsign), import CSV (Prospects, Mon Prospecteur, Rechat…).
+- Documentation : [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) (architecture, sécurité, configuration pas à pas) et
+  [docs/MATRICE.md](docs/MATRICE.md) (matrice application par application, générée depuis le code).
+
 ## Pages
 - `/` : page d’accueil commerciale (fonctionnalités, intégrations, forfaits, formation, formulaire de contact)
+- `/inscription` : création d’une agence (essai 30 jours) et de son compte administrateur
 - `/connexion` : connexion des agences, courtiers et membres
 - `/app` : espace sécurisé de l’agence (données partagées entre les membres)
 - `/admin` : console des propriétaires de la plateforme (statistiques, agences, utilisateurs, demandes)
@@ -26,14 +40,17 @@ Démarrer une visite (évaluation, acheteur, visite libre, relevé, inspection),
 éditeur de plan 2D (généré depuis les mesures ou plan importé), rapport imprimable, copie des pièces dans l’inscription.
 
 ## Serveur (Vercel Functions)
-`api/*.ts` : auth, data, media, leads, admin. Stockage : Vercel Blob privé (`BLOB_READ_WRITE_TOKEN`), système de fichiers `.data/` en développement.
+`api/*.ts` : auth, data, media, leads, admin, google, send, connect, sync, ai. Stockage : Vercel Blob privé (`BLOB_READ_WRITE_TOKEN`), système de fichiers `.data/` en développement.
 
 Variables d’environnement : `SESSION_SECRET`, `SUPERADMIN_EMAIL`, `SUPERADMIN_PASSWORD`, `TEST_ADMIN_EMAIL`, `TEST_ADMIN_PASSWORD`,
 `TEST_AGENT_EMAIL`, `TEST_AGENT_PASSWORD`. Les comptes sont créés automatiquement au premier appel.
+Intégrations, IA et synchronisation : `SECRETS_KEY`, `APP_URL`, `CRON_SECRET`, `OPENAI_API_KEY` et les identifiants de
+chaque fournisseur — voir [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md#9-variables-denvironnement-vercel--project--settings--environment-variables).
 
 ## Développement
 ```bash
 npm install
 npm run dev     # http://localhost:5173
 npm run build   # dist/
+npm test        # scénarios critiques (vitest)
 ```

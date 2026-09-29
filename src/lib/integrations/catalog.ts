@@ -231,7 +231,7 @@ export const INTEGRATIONS: IntegrationDef[] = [
     impl: 'connecteur', implNote: 'Assistant IA intégré (API OpenAI plateforme, OPENAI_API_KEY côté serveur).', blockers: [], docs: ['https://platform.openai.com/docs/api-reference/responses'], modes: [], modules: ['Assistant IA'] },
   { key: 'streetview', name: 'Google Street View', domain: 'maps.google.com', url: 'https://www.google.com/maps', category: 'Communication & administration', method: ['cle_api'],
     access: ['Clé Maps Embed API (plateforme)'], read: [], write: [], stats: [], actions: [],
-    embed: { status: 'oui', note: 'Maps Embed API conçue pour l’affichage intégré : carte et Street View directement dans la fiche d’inscription.' }, automation: { status: 'non', note: 'Affichage seulement.' }, impl: 'connecteur', implNote: 'Carte/Street View intégrés si GOOGLE_MAPS_EMBED_KEY est configurée; sinon lien.', blockers: [], docs: ['https://developers.google.com/maps/documentation/embed/get-started'], modes: [], modules: ['Inscriptions'] },
+    embed: { status: 'oui', note: 'Maps Embed API conçue pour l’affichage intégré : carte et vue satellite directement dans la fiche d’inscription (Street View s’ouvre par lien, le mode intégré exigeant des coordonnées).' }, automation: { status: 'non', note: 'Affichage seulement.' }, impl: 'connecteur', implNote: 'Carte et vue satellite intégrées si GOOGLE_MAPS_EMBED_KEY est configurée; Street View par lien.', blockers: [], docs: ['https://developers.google.com/maps/documentation/embed/get-started'], modes: [], modules: ['Inscriptions'] },
 
   // ---------- Connecteurs génériques ----------
   { key: 'ics', name: 'Autre agenda (.ics)', domain: '', url: '', category: 'Connecteurs génériques', connector: 'ics', method: ['ics'],

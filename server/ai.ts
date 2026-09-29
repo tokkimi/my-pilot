@@ -108,7 +108,7 @@ Règles absolues :
 - Tu ne peux ni envoyer de courriel, ni publier, ni signer, ni dépenser : tu peux seulement préparer et proposer.`
 
 async function openai(input: string, maxTokens = 1800): Promise<{ json: { answer: string; sources: Answer['sources']; proposals: Omit<Proposal, 'id' | 'createdAt' | 'by' | 'type' | 'status'>[] }; tokens: number }> {
-  const r = await call<{ output?: { type: string; content?: { type: string; text?: string }[] }[]; output_text?: string; usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number } }>('https://api.openai.com/v1/responses', {
+  const r = await call<{ output?: { type: string; content?: { type: string; text?: string }[] }[]; output_text?: string; usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number } }>(`${(process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '')}/responses`, {
     provider: 'openai', method: 'POST', retries: 1, headers: { authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     json: { model: aiModel(), instructions: INSTRUCTIONS, input, max_output_tokens: maxTokens, store: false, text: { format: { type: 'json_schema', name: 'reponse_immopilot', strict: true, schema: SCHEMA } } },
   })

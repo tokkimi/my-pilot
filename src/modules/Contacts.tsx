@@ -1,4 +1,5 @@
 import SendTemplate from '../components/SendTemplate'
+import { Sources } from '../components/Provenance'
 import { useMemo, useRef, useState } from 'react'
 import { Download, Mail, MessageSquare, Phone, Plus, Search, Trash2, Upload, Pencil } from 'lucide-react'
 import type { PageProps } from '../App'
@@ -173,6 +174,7 @@ export function ContactDetail({ id, onClose, onEdit, go }: { id: string; onClose
             <div className="flex items-center gap-2"><dt className="w-28 text-slate-500">Responsable</dt><dd className="flex items-center gap-1"><Avatar memberId={c.ownerId} /> {db.members.find(m => m.id === c.ownerId)?.name}</dd></div>
           </dl>
           {c.notes && <p className="whitespace-pre-wrap rounded-lg bg-amber-50 p-3 text-sm">{c.notes}</p>}
+          <Sources src={c._src} />
           <button className="btn-ghost text-rose-600" onClick={() => { if (confirm('Supprimer ce contact?')) { remove('contacts', id); onClose() } }}><Trash2 size={15} /> Supprimer</button>
         </div>
 

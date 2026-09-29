@@ -38,7 +38,7 @@ export default function Login() {
         <button className="btn-primary w-full justify-center py-2.5" disabled={busy}>{busy ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />} Se connecter</button>
         <div className="mt-4 flex justify-between text-xs text-slate-500">
           <a href="/demo" className="hover:underline">Essayer la démo →</a>
-          <a href="/#contact" className="hover:underline">Pas de compte? Contactez-nous</a>
+          <a href="/inscription" className="font-medium text-brand-700 hover:underline">Créer mon agence →</a>
         </div>
       </form>
     </div>

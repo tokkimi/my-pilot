@@ -60,7 +60,8 @@ async function overview(u: User) {
   })).filter(c => c.access.see)
   return {
     connectors, admin: isAdmin(u), me: u.id,
-    connections: conns.map(c => ({ ...c, ownerName: names[c.ownerId] ?? '', mine: c.ownerId === u.id })),
+    // ni curseurs ni empreintes de jetons vers le navigateur
+    connections: conns.map(c => ({ ...c, cursors: {}, settings: Object.fromEntries(Object.entries(c.settings).filter(([k]) => !/token|hash|secret/i.test(k))), ownerName: names[c.ownerId] ?? '', mine: c.ownerId === u.id })),
     policy: isAdmin(u) ? policy : null,
     offered: [...offered],
     ai: { configured: !!process.env.OPENAI_API_KEY, enabled: policy.ai.enabled && policy.ai.roles.includes(u.role === 'superadmin' ? 'admin' : u.role) },
@@ -366,10 +367,12 @@ async function embedCheck(u: User, key: string) {
   // uniquement les adresses du catalogue ou des plateformes de l'agence (pas de requête vers une adresse arbitraire)
   let url = INTEGRATIONS.find(i => i.key === key)?.url
   if (!url) {
+    // liens personnalisés de l'agence : réservé à l'administrateur (évite d'utiliser le serveur pour sonder des adresses)
+    if (!isAdmin(u)) return json({ error: 'Vérification réservée à l’administrateur pour les liens personnalisés.' }, 403)
     const { data } = await readJson<{ platforms?: { id: string; url: string }[] }>(agencyDb(u.agencyId))
     url = data?.platforms?.find(p => p.id === key)?.url
   }
-  if (!url || !/^https:\/\/[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(url) || /^https:\/\/(localhost|127\.|10\.|192\.168\.|169\.254\.)/i.test(url)) return json({ error: 'Adresse non vérifiable.' }, 400)
+  if (!url || !/^https:\/\/[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(url) || /^https:\/\/(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|\d+\.\d+\.\d+\.\d+)/i.test(url) || /\.(internal|local|localhost)(\/|:|$)/i.test(url)) return json({ error: 'Adresse non vérifiable.' }, 400)
   const cache = (await readJson<Record<string, { at: string; embeddable: boolean; reason: string }>>(EMBED)).data ?? {}
   const hit = cache[url]
   if (hit && Date.now() - Date.parse(hit.at) < 86400000) return json({ url, ...hit, cached: true })

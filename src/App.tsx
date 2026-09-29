@@ -28,6 +28,8 @@ import Visits from './modules/Visits'
 import GooglePage from './modules/Google'
 import Compliance from './modules/Compliance'
 import { AccountModal } from './modules/Account'
+import Assistant from './components/Assistant'
+import Onboarding from './components/Onboarding'
 
 export type Page = keyof typeof PAGES
 export interface PageProps { go: (p: Page, id?: string) => void; openId?: string }
@@ -48,7 +50,7 @@ const PAGES = {
   sop: { label: 'SOP & scripts', icon: BookOpen, C: Sop, group: 'Savoir' },
   guides: { label: 'Guides clients', icon: FileText, C: Guides, group: 'Savoir' },
   tools: { label: 'Calculateurs', icon: Calculator, C: Tools, group: 'Savoir' },
-  platforms: { label: 'Plateformes', icon: Grid3x3, C: Platforms, group: 'Réseau' },
+  platforms: { label: 'Plateformes & connexions', icon: Grid3x3, C: Platforms, group: 'Réseau' },
   google: { label: 'Google Drive & Agenda', icon: HardDrive, C: GooglePage, group: 'Réseau' },
   partners: { label: 'Partenaires', icon: Handshake, C: Partners, group: 'Réseau' },
   finance: { label: 'Comptabilité', icon: Wallet, C: Accounting, group: 'Agence' },
@@ -67,6 +69,7 @@ export default function App() {
   const [account, setAccount] = useState(!!session?.user.mustChangePassword)
   const [nav, setNav] = useState(false)
   const [search, setSearch] = useState(false)
+  const [welcome, setWelcome] = useState(mode === 'remote' && !!session && !session.user.onboardedAt && !session.user.mustChangePassword)
 
   useEffect(() => {
     const h = () => setRoute(readHash())
@@ -155,7 +158,9 @@ export default function App() {
       </main>
       {!inVisit && <BubbleNav current={route.page} go={go} openMenu={() => setNav(true)} />}
       {search && <GlobalSearch go={go} onClose={() => setSearch(false)} />}
-      {account && <AccountModal onClose={() => setAccount(false)} forced={!!session?.user.mustChangePassword} />}
+      {account && <AccountModal onClose={() => { setAccount(false); if (mode === 'remote' && session && !session.user.onboardedAt) setWelcome(true) }} forced={!!session?.user.mustChangePassword} />}
+      {welcome && !account && <Onboarding onClose={() => setWelcome(false)} goPlatforms={() => go('platforms')} />}
+      {!inVisit && <Assistant page={route.page} id={route.id} />}
     </div>
   )
 }

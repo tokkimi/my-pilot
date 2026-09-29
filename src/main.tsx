@@ -9,6 +9,7 @@ import Landing from './site/Landing'
 const App = lazy(() => import('./App'))
 const Admin = lazy(() => import('./site/Admin'))
 const Login = lazy(() => import('./site/Login'))
+const Signup = lazy(() => import('./site/Signup'))
 
 const Loading = ({ text = 'Chargement…' }: { text?: string }) => <div className="flex min-h-screen items-center justify-center text-slate-500">{text}</div>
 
@@ -37,6 +38,7 @@ const page =
   path === '/demo' ? <StoreProvider mode="local"><App /></StoreProvider>
   : path === '/app' ? <RemoteApp />
   : path === '/connexion' ? <Login />
+  : path === '/inscription' ? <Signup />
   : path === '/admin' ? <Admin />
   : <Landing />
 

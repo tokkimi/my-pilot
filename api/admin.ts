@@ -4,6 +4,10 @@ import { ACTIVITY, AGENCIES, FINANCE, type PlatformEntry, agencyDb, currentUser,
 import { mutate, readJson, storageMode, StorageUnavailable, writeJson } from '../server/storage.js'
 import type { DB } from '../src/lib/types.js'
 import { googleConfigured } from '../server/google.js'
+import { platformReady } from '../server/connectors/index.js'
+import { loadOffer } from '../server/policy.js'
+import { vaultUsesDedicatedKey } from '../server/vault.js'
+import { CONNECTORS, type ConnectorKey } from '../src/lib/integrations/catalog.js'
 
 const tempPassword = () => 'IP-' + randomBytes(9).toString('base64url')
 
@@ -30,7 +34,13 @@ export async function GET(req: Request) {
         media: visits.reduce((s, v) => s + (v.rooms ?? []).reduce((t, r) => t + (r.media?.length ?? 0), 0) + (v.voiceNotes?.length ?? 0) + (v.photos?.length ?? 0), 0),
       }
     }))
-    return json({ users: users.map(publicUser), agencies, leads, activity, usage, finance, storage: storageMode(), email: await emailStatus(), google: { configured: googleConfigured(), picker: !!(process.env.GOOGLE_API_KEY && process.env.GOOGLE_APP_ID), redirect: `${new URL(req.url).origin}/api/google-callback` } })
+    return json({ users: users.map(publicUser), agencies, leads, activity, usage, finance, storage: storageMode(), email: await emailStatus(), google: { configured: googleConfigured(), picker: !!(process.env.GOOGLE_API_KEY && process.env.GOOGLE_APP_ID), redirect: `${new URL(req.url).origin}/api/google-callback` },
+      integrations: {
+        origin: process.env.APP_URL?.replace(/\/$/, '') || new URL(req.url).origin,
+        connectors: (Object.keys(CONNECTORS) as ConnectorKey[]).map(k => ({ key: k, name: CONNECTORS[k].name, ...platformReady(k), oauth: CONNECTORS[k].auth === 'oauth2' })),
+        openai: !!process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-5-mini', cron: !!process.env.CRON_SECRET, vaultKey: vaultUsesDedicatedKey(), maps: !!process.env.GOOGLE_MAPS_EMBED_KEY,
+        offer: await loadOffer(),
+      } })
   } catch (e) { return fail(e) }
 }
 

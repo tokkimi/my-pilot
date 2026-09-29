@@ -9,7 +9,8 @@ interface Agency { id: string; name: string; plan: Plan; seats: number; status: 
 interface User { id: string; email: string; name: string; role: string; agencyId: string; active: boolean; title: string; createdAt: string; lastLoginAt: string; lastSeenAt: string; loginCount: number; mustChangePassword: boolean; googleEmail?: string; googleDrive?: boolean; googleCalendar?: boolean }
 import type { Lead } from './AdminLeads'
 interface Usage { agencyId: string; contacts: number; listings: number; deals: number; tasks: number; visits: number; visitsDone: number; events: number; media: number }
-interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; finance?: PlatformEntry[]; storage: string; email?: { configured: boolean; from: string; ok: boolean; domains: { name: string; status: string }[]; error: string }; google: { configured: boolean; picker: boolean; redirect: string } }
+interface Data { users: User[]; agencies: Agency[]; leads: Lead[]; activity: { days: Record<string, { logins: number; active: string[] }> }; usage: Usage[]; finance?: PlatformEntry[]; storage: string; email?: { configured: boolean; from: string; ok: boolean; domains: { name: string; status: string }[]; error: string }; google: { configured: boolean; picker: boolean; redirect: string }; integrations?: Integrations }
+interface Integrations { origin: string; connectors: { key: string; name: string; ok: boolean; missing: string[]; oauth: boolean }[]; openai: boolean; model: string; cron: boolean; vaultKey: boolean; maps: boolean; offer: { default: string[] | 'all'; agencies: Record<string, string[] | 'all'> } }
 
 const PLAN_LABEL: Record<Plan, string> = { essai: 'Essai (30 j)', solo: 'Courtier solo', equipe: 'Équipe', agence: 'Agence', entreprise: 'Entreprise', illimite: 'Illimité (interne)' }
 const ROLE_LABEL: Record<string, string> = { superadmin: 'Fondateur (super-admin)', admin: 'Admin agence', courtier: 'Courtier', adjointe: 'Adjointe', marketing: 'Équipe marketing', agent: 'Membre' }
@@ -124,6 +125,7 @@ function Overview({ data }: { data: Data }) {
         {data.email.ok && /resend\.dev/.test(data.email.from) && <div className="mt-1 text-xs">Adresse de test Resend : les envois ne partent que vers le courriel du compte Resend. Vérifiez votre domaine dans Resend pour écrire aux clients.</div>}
       </div>}
       <GoogleSetup g={data.google} connected={data.users.filter(u => u.googleEmail).length} />
+      {data.integrations && <IntegrationsSetup i={data.integrations} agencies={data.agencies} />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="Agences" value={data.agencies.length} sub={`${data.agencies.filter(a => a.status === 'actif').length} actives · ${data.agencies.filter(a => a.plan === 'essai').length} en essai`} />
         <Tile label="Utilisateurs" value={users.length} sub={`${users.filter(u => u.active).length} actifs`} />
@@ -232,6 +234,44 @@ function UsersTab({ data, run, onSecret }: { data: Data; run: (b: object, after?
   )
 }
 
+
+function IntegrationsSetup({ i, agencies }: { i: Integrations; agencies: Agency[] }) {
+  const [open, setOpen] = useState(false)
+  const [agency, setAgency] = useState('')
+  const cur = agency ? i.offer.agencies[agency] ?? i.offer.default : 'all'
+  const [sel, setSel] = useState<string[] | 'all'>('all')
+  useEffect(() => { setSel(cur) }, [agency]) // eslint-disable-line react-hooks/exhaustive-deps
+  const ready = i.connectors.filter(c => c.ok).length
+  const save = async () => {
+    const r = await fetch('/api/connect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'offer', agencyId: agency, providers: sel }) })
+    alert(r.ok ? 'Applications proposées enregistrées.' : (await r.json()).error)
+  }
+  const flag = (ok: boolean, yes: string, no: string) => <span className={ok ? 'text-emerald-700' : 'text-amber-700'}>{ok ? yes : no}</span>
+  return (
+    <section className="card p-4">
+      <button className="flex w-full items-center justify-between text-left" onClick={() => setOpen(!open)}>
+        <span className="font-semibold">Connecteurs & IA — {ready}/{i.connectors.length} prêts · IA {flag(i.openai, 'active', 'à configurer')} · planificateur {flag(i.cron, 'actif', 'à configurer')}</span>
+        <span className="text-slate-400">{open ? '▾' : '▸'}</span>
+      </button>
+      {open && <div className="mt-3 space-y-3 text-sm">
+        <ul className="grid gap-1 sm:grid-cols-2">{i.connectors.map(c => (
+          <li key={c.key} className="rounded bg-slate-50 px-2 py-1 text-xs"><b>{c.name}</b> — {c.ok ? <span className="text-emerald-700">prêt</span> : <span className="text-amber-700">manque {c.missing.join(', ')}</span>}
+            {c.oauth && c.key !== 'google' && <div className="break-all text-slate-500">Redirection : {i.origin}/api/connect/callback/{c.key}</div>}</li>
+        ))}</ul>
+        <p className="text-xs text-slate-600">OpenAI : {flag(i.openai, `configuré (modèle ${i.model})`, 'OPENAI_API_KEY manquante')} · Coffre : {flag(i.vaultKey, 'clé SECRETS_KEY dédiée', 'clé dérivée de SESSION_SECRET (ajoutez SECRETS_KEY)')} · Street View intégré : {flag(i.maps, 'actif', 'GOOGLE_MAPS_EMBED_KEY manquante')} · Planificateur : {flag(i.cron, 'CRON_SECRET défini', 'CRON_SECRET manquant')}. Procédure détaillée : docs/INTEGRATIONS.md.</p>
+        <div className="rounded-lg border border-slate-200 p-3">
+          <div className="mb-2 font-semibold">Applications proposées par agence</div>
+          <select className="input mb-2 max-w-sm" value={agency} onChange={e => setAgency(e.target.value)}><option value="">— Choisir une agence —</option>{agencies.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
+          {agency && <>
+            <label className="mb-1 flex items-center gap-2 text-xs"><input type="checkbox" checked={sel === 'all'} onChange={e => setSel(e.target.checked ? 'all' : i.connectors.map(c => c.key))} /> Toutes les applications</label>
+            {sel !== 'all' && <div className="grid grid-cols-2 gap-1 text-xs sm:grid-cols-3">{i.connectors.map(c => <label key={c.key} className="flex items-center gap-1"><input type="checkbox" checked={sel.includes(c.key)} onChange={() => setSel(sel.includes(c.key) ? sel.filter(x => x !== c.key) : [...sel, c.key])} />{c.name}</label>)}</div>}
+            <button className="btn-primary mt-2 py-1 text-xs" onClick={save}>Enregistrer</button>
+          </>}
+        </div>
+      </div>}
+    </section>
+  )
+}
 
 function GoogleSetup({ g, connected }: { g: Data['google']; connected: number }) {
   const [open, setOpen] = useState(!g.configured)
